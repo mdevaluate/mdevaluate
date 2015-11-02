@@ -2,7 +2,7 @@ __author__ = 'mbartelm'
 import os
 from glob import glob
 from .gromacs import atoms_from_grofile, load_indices
-from mdpy.xtclib.reader import XTCReader, TRRReader
+from .gromacs import XTCReader, TRRReader
 
 
 class GromacsSimulationResult:
