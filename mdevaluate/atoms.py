@@ -6,6 +6,7 @@ import numpy as np
 from scipy.spatial import KDTree
 
 def from_grofile(grofile, index_file=None):
+    indices = None
     if index_file is not None:
         indices = load_indices(index_file)
 
@@ -68,8 +69,9 @@ class AtomSubset:
 
     def __getitem__(self, slice):
         if isinstance(slice, str):
-            slice = self.atoms.indices[slice]
-
+            indices = self.atoms.indices[slice]
+            return self.atoms.subset()[indices] & self
+        
         return self.subset(indices=self.indices[0].__getitem__(slice))
 
     def __and__(self, other):
