@@ -69,7 +69,7 @@ class AtomSubset:
     def __getitem__(self, slice):
         if isinstance(slice, str):
             slice = self.atoms.indices[slice]
-            
+
         return self.subset(indices=self.indices[0].__getitem__(slice))
 
     def __and__(self, other):
@@ -120,7 +120,7 @@ def layer_of_atoms(atoms,
     distance = np.dot(p_, plane_normal)
     
     return abs(distance) <= thickness
-    
+
 def distance_to_atoms(ref, atoms, box=None):
     """Get the minimal distance from atoms to ref.
     The result is an array of with length == len(atoms)
