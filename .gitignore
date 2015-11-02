@@ -1,0 +1,9 @@
+.idea
+__pycache__
+build/
+dist/
+*.egg-info
+logarithmic.*.so
+logarithmic.c
+coordinates.*.so
+coordinates.c
