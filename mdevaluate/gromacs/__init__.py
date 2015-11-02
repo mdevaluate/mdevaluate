@@ -3,10 +3,16 @@ from numpy import genfromtxt
 import itertools
 import re
 
-from .reader import XTCReader
+from .reader import XTCReader, TRRReader
 
 def atoms_from_grofile(file):
+    """ Deprecated. Use Atoms.from_grofile"""
     t = genfromtxt(file, skip_header=2, delimiter=(10, 5), dtype='U8', autostrip=True, skip_footer=1)
+    return t
+
+
+def _atoms_from_grofile(file):
+    t = genfromtxt(file, skip_header=2, delimiter=(5, 5, 5), dtype='U8', autostrip=True, skip_footer=1)
     return t
 
 
