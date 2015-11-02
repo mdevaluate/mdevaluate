@@ -80,7 +80,7 @@ def distance_distribution(atoms, bins):
 def tetrahedral_order(atoms):
     indices = next_neighbors(atoms, number_of_neighbors = 4)
     neighbors = atoms[indices]
-    neighbor_1, neighbor_2, neighbor_3, neighbor_4 = \
+    neighbors_1, neighbors_2, neighbors_3, neighbors_4 = \
         neighbors[:,0,:], neighbors[:,1,:], neighbors[:,2,:], neighbors[:,3,:]
     
     # Connection vectors
@@ -90,10 +90,10 @@ def tetrahedral_order(atoms):
     neighbors_4 -= atoms
     
     # Normed Connection vectors
-    neighbors_1 /= (neighbors_1**2).sum(axis=1)**.5
-    neighbors_2 /= (neighbors_2**2).sum(axis=1)**.5
-    neighbors_3 /= (neighbors_3**2).sum(axis=1)**.5
-    neighbors_4 /= (neighbors_4**2).sum(axis=1)**.5
+    neighbors_1 /= ((neighbors_1**2).sum(axis=1)**.5).reshape(neighbors_1.shape[0],1)
+    neighbors_2 /= ((neighbors_2**2).sum(axis=1)**.5).reshape(neighbors_1.shape[0],1)
+    neighbors_3 /= ((neighbors_3**2).sum(axis=1)**.5).reshape(neighbors_1.shape[0],1)
+    neighbors_4 /= ((neighbors_4**2).sum(axis=1)**.5).reshape(neighbors_1.shape[0],1)
     
     a_1_2 = ((neighbors_1*neighbors_2).sum(axis=1) + 1/3)**2
     a_1_3 = ((neighbors_1*neighbors_3).sum(axis=1) + 1/3)**2
