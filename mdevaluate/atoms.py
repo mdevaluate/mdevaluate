@@ -1,21 +1,25 @@
 from scipy.spatial.distance import cdist
 from .pbc import pbc_diff
-from .gromacs import atoms_from_grofile
+from .gromacs import _atoms_from_grofile, load_indices
 import numpy as np
 
 from scipy.spatial import KDTree
 
-class Atoms:
-    @classmethod
-    def from_grofile(cls, grofile):
-        return cls(atoms_from_grofile(grofile))
+def from_grofile(grofile, index_file=None):
+    if index_file is not None:
+        indices = load_indices(index_file)
 
-    def __init__(self, atoms):
-        self.residue_names, self.atom_names = atoms.T
+    return Atoms(_atoms_from_grofile(grofile), indices).subset()
+
+class Atoms:
+    def __init__(self, atoms, indices=None):
+        self.residue_ids, self.residue_names, self.atom_names = atoms.T
+        self.residue_ids = np.array([int(m) for m in self.residue_ids])
+        self.indices = indices
 
     def subset(self, *args, **kwargs):
         return AtomSubset(self).subset(*args, **kwargs)
-
+    
     def __len__(self):
         return len(self.atom_names)
 
@@ -29,13 +33,16 @@ class AtomSubset:
         self.selection = selection
         self.atoms = atoms
 
-    def subset(self, atom_name=None, residue_name=None, indices=None):
+    def subset(self, atom_name=None, residue_name=None, residue_id=None, indices=None):
         new_subset = self
         if atom_name is not None:
             new_subset &= AtomSubset(self.atoms, self.atoms.atom_names == atom_name)
 
         if residue_name is not None:
             new_subset &= AtomSubset(self.atoms, self.atoms.residue_names == residue_name)
+
+        if residue_id is not None:
+            new_subset &= AtomSubset(self.atoms, self.atoms.residue_ids == residue_id)
 
         if indices is not None:
             selection = np.zeros(len(self.selection), dtype='bool')
@@ -52,10 +59,17 @@ class AtomSubset:
         return self.atoms.residue_names[self.selection]
 
     @property
+    def residue_ids(self):
+        return self.atoms.residue_ids[self.selection]
+
+    @property
     def indices(self):
         return np.where(self.selection)
 
     def __getitem__(self, slice):
+        if isinstance(slice, str):
+            slice = self.atoms.indices[slice]
+            
         return self.subset(indices=self.indices[0].__getitem__(slice))
 
     def __and__(self, other):
@@ -70,14 +84,18 @@ class AtomSubset:
 
         return AtomSubset(self.atoms, selection)
 
-    def __neg__(self):
-        selection = not self.selection
-        if self.atoms != other.atoms: raise AtomMismatch
-
+    def __invert__(self):
+        selection = ~self.selection
         return AtomSubset(self.atoms, selection)
 
     def __repr__(self):
         return 'Subset of Atoms ({} of {})'.format(len(self.atoms.residue_names[self.selection]), len(self.atoms))
+    
+    @property
+    def description(self):
+        return "\n".join(["{}{} {}".format(resid, resname, atom_names) for resid, resname, atom_names in 
+            zip(self.residue_ids, self.residue_names, self.atom_names)
+        ])
 
 
 def center_of_mass(position, mass=None):
