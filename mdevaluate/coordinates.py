@@ -3,6 +3,7 @@ from .atoms import AtomSubset
 from .pbc import pbc_diff
 
 class Coordinates:
+    atom_filter = None
 
     def __init__(self, frames, atom_filter=None, atom_subset: AtomSubset=None):
         self.frames = frames

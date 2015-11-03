@@ -280,6 +280,9 @@ class XTCReader(BaseReader):
             return len(self._cache)
         raise UnknownLenError
 
+    def times_of_indices(self, indices):
+        return [self[i].time for i in indices]
+
 
 class TRRHeader:
     __slots__ = ['ir_size', 'e_size', 'box_size', 'vir_size', 'pres_size', 'top_size', 'sym_size', 'x_size', 'v_size',

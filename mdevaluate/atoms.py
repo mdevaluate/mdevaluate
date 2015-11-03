@@ -71,7 +71,7 @@ class AtomSubset:
         if isinstance(slice, str):
             indices = self.atoms.indices[slice]
             return self.atoms.subset()[indices] & self
-        
+
         return self.subset(indices=self.indices[0].__getitem__(slice))
 
     def __and__(self, other):

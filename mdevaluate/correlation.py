@@ -60,7 +60,7 @@ def isf(start, frame, q, box=None):
 
     :param q: length of scattering vector
     """
-    vec = pbc_diff(start, frame, box)
+    vec = pbc_diff(start, frame, box) # start-frame
     distance = (vec ** 2).sum(axis=1) ** .5
     return np.sinc(distance * q / np.pi).mean()
 

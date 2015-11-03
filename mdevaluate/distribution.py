@@ -50,10 +50,6 @@ def time_histogram(function, coordinates, bins, hist_range, pool=None):
                     hist_results[i] += histo
                 results = []
     return hist_results
-                
-                
-            
-        
 
 
 def radial_pair_distribution(atoms, bins, box=None):
