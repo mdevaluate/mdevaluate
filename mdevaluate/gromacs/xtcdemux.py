@@ -32,7 +32,7 @@ class LogWriter:
 
 def main():
     filename = sys.argv[1]
-    reader = XTCReader(filename)
+    reader = XTCReader(filename, load_cache_file=False)
     lin_freq = int(sys.argv[2])
     log_freq = int(sys.argv[3])
     log_restart = int(sys.argv[4])
