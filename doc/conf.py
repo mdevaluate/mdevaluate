@@ -36,6 +36,9 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.intersphinx',
+    #    'sphinx.ext.autosummary',
+    #    'sphinx.ext.inheritance_diagram',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -54,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'mdevaluate'
-copyright = '2015, mbartelm'
+#copyright = '2015, mbartelm'
 author = 'mbartelm'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -212,25 +215,25 @@ htmlhelp_basename = 'mdevaluatedoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
-# The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+    # The paper size ('letterpaper' or 'a4paper').
+    #'papersize': 'letterpaper',
 
-# The font size ('10pt', '11pt' or '12pt').
-#'pointsize': '10pt',
+    # The font size ('10pt', '11pt' or '12pt').
+    #'pointsize': '10pt',
 
-# Additional stuff for the LaTeX preamble.
-#'preamble': '',
+    # Additional stuff for the LaTeX preamble.
+    #'preamble': '',
 
-# Latex figure (float) alignment
-#'figure_align': 'htbp',
+    # Latex figure (float) alignment
+    #'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'mdevaluate.tex', 'mdevaluate Documentation',
-   'mbartelm', 'manual'),
+    (master_doc, 'mdevaluate.tex', 'mdevaluate Documentation',
+     'mbartelm', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -273,9 +276,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'mdevaluate', 'mdevaluate Documentation',
-   author, 'mdevaluate', 'One line description of project.',
-   'Miscellaneous'),
+    (master_doc, 'mdevaluate', 'mdevaluate Documentation',
+     author, 'mdevaluate', 'One line description of project.',
+     'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.
@@ -289,3 +292,6 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+intersphinx_mapping = {'python': ('http://docs.python.org/3/', None),
+                       'ipython': ('http://ipython.org/ipython-doc/dev/', None), }

@@ -1,5 +1,3 @@
-mdevaluate package
-==================
 
 Subpackages
 -----------
@@ -12,48 +10,48 @@ Subpackages
 Submodules
 ----------
 
-mdevaluate.atoms module
------------------------
+mdevaluate.atoms
+................
 
 .. automodule:: mdevaluate.atoms
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.coordinates module
------------------------------
+mdevaluate.coordinates
+......................
 
 .. automodule:: mdevaluate.coordinates
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.correlation module
------------------------------
+mdevaluate.correlation
+......................
 
 .. automodule:: mdevaluate.correlation
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.distribution module
-------------------------------
+mdevaluate.distribution
+.......................
 
 .. automodule:: mdevaluate.distribution
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.evaluation module
-----------------------------
+mdevaluate.evaluation
+.....................
 
 .. automodule:: mdevaluate.evaluation
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.functions module
----------------------------
+mdevaluate.functions
+....................
 
 .. automodule:: mdevaluate.functions
     :members:
@@ -61,15 +59,15 @@ mdevaluate.functions module
     :show-inheritance:
 
 mdevaluate.pbc module
----------------------
+.....................
 
 .. automodule:: mdevaluate.pbc
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.simulation module
-----------------------------
+mdevaluate.simulation
+.....................
 
 .. automodule:: mdevaluate.simulation
     :members:

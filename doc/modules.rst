@@ -1,5 +1,7 @@
-mdevaluate
-==========
+.. _reference-guide:
+
+Reference Guide
+===============
 
 .. toctree::
    :maxdepth: 4

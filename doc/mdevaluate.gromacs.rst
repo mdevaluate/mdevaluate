@@ -1,43 +1,43 @@
-mdevaluate.gromacs package
-==========================
+mdevaluate.gromacs
+==================
 
 Submodules
 ----------
 
-mdevaluate.gromacs.coordinates module
--------------------------------------
+mdevaluate.gromacs.coordinates
+..............................
 
 .. automodule:: mdevaluate.gromacs.coordinates
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.gromacs.logarithmic module
--------------------------------------
+mdevaluate.gromacs.logarithmic
+..............................
 
 .. automodule:: mdevaluate.gromacs.logarithmic
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.gromacs.reader module
---------------------------------
+mdevaluate.gromacs.reader
+.........................
 
 .. automodule:: mdevaluate.gromacs.reader
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.gromacs.xtcdemux module
-----------------------------------
+mdevaluate.gromacs.xtcdemux
+...........................
 
 .. automodule:: mdevaluate.gromacs.xtcdemux
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.gromacs.xtcindex module
-----------------------------------
+mdevaluate.gromacs.xtcindex
+...........................
 
 .. automodule:: mdevaluate.gromacs.xtcindex
     :members:
