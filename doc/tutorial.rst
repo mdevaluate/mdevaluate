@@ -34,8 +34,8 @@ which takes the path to a gro-file as argument and an optional gromacs index fil
 
   from mdevaluate import atoms
 
-  all_atoms = atoms.from_grofile('/data/niels/ionicliquids/systems/repro256/300K/NVT/PF6-BMIM_256_NVT_300K_30ns.gro',
-                                 index='/data/niels/ionicliquids/systems/repro256/300K/NVT/index.ndx')
+  all_atoms = atoms.from_grofile('/data/niels/tutorial/conf.gro',
+                                 index='/data/niels/tutorial/index.ndx')
 
 For many evaluations, a subset of the system must be selected.
 Atoms can be selected by name, residue or direct indices::
@@ -60,13 +60,13 @@ The trajectory is read from xtc-files or trr-files, usually the former are used.
 For effective data loading, these files have to be indexed **once** before they can be used with mdevaluate.
 This is done with the commandline tool ``index-xtc``::
 
-  $ index-xtc /data/niels/ionicliquids/systems/repro256/300K/NVT/traj_full_PF6-BMIM_256_NVT_300K_30ns.xtc
+  $ index-xtc /data/niels/tutorial/traj.xtc
 
 The trajectory is than read with an appropiate reader::
 
   from mdevaluate.gromacs.reader import XTCReader
 
-  trajectory = XTCReader('/data/niels/ionicliquids/systems/repro256/300K/NVT/traj_full_PF6-BMIM_256_NVT_300K_30ns.xtc')
+  trajectory = XTCReader('/data/niels/tutorial/traj.xtc')
 
 From this trajectory, single frames can be selected by index::
 
@@ -74,6 +74,9 @@ From this trajectory, single frames can be selected by index::
   print(frame.time)
   print(frame.box)
   print(frame.coordinates)
+
+.. warning::
+  To this time, even though implented, the usage of trr-files is not fully tested.
 
 Coordinates
 +++++++++++
@@ -114,7 +117,13 @@ Distributions
 
 Static properties like radial pair distributions can be calculated with the function :func:`mdevaluate.distribution.time_average`.
 This function calculates an average of the given function frame by frame over the whole trajectory.
-The function that is avaeraged should take exactly one arguent wich is the list of coordinates in the frame.
+
+.. Mathematically this is expressed by
+.. $$
+.. F(r) = \\frac{1}{N}\\sum_{i=0}^N f(R(t_i),r)
+.. $$
+
+The function that is averaged should take exactly one arguent wich is the list of coordinates in the frame.
 Therefore more complex functions have to be partially evaluated, which can be done with :func:`functools.partial`::
 
   from mdevaluate import distribution
@@ -129,13 +138,15 @@ Therefore more complex functions have to be partially evaluated, which can be do
 
 In the above example, the radial pair distribution between the centers of mass of the amim molecules is calculated.
 The parameter ``bins`` defines the distances for which the function is computed,
-the``box`` parameter defines the periodic boundary condtions that are considered in the calculation.
+the ``box`` parameter defines the periodic boundary condtions that are considered in the calculation.
 
 Correlations
 ++++++++++++
 
-Dynamic properties like mean square displacement are calculated with the function :func:`mdevaluate.correlation.shifted_correlation`.
-This function takes a correlation function and calculates the avaraged time series of it, by shifting a time intervall over the trajectory.
+Dynamic properties like mean square displacement are calculated with the
+function :func:`mdevaluate.correlation.shifted_correlation`.
+This function takes a correlation function and calculates the avaraged
+time series of it, by shifting a time intervall over the trajectory.
 
 ::
 
