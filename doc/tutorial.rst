@@ -76,7 +76,7 @@ From this trajectory, single frames can be selected by index::
   print(frame.coordinates)
 
 .. warning::
-  To this time, even though implented, the usage of trr-files is not fully tested.
+  To this time, even though implented, the usage of trr-files has not been fully tested.
 
 Coordinates
 +++++++++++
