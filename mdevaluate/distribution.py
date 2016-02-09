@@ -7,7 +7,7 @@ def rotate_axis(coords, axis):
     """
     Rotate a set of coordinates to a given axis.
     """
-    axis = np.array(axis) / norm(axis)
+    axis = np.array(axis) / np.linalg.norm(axis)
     zaxis = np.array([0, 0, 1])
     if (axis == zaxis).sum() == 3:
         return coords
@@ -191,3 +191,31 @@ def radial_density(atoms, bins, symmetry_axis=(0, 0, 1), origin=(0, 0, 0), heigh
     hist = np.histogram(radius, bins=bins)[0]
     volume = 2 * np.pi * (bins[1:]**2 - bins[:-1]**2) * height
     return hist / volume
+
+def shell_density(atoms, shell_radius, bins, pbc_box=None, shell_thickness=0.5, symmetry_axis=(0,0,1), origin=(0,0,0)):
+    """
+    Compute the density distribution on a cylindrical shell.
+
+    Args:
+        atoms: The coordinates of the atoms
+        shell_radius: Inner radius of the shell
+        bins: Histogramm bins, this has to be a two-dimensional list of bins: [angle, z]
+        pbc_box (opt.): Tuple of box lengths in x,y,z direction which is used to set atoms
+            back to the pbc-box
+        shell_thickness (opt.): Thicknes of the shell, default is 0.5
+        symmetry_axis (opt.): The symmtery axis of the pore, the coordinates will be
+            rotated such that this axis is the z-axis
+        origin (opt.): Origin of the pore, the coordinates will be moved such that this
+            is the new origin.
+
+    Returns:
+        Two-dimensional density distribution of the atoms in the defined shell.
+    """
+    if pbc_z is not None:
+        atoms[:] %= pbc_box
+    cartesian = rotate_axis(atoms-origin, symmetry_axis)
+    radius, theta = polar_coordinates(cartesian[:,0], cartesian[:,1])
+    shell_indices = (shell_radius <= radius)&(radius <= shell_radius + shell_thickness)
+    hist = numpy.histogram2d(theta[shell_indices], cartesian[shell_indices, 2], bins)[0]
+
+    return hist
