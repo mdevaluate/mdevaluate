@@ -1,52 +1,6 @@
 import numpy as np
-from .coordinates import pbc_diff
+from .coordinates import pbc_diff, rotate_axis, polar_coordinates, spherical_coordinates
 from .atoms import next_neighbors
-
-
-def rotate_axis(coords, axis):
-    """
-    Rotate a set of coordinates to a given axis.
-    """
-    axis = np.array(axis) / np.linalg.norm(axis)
-    zaxis = np.array([0, 0, 1])
-    if (axis == zaxis).sum() == 3:
-        return coords
-    rotation_axis = np.cross(axis, zaxis)
-    rotation_axis = rotation_axis / np.linalg.norm(rotation_axis)
-
-    theta = np.arccos(axis @ zaxis / np.linalg.norm(axis))
-
-    # return theta/pi, rotation_axis
-
-    ux, uy, uz = rotation_axis
-    cross_matrix = array([
-        [0, -uz, uy],
-        [uz,  0, -ux],
-        [-uy, ux, 0]
-    ])
-    rotation_matrix = np.cos(theta) * np.identity(len(axis)) \
-        + (1 - np.cos(theta)) * rotation_axis.reshape(-1, 1) @ rotation_axis.reshape(1, -1) \
-        + np.sin(theta) * cross_matrix
-
-    if len(coords.shape) == 2:
-        rotated = np.array([rotation_matrix @ xyz for xyz in coords])
-    else:
-        rotated = rotation_matrix @ coords
-    return rotated
-
-
-def polar_coordinates(x, y):
-    """Convert cartesian to polar coordinates."""
-    radius = np.sqrt(x**2 + y**2)
-    phi = np.arctan(y / x)
-    return radius, phi
-
-
-def spherical_coordinates(x, y, z):
-    """Convert cartesian to spherical coordinates."""
-    radius, phi = polar_coordinates(x,y)
-    theta = np.arccos(z / radius)
-    return radius, phi, theta
 
 
 def time_average(function, coordinates, pool=None, verbose=False):
