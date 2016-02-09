@@ -1,4 +1,5 @@
 import numpy as np
+from functools import wraps
 from .atoms import AtomSubset
 from .pbc import pbc_diff
 
@@ -38,7 +39,7 @@ def rotate_axis(coords, axis):
 def polar_coordinates(x, y):
     """Convert cartesian to polar coordinates."""
     radius = np.sqrt(x**2 + y**2)
-    phi = np.arctan(y / x)
+    phi = np.arctan2(y, x)
     return radius, phi
 
 
@@ -114,15 +115,19 @@ class CoordinatesMap:
         self.function = function
 
     def __getitem__(self, item):
-        return self.function(self.coordinates.__getitem__(item))
+        if isinstance(item, slice):
+            return (self.function(frame) for frame in self.coordinates[item])
+        else:
+            return self.function(self.coordinates.__getitem__(item))
 
     def __len__(self):
         return len(self.coordinates.frames)
 
 
-def map_coordinates(fn):
+def map_coordinates(func):
+    @wraps(func)
     def wrapped(coordinates, *args, **kwargs):
-        return CoordinatesMap(coordinates, lambda x: fn(x, *args, **kwargs))
+        return CoordinatesMap(coordinates, lambda x: func(x, *args, **kwargs))
     return wrapped
 
 
@@ -157,3 +162,23 @@ def centers_of_mass(c, masses):
     grouped_masses = c.reshape(number_of_new_coordinates, number_of_masses, number_of_dimensions)
 
     return np.average(grouped_masses, axis=1, weights=masses)
+
+
+@map_coordinates
+def pore_coordinates(coordinates, origin, sym_axis='z'):
+    """
+    Map coordinates of a pore simulation so the pore has cylindrical symmetry.
+
+    Args:
+        coordinates: Coordinates of the simulation
+        origin: Origiin of the pore which will be the coordinates origin after mapping
+        sym_axis (opt.): Symmtery axis of the pore, may be a literal direction
+            'x', 'y' or 'z' or an array of shape (3,)
+    """
+    if sym_axis in ('x', 'y', 'z'):
+        rot_axis = np.zeros(shape=(3,))
+        rot_axis[['x','y','z'].index(sym_axis)] = 1
+    else:
+        rot_axis = sym_axis
+
+    return rotate_axis(coordinates - origin, rot_axis)
