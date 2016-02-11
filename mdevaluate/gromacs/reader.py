@@ -18,7 +18,7 @@ def index_filename_for_xtc(xtcfile):
     and does not exist, the index file will be instead located in a subdirectory
     of ~/.xtcindex, of the current user.
 
-    The directory for local index files can be changed by setting the environment
+    The directory for user index files can be changed by setting the environment
     variable 'XTCINDEXDIR'.
 
     Example:
@@ -43,7 +43,7 @@ def index_filename_for_xtc(xtcfile):
     base = os.path.basename(xtcfile)
     filename = "." + base + ".xtcindex"
 
-    dir = os.path.dirname(xtcfile)
+    dir = os.path.abspath(os.path.dirname(xtcfile))
 
     if not os.path.exists(os.path.join(dir, filename)) and  not os.access(dir, os.W_OK):
         if 'XTCINDEXDIR' in os.environ:

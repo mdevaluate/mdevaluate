@@ -6,8 +6,20 @@ import logging
 
 
 def index_xtcfile(filename):
+    """
+    Write an index-file for a xtc-file.
 
+    The resulting file will have the same name, except for the new extension .xtcindex.
+    This function has to be called only once for every xtcfile.
+
+    Args:
+        filename (str): Name of the xtc-file
+
+    """
+    # TODO: Would it be possible, to index files on the fly?
+    #       How long does indexing take?
     index_filename = index_filename_for_xtc(filename)
+    print('Writing index file: {}'.format(index_filename))
     packer = Packer()
     xtc_stat = os.stat(filename)
     c_time = int(xtc_stat.st_ctime)
@@ -16,6 +28,7 @@ def index_xtcfile(filename):
 
     with XTCReader(filename, load_cache_file=False) as reader, open(index_filename, 'wb') as idx_fd:
         packer.pack_hyper(INDEX_MAGIC)
+        # TODO Maybe store only the hashsum of the file for identification?
         packer.pack_hyper(c_time)
         packer.pack_hyper(m_time)
         packer.pack_hyper(size)
