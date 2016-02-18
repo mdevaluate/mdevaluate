@@ -9,6 +9,9 @@ def trajectory_from_xtc(xtc_file, generate_index=True):
     index_file = gromacs.reader.index_filename_for_xtc(xtc_file)
     if not os.path.exists(index_file):
         print('No index file found, generating a new one. This may take a while...')
-        gromacs.xtcindex.index_xtcfile(xtc_file)
+        gromacs.index_xtcfile(xtc_file)
 
-    return gromacs.reader.XTCReader(xtc_file)
+    return gromacs.XTCReader(xtc_file)
+
+
+__all__ = ['atoms', 'coordinates']

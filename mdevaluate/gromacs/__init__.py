@@ -4,6 +4,7 @@ import itertools
 import re
 
 from .reader import XTCReader, TRRReader
+from .xtcindex import index_xtcfile
 
 def atoms_from_grofile(file):
     """ Deprecated. Use Atoms.from_grofile"""
@@ -44,7 +45,7 @@ def load_index(indexfile, index_names):
     """
     index_arrays = [[] for _ in index_names]
     index_array = []  # This array will contain all indices before the first index_group. Should be empty
-    
+
     with open(indexfile) as idx_file:
         for line in idx_file:
             if line.startswith("["):
@@ -56,7 +57,7 @@ def load_index(indexfile, index_names):
             else:
                 elements = line.strip().split('\t')
                 elements = [x.split(' ') for x in elements]
-                
+
                 elements = itertools.chain(*elements)  # make a flat iterator
                 elements = [x for x in elements if x != '']
                 index_array += [int(x) - 1 for x in elements]
