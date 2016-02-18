@@ -1,8 +1,10 @@
 import numpy as np
 from .coordinates import pbc_diff, rotate_axis, polar_coordinates, spherical_coordinates
 from .atoms import next_neighbors
+from .autosave import autosave_data
 
 
+@autosave_data(nargs=2)
 def time_average(function, coordinates, pool=None, verbose=False):
     """
     Compute the time average of a function.

@@ -1,4 +1,4 @@
-from . import atoms, coordinates, correlation, coordinates, distribution, evaluation, functions, gromacs, pbc, simulation
+from . import atoms, coordinates, correlation, coordinates, distribution, evaluation, functions, gromacs, pbc, simulation, autosave
 import os
 
 def trajectory_from_xtc(xtc_file, generate_index=True):
