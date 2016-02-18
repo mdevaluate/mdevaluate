@@ -6,8 +6,9 @@ from .meta import annotate
 
 
 def log_indices(first, last, num=100):
-    ls = np.logspace(0, np.log10(last-first+1), num=num)
-    return np.unique(np.int_(ls)-1+first)
+    # TODO: The function doesn't work for a first index not equal to 0
+    ls = np.logspace(0, np.log10(last - first + 1), num=num)
+    return np.unique(np.int_(ls) - 1 + first)
 
 
 def correlation(function, frames):
@@ -33,17 +34,47 @@ def shifted_correlation(function,
                         segments=10,
                         window=0.5,
                         correlation=correlation):
+    """
+    Calculate the time series for a correlation function
 
-    start_frames = np.int_(np.linspace(0, len(frames)*(1-window), num=segments, endpoint=False))
+    The times at which the correlation is calculated are determined automatically by the
+    function given as ``index_distribution``. The default is a logarithmic distribution.
+
+    Args:
+        function:   The function that should be correlated
+        frames:     The coordinates of the simulation data
+        index_distribution (opt.):
+                    A function that returns the indices for which the timeseries
+                    will be calculated
+        segments (int, opt.):
+                    The number of segments the time window will be shifted
+        window (number, opt.):
+                    The fraction of the simulation the time series will cover
+        correlation (function, opt.):
+                    The correlation function
+    Returns:
+        tuple:
+            A list of length N that contains the indices of the frames at which
+            the time series was calculated and a numpy array of shape (segments, N)
+            that holds the (non-avaraged) correlation data
+
+    Example:
+        Calculating the mean square displacement of a coordinates object named ``coords``:
+
+        >>> indices, data = shifted_correlation(msd, coords)
+    """
+    start_frames = np.int_(np.linspace(0, len(frames) * (1 - window), num=segments, endpoint=False))
     num_frames = int(len(frames) * window)
 
     idx = index_distribution(0, num_frames)
+
     def correlate(start_frame):
-        shifted_idx = idx+start_frame
+        shifted_idx = idx + start_frame
         return correlation(function, map(frames.__getitem__, shifted_idx))
 
     result = np.array([list(correlate(start_frame)) for start_frame in start_frames])
     return idx, result
+
 
 def msd(start, frame, box=None):
     """
@@ -60,7 +91,7 @@ def isf(start, frame, q, box=None):
 
     :param q: length of scattering vector
     """
-    vec = pbc_diff(start, frame, box) # start-frame
+    vec = pbc_diff(start, frame, box)  # start-frame
     distance = (vec ** 2).sum(axis=1) ** .5
     return np.sinc(distance * q / np.pi).mean()
 
@@ -78,9 +109,8 @@ def oaf(start, frame):
     vec_start_norm = np.norm(start)
     vec_frame_norm = np.norm(frame)
 
-    dot_prod = (start*frame).sum(axis=1) /(vec_start_norm, vec_frame_norm)
-    return (3*dot_prod**2 - 1).mean() / 2.0
-
+    dot_prod = (start * frame).sum(axis=1) / (vec_start_norm, vec_frame_norm)
+    return (3 * dot_prod**2 - 1).mean() / 2.0
 
 
 def oaf_indexed(index_from, index_to):
@@ -91,9 +121,8 @@ def oaf_indexed(index_from, index_to):
     :param index_to:
     :return:
     """
-    return lambda start, frame: oaf(start[index_to]-start[index_from],
-                                    frame[index_to]-frame[index_from])
-
+    return lambda start, frame: oaf(start[index_to] - start[index_from],
+                                    frame[index_to] - frame[index_from])
 
 
 @annotate.unfinished
@@ -101,6 +130,4 @@ def van_hove(start, end, bins, box=None):
     vec = pbc_diff(start, end, box)
     delta_r = ((vec)**2).sum(axis=1) ** .5
 
-    return 1/len(start) * np.histogram(delta_r, bins)[0]
-
-
+    return 1 / len(start) * np.histogram(delta_r, bins)[0]

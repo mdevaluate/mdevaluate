@@ -1,0 +1,84 @@
+
+Subpackages
+-----------
+
+.. toctree::
+
+    mdevaluate.gromacs
+    mdevaluate.meta
+
+Submodules
+----------
+
+mdevaluate.atoms
+................
+
+.. automodule:: mdevaluate.atoms
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+mdevaluate.coordinates
+......................
+
+.. automodule:: mdevaluate.coordinates
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+mdevaluate.correlation
+......................
+
+.. automodule:: mdevaluate.correlation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+mdevaluate.distribution
+.......................
+
+.. automodule:: mdevaluate.distribution
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+mdevaluate.evaluation
+.....................
+
+.. automodule:: mdevaluate.evaluation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+mdevaluate.functions
+....................
+
+.. automodule:: mdevaluate.functions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+mdevaluate.pbc module
+.....................
+
+.. automodule:: mdevaluate.pbc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+mdevaluate.simulation
+.....................
+
+.. automodule:: mdevaluate.simulation
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+Module contents
+---------------
+
+.. automodule:: mdevaluate
+    :members:
+    :undoc-members:
+    :show-inheritance:
