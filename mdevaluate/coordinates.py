@@ -1,5 +1,6 @@
 import numpy as np
 from functools import wraps
+from copy import copy
 from .atoms import AtomSubset
 from .pbc import pbc_diff
 from .utils import hash_of_iterable, merge_hashes
@@ -57,27 +58,33 @@ class Coordinates:
 
     Atoms may be selected by specifing a atom_subset or a atom_filter.
     """
-    atom_filter = None
 
     def __init__(self, frames, atom_filter=None, atom_subset: AtomSubset=None):
         self.frames = frames
+        self._slice = slice(0, len(self.frames))
         assert atom_filter is None or atom_subset is None, "Cannot use both: subset and filter"
 
         if atom_filter is not None:
             self.atom_filter = atom_filter
-
-        if atom_subset is not None:
+        elif atom_subset is not None:
             self.atom_filter = atom_subset.selection
             self.atom_subset = atom_subset
             self.atoms = atom_subset.atoms
+        else:
+            self.atom_filter = np.ones(shape=(len(frames[0].coordinates),), dtype=bool)
 
     def slice(self, slice):
         for i in range(len(self))[slice]:
             yield self[i]
 
+    def __iter__(self):
+        return self.slice(self._slice)
+
     def __getitem__(self, item):
         if isinstance(item, slice):
-            return self.slice(item)
+            sliced = copy(self)
+            sliced._slice = item
+            return sliced
         else:
             try:
                 if self.atom_filter is not None:
@@ -91,7 +98,7 @@ class Coordinates:
         return len(self.frames)
 
     def __hash__(self):
-        return merge_hashes(hash(self.frames), hash_of_iterable(self.atom_filter))
+        return merge_hashes(hash(self.frames), hash_of_iterable(self.atom_filter), hash(str(self._slice)))
 
 
 class MeanCoordinates(Coordinates):
@@ -118,9 +125,15 @@ class CoordinatesMap:
         self.coordinates = coordinates
         self.function = function
 
+    def __iter__(self):
+        for frame in self.coordinates:
+            yield self.function(frame)
+
     def __getitem__(self, item):
         if isinstance(item, slice):
-            return (self.function(frame) for frame in self.coordinates[item])
+            sliced = copy(self)
+            sliced.coordinates = self.coordinates[item]
+            return sliced
         else:
             return self.function(self.coordinates.__getitem__(item))
 
