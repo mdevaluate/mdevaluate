@@ -138,7 +138,8 @@ class AtomSubset:
         return "\n".join(["{}{} {}".format(resid, resname, atom_names) for resid, resname, atom_names in
                           zip(self.residue_ids, self.residue_names, self.atom_names)
                           ])
-
+    def __hash__(self):
+        return hash(self.description)
 
 def center_of_mass(position, mass=None):
     if mass is not None:

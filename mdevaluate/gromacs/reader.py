@@ -334,6 +334,9 @@ class XTCReader(BaseReader):
     def times_of_indices(self, indices):
         return [self[i].time for i in indices]
 
+    def __hash__(self):
+        return hash(''.join(str(x) for x in self._ca))
+
 
 class TRRHeader:
     __slots__ = ['ir_size', 'e_size', 'box_size', 'vir_size', 'pres_size', 'top_size', 'sym_size', 'x_size', 'v_size',
