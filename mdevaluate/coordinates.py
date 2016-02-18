@@ -3,7 +3,7 @@ from functools import wraps
 from copy import copy
 from .atoms import AtomSubset
 from .pbc import pbc_diff
-from .utils import hash_of_iterable, merge_hashes
+from .utils import hash_anything as _hash, merge_hashes
 
 
 def rotate_axis(coords, axis):
@@ -98,7 +98,7 @@ class Coordinates:
         return len(self.frames)
 
     def __hash__(self):
-        return merge_hashes(hash(self.frames), hash_of_iterable(self.atom_filter), hash(str(self._slice)))
+        return merge_hashes(_hash(self.frames), _hash(self.atom_filter), _hash(str(self._slice)))
 
 
 class MeanCoordinates(Coordinates):
@@ -141,7 +141,7 @@ class CoordinatesMap:
         return len(self.coordinates.frames)
 
     def __hash__(self):
-        return merge_hashes(hash(self.coordinates), hash(self.function.__code__))
+        return merge_hashes(_hash(self.coordinates), _hash(self.function.__code__))
 
 def map_coordinates(func):
     @wraps(func)

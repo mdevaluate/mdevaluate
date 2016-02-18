@@ -2,6 +2,7 @@ import xdrlib
 import io
 import os
 from .coordinates import decompress
+from ..utils import hash_anything
 from functools import partial
 import numpy as np
 
@@ -335,7 +336,7 @@ class XTCReader(BaseReader):
         return [self[i].time for i in indices]
 
     def __hash__(self):
-        return hash(''.join(str(x) for x in self._ca))
+        return hash_anything(self._cache)
 
 
 class TRRHeader:
