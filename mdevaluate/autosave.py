@@ -57,9 +57,9 @@ def autosave_data(nargs, kwargs_keys=None):
     def decorator_function(function):
         @functools.wraps(function)
         def autosave(*args, **kwargs):
+            description = kwargs.pop('description', '')
             if autosave_directory is not None:
                 relevant_args = args[:nargs]
-                description = kwargs.pop('description', '')
                 if kwargs_keys is not None:
                     relevant_args += [kwargs[key] for key in kwargs_keys]
 
