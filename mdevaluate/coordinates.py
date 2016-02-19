@@ -22,7 +22,7 @@ def rotate_axis(coords, axis):
     # return theta/pi, rotation_axis
 
     ux, uy, uz = rotation_axis
-    cross_matrix = array([
+    cross_matrix = np.array([
         [0, -uz, uy],
         [uz,  0, -ux],
         [-uy, ux, 0]
