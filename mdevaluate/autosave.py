@@ -22,9 +22,24 @@ def enable(dir, load_data=True):
     load_autosave_data = load_data
 
 
-def get_filename(function, checksum, description):
+def disable():
+    """
+    Disable autosave.
+    """
+    global autosave_directory, load_autosave_data
+    autosave_directory = None
+    load_autosave_data = False
+
+
+def get_filename(function, checksum, description, *args):
     """Get the autosave filename for a specific function call."""
-    filename = '{}_{}.{}.npy'.format(function.__name__, description, checksum)
+    func_desc = function.__name__
+    for arg in args:
+        if hasattr(arg, '__name__'):
+            func_desc += '_{}'.format(arg.__name__)
+        elif isinstance(arg, functools.partial):
+            func_desc += '_{}'.format(arg.func.__name__)
+    filename = '{}_{}.{}.npy'.format(func_desc, description, checksum)
     return os.path.join(autosave_directory, filename)
 
 
@@ -58,20 +73,26 @@ def autosave_data(nargs, kwargs_keys=None):
         @functools.wraps(function)
         def autosave(*args, **kwargs):
             description = kwargs.pop('description', '')
+            autoload = kwargs.pop('autoload', True) and load_autosave_data
+            #return_checksum = kwargs.pop('checksum', False)
             if autosave_directory is not None:
-                relevant_args = args[:nargs]
+                relevant_args = list(args[:nargs])
                 if kwargs_keys is not None:
-                    relevant_args += [kwargs[key] for key in kwargs_keys]
+                    for key in kwargs_keys:
+                        if key in kwargs:
+                            relevant_args.append(kwargs[key])
 
                 csum = checksum(function, *relevant_args)
-                filename = get_filename(function, csum, description)
-                if load_autosave_data and verify_file(filename, csum):
+                filename = get_filename(function, csum, description, *relevant_args)
+                if autoload and verify_file(filename, csum):
                     print('Loading result from file: {}'.format(filename))
                     result = np.load(filename)
                 else:
                     result = function(*args, **kwargs)
                     print('Saving result to file: {}'.format(filename))
                     np.save(filename, result)
+                #if return_checksum:
+                #    result = result, csum
             else:
                 result = function(*args, **kwargs)
 
