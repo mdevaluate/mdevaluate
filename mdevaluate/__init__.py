@@ -1,5 +1,8 @@
-from . import atoms, coordinates, correlation, coordinates, distribution, evaluation, functions, gromacs, pbc, simulation, autosave
 import os
+from glob import glob
+
+from . import atoms, coordinates, correlation, coordinates, distribution, evaluation, functions, gromacs, pbc, simulation, autosave
+
 
 def trajectory_from_xtc(xtc_file, generate_index=True):
     """
@@ -14,4 +17,14 @@ def trajectory_from_xtc(xtc_file, generate_index=True):
     return gromacs.XTCReader(xtc_file)
 
 
-__all__ = ['atoms', 'coordinates']
+def load_simulation(directory, xtc='*.xtc', gro='*.gro'):
+    """
+    Load a simulation from adirectory.
+    """
+    xtc_file, = glob(os.path.join(directory, xtc))
+    gro_file, = glob(os.path.join(directory, gro))
+    frames = trajectory_from_xtc(xtc_file)
+    atom_set = atoms.from_grofile(gro_file)
+    return coordinates.Coordinates(frames, atom_subset=atom_set)
+
+#__all__ = ['atoms', 'coordinates']
