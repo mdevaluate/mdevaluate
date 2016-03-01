@@ -4,8 +4,8 @@ from .atoms import next_neighbors
 from .autosave import autosave_data
 
 
-@autosave_data(nargs=2)
-def time_average(function, coordinates, pool=None, verbose=False):
+@autosave_data(nargs=2, kwargs_keys=('coordinates_b'))
+def time_average(function, coordinates, coordinates_b=None, pool=None, verbose=False):
     """
     Compute the time average of a function.
 
@@ -20,16 +20,20 @@ def time_average(function, coordinates, pool=None, verbose=False):
         verbose (bool, opt.): If
 
     """
-    coordinate_iter = iter(coordinates)
-    number_of_averages = 0
-    result = 0
-
     if pool is not None:
         _map = pool.imap
     else:
         _map = map
 
-    evaluated = _map(function, coordinate_iter)
+    number_of_averages = 0
+    result = 0
+
+    if coordinates_b is not None:
+        coordinate_iter = (iter(coordinates), iter(coordinates_b))
+    else:
+        coordinate_iter = (iter(coordinates),)
+
+    evaluated = _map(function, *coordinate_iter)
 
     for ev in evaluated:
         number_of_averages += 1
@@ -57,14 +61,14 @@ def time_histogram(function, coordinates, bins, hist_range, pool=None):
 
         if num % 100 == 0 and num > 0:
             print(num)
-            r = np.array(results).T
-            for i, row in enumerate(r):
-                histo, _ = np.histogram(row, bins=bins, range=hist_range)
-                if len(hist_results) <= i:
-                    hist_results.append(histo)
-                else:
-                    hist_results[i] += histo
-                results = []
+        r = np.array(results).T
+        for i, row in enumerate(r):
+            histo, _ = np.histogram(row, bins=bins, range=hist_range)
+            if len(hist_results) <= i:
+                hist_results.append(histo)
+            else:
+                hist_results[i] += histo
+            results = []
     return hist_results
 
 
@@ -122,6 +126,11 @@ def tetrahedral_order(atoms):
     return q
 
 
+def tetrahedral_order_distribution(atoms, bins):
+    Q = tetrahedral_order(atoms)
+    return np.histogram(Q, bins=bins)[0]
+
+
 def radial_density(atoms, bins, symmetry_axis=(0, 0, 1), origin=(0, 0, 0), height=1):
     """
     Calculate the radial density distribution.
@@ -149,7 +158,8 @@ def radial_density(atoms, bins, symmetry_axis=(0, 0, 1), origin=(0, 0, 0), heigh
     return hist / volume
 
 
-def shell_density(atoms, shell_radius, bins, shell_thickness=0.5, symmetry_axis=(0,0,1), origin=(0,0,0)):
+def shell_density(atoms, shell_radius, bins, shell_thickness=0.5,
+                  symmetry_axis=(0, 0, 1), origin=(0, 0, 0)):
     """
     Compute the density distribution on a cylindrical shell.
 
@@ -167,8 +177,30 @@ def shell_density(atoms, shell_radius, bins, shell_thickness=0.5, symmetry_axis=
         Two-dimensional density distribution of the atoms in the defined shell.
     """
     cartesian = rotate_axis(atoms-origin, symmetry_axis)
-    radius, theta = polar_coordinates(cartesian[:,0], cartesian[:,1])
-    shell_indices = (shell_radius <= radius)&(radius <= shell_radius + shell_thickness)
+    radius, theta = polar_coordinates(cartesian[:, 0], cartesian[:, 1])
+    shell_indices = (shell_radius <= radius) & (radius <= shell_radius + shell_thickness)
     hist = np.histogram2d(theta[shell_indices], cartesian[shell_indices, 2], bins)[0]
 
+    return hist
+
+
+def spatial_density(atoms, bins, weights=None):
+    """
+    Compute the spatial density distribution.
+    """
+    density, _ = np.histogramdd(atoms, bins=bins, weights=weights)
+    return density
+
+
+def mixing_ratio_distribution(atoms_a, atoms_b, bins_ratio, bins_density,
+                              weights_a=None, weights_b=None, weights_ratio=None):
+    """
+    Compute the distribution of the mixing ratio of two sets of atoms.
+    """
+
+    density_a, _ = time_average
+    density_b, _ = np.histogramdd(atoms_b, bins=bins_density, weights=weights_b)
+    mixing_ratio = density_a/(density_a + density_b)
+    good_inds = (density_a != 0) & (density_b != 0)
+    hist, _ = np.histogram(mixing_ratio[good_inds], bins=bins_ratio, weights=weights_ratio)
     return hist
