@@ -47,10 +47,34 @@ def polar_coordinates(x, y):
 
 def spherical_coordinates(x, y, z):
     """Convert cartesian to spherical coordinates."""
-    radius, phi = polar_coordinates(x,y)
+    radius, phi = polar_coordinates(x, y)
     theta = np.arccos(z / radius)
     return radius, phi, theta
 
+
+class CoordinateFrame(np.ndarray):
+    @property
+    def box(self):
+        return self.coordinates.frames[self.step].box
+
+    @property
+    def time(self):
+        return self.coordinates.frames[self.step].time
+
+    def __new__(subtype, shape, dtype=float, buffer=None, offset=0, strides=None, order=None,
+                coordinates=None, step=None, box=None):
+        obj = np.ndarray.__new__(subtype, shape, dtype, buffer, offset, strides)
+
+        obj.coordinates = coordinates
+        obj.step = step
+        return obj
+
+    def __array_finalize__(self, obj):
+        if obj is None:
+            return
+
+        self.coordinates = getattr(obj, 'coordinates', None)
+        self.step = getattr(obj, 'step', None)
 
 class Coordinates:
     """
@@ -88,9 +112,12 @@ class Coordinates:
         else:
             try:
                 if self.atom_filter is not None:
-                    return self.frames.__getitem__(item).coordinates[self.atom_filter]
+                    frame = self.frames[item].coordinates[self.atom_filter].view(CoordinateFrame)
                 else:
-                    return self.frames.__getitem__(item).coordinates
+                    frame = self.frames.__getitem__(item).coordinates.view(CoordinateFrame)
+                frame.coordinates = self
+                frame.step = item
+                return frame
             except EOFError:
                 raise IndexError
 
@@ -98,7 +125,11 @@ class Coordinates:
         return len(self.frames)
 
     def __hash__(self):
-        return merge_hashes(_hash(self.frames), _hash(self.atom_filter), _hash(str(self._slice)))
+        return merge_hashes(_hash(self.frames), _hash(self.atom_filter), _hash(self._slice))
+
+    def subset(self, **kwargs):
+        self.atom_subset = self.atom_subset.subset(**kwargs)
+        self.atom_filter = self.atom_subset.selection
 
 
 class MeanCoordinates(Coordinates):
@@ -123,7 +154,10 @@ class CoordinatesMap:
 
     def __init__(self, coordinates, function):
         self.coordinates = coordinates
+        self.frames = self.coordinates.frames
+        self.atom_subset = self.coordinates.atom_subset
         self.function = function
+
 
     def __iter__(self):
         for frame in self.coordinates:
@@ -135,13 +169,40 @@ class CoordinatesMap:
             sliced.coordinates = self.coordinates[item]
             return sliced
         else:
-            return self.function(self.coordinates.__getitem__(item))
+            frame = self.function(self.coordinates.__getitem__(item))
+            frame.coordinates = self
+            frame.step = item
+            return frame
 
     def __len__(self):
         return len(self.coordinates.frames)
 
     def __hash__(self):
         return merge_hashes(_hash(self.coordinates), _hash(self.function.__code__))
+
+    def subset(self, **kwargs):
+        self.coordinates.subset(**kwargs)
+
+
+class CoordinatesFilter:
+
+    @property
+    def atom_subset(self):
+        pass
+
+    def __init__(self, coordinates, atom_filter):
+        self.coordinates = coordinates
+        self.atom_filter = atom_filter
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            sliced = copy(self)
+            sliced.coordinates = self.coordinates[item]
+            return sliced
+        else:
+            frame = self.coordinates[item]
+            return frame[self.atom_filter]
+
 
 def map_coordinates(func):
     @wraps(func)
@@ -190,13 +251,13 @@ def pore_coordinates(coordinates, origin, sym_axis='z'):
 
     Args:
         coordinates: Coordinates of the simulation
-        origin: Origiin of the pore which will be the coordinates origin after mapping
+        origin: Origin of the pore which will be the coordinates origin after mapping
         sym_axis (opt.): Symmtery axis of the pore, may be a literal direction
             'x', 'y' or 'z' or an array of shape (3,)
     """
     if sym_axis in ('x', 'y', 'z'):
         rot_axis = np.zeros(shape=(3,))
-        rot_axis[['x','y','z'].index(sym_axis)] = 1
+        rot_axis[['x', 'y', 'z'].index(sym_axis)] = 1
     else:
         rot_axis = sym_axis
 
