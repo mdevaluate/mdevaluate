@@ -1,9 +1,19 @@
+import re
+
 from scipy.spatial.distance import cdist
 from .pbc import pbc_diff
 from .gromacs import _atoms_from_grofile, load_indices
 import numpy as np
 
 from scipy.spatial import KDTree
+
+
+def compare_regex(list, exp):
+    """
+    Compare a list of strings with a regular expression.
+    """
+    regex = re.compile(exp)
+    return np.array([regex.search(s) is not None for s in list])
 
 
 def from_grofile(grofile, index_file=None):
@@ -74,11 +84,10 @@ class AtomSubset:
     def subset(self, atom_name=None, residue_name=None, residue_id=None, indices=None):
         new_subset = self
         if atom_name is not None:
-            new_subset &= AtomSubset(self.atoms, self.atoms.atom_names == atom_name)
-
+            new_subset &= AtomSubset(self.atoms, compare_regex(self.atoms.atom_names, atom_name))
         if residue_name is not None:
-            new_subset &= AtomSubset(self.atoms, self.atoms.residue_names == residue_name)
-
+            new_subset &= AtomSubset(self.atoms, compare_regex(self.atoms.residue_names,
+                                                               residue_name))
         if residue_id is not None:
             new_subset &= AtomSubset(self.atoms, self.atoms.residue_ids == residue_id)
 
