@@ -70,7 +70,9 @@ def filon_fourier_transformation(time, correlation,
     if derivative is 'linear':
         derivative = (np.diff(correlation) / np.diff(time)).reshape(-1, 1)
     elif derivative is 'stencil':
-        time, derivative = five_point_stencil(time, correlation).reshape(-1, 1)
+        time, derivative = five_point_stencil(time, correlation)
+        time = time.reshape(-1, 1)
+        derivative = derivative.reshape(-1, 1)
     elif np.iterable(derivative) and len(time) is len(derivative):
         pass
     else:
