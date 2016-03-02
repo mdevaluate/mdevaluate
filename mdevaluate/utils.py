@@ -37,42 +37,54 @@ def five_point_stencil(xdata, ydata):
         )
 
 
-def filon_fourier_transformation(time, correlation, frequencies=None, interpolation='linear'):
+def filon_fourier_transformation(time, correlation,
+                                 frequencies=None, derivative='linear', imag=True,
+                                 ):
     """
     Fourier-transformation for slow varrying functions. The filon algorithmus is
     described in detail in [1].
 
     Args:
         time: List of times where the correlation function was sampled.
-        correlatio: Values of the correlation function.
+        correlation: Values of the correlation function.
         frequencies (opt.):
             List of frequencies where the fourier transformation will be calculated.
             If None the frequencies will be choosen based on the input times.
-        interpolation (opt.):
-            Interpolation algorithmus for the derivative of the correlation function.
-            Possible values are: 'linear' or 'stencil'.
+        derivative (opt.):
+            Approximation algorithmus for the derivative of the correlation function.
+            Possible values are: 'linear', 'stencil' or a list of derivatives.
+        imag (opt.): If imaginary part of the integral should be calculated.
 
     Reference:
         [1] T. Blochowicz, Broadband dielectric spectroscopy in neat and binary
         molecular glass formers, Ph.D. thesis, Uni-versität Bayreuth (2003)
     """
     if frequencies is None:
+        f_min = 1 / time[time > 0][-1]
+        f_max = 1 / time[time > 0][0]
         frequencies = 2*np.pi*np.logspace(
-            np.log10(1 / time[-1]), np.log10(1 / time[0]), num=100
+            np.log10(f_min), np.log10(f_max), num=100
         )
     frequencies.reshape(1, -1)
 
-    if interpolation is 'linear':
+    if derivative is 'linear':
         derivative = (np.diff(correlation) / np.diff(time)).reshape(-1, 1)
-    elif interpolation is 'stencil':
+    elif derivative is 'stencil':
         time, derivative = five_point_stencil(time, correlation).reshape(-1, 1)
+    elif np.iterable(derivative) and len(time) is len(derivative):
+        pass
     else:
         raise NotImplementedError(
-            'Invalid interpolation method {}. Possible values are "linear" or "stencil" '
+            'Invalid approximation method {}. Possible values are "linear", "stencil" or "direct".'
             )
     time = time.reshape(-1, 1)
 
     integral = (np.cos(frequencies * time[1:]) - np.cos(frequencies * time[:-1])) / frequencies**2
+    if imag:
+        integral = integral + 1j * (
+            correlation[0]/frequencies +
+            (np.sin(frequencies * time[1:]) - np.sin(frequencies * time[:-1])) / frequencies**2
+            )
     fourier = (derivative * integral).sum(axis=0) / derivative.size
 
     return frequencies.reshape(-1,), fourier
