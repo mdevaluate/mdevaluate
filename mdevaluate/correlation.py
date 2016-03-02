@@ -4,6 +4,7 @@ from functools import reduce
 from .coordinates import pbc_diff
 from .meta import annotate
 from .autosave import autosave_data
+from .utils import filon_fourier_transformation
 
 
 def log_indices(first, last, num=100):
@@ -154,3 +155,17 @@ def van_hove(start, end, bins, box=None):
     delta_r = ((vec)**2).sum(axis=1) ** .5
 
     return 1 / len(start) * np.histogram(delta_r, bins)[0]
+
+
+def susceptibility(time, correlation, **kwargs):
+    """
+    Calculate the susceptibility of a correlation function.
+
+    Args:
+        time: Timesteps of the correlation data
+        correlation: Value of the correlation function
+        **kwargs (opt.):
+            Additional keyword arguments will be passed to :func:`filon_fourier_transformation`.
+    """
+    frequencies, fourier = filon_fourier_transformation(time, correlation, imag=False, **kwargs)
+    return frequencies, frequencies * fourier
