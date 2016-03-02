@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.special import legendre
 from itertools import chain
 from functools import reduce
 from .coordinates import pbc_diff
@@ -104,19 +105,18 @@ def isf(start, frame, q, box=None):
 
 def rotational_autocorrelation(onset, frame, order=2):
     """
-    Compute the rotaional autocorrelation for the given vectors.
+    Compute the rotaional autocorrelation of the legendre polynamial for the given vectors.
 
     Args:
         onset, frame: CoordinateFrames of vectors
-        order (opt.): Order of the correlation.
+        order (opt.): Order of the legendre polynomial.
 
     Returns:
         Skalar value of the correltaion function.
     """
-    scalar_prod = (onset * frame).sum(axis=-1) ** order
-    if order is 2:
-        scalar_prod = (3*scalar_prod - 1)/2
-    return scalar_prod.mean()
+    scalar_prod = (onset * frame).sum(axis=-1)
+    poly = legendre(order)
+    return poly(scalar_prod).mean()
 
 
 @annotate.untested
