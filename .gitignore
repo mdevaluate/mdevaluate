@@ -8,3 +8,4 @@ logarithmic.*.so
 logarithmic.c
 coordinates.*.so
 coordinates.c
+.cache/
