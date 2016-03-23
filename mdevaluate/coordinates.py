@@ -1,5 +1,6 @@
 import numpy as np
 from functools import wraps
+from functools import partial
 from copy import copy
 from .atoms import AtomSubset
 from .pbc import pbc_diff
@@ -76,6 +77,7 @@ class CoordinateFrame(np.ndarray):
         self.coordinates = getattr(obj, 'coordinates', None)
         self.step = getattr(obj, 'step', None)
 
+
 class Coordinates:
     """
     Coordinates represent trajectory data, which is used for evaluation functions.
@@ -128,8 +130,7 @@ class Coordinates:
         return merge_hashes(_hash(self.frames), _hash(self.atom_filter), _hash(self._slice))
 
     def subset(self, **kwargs):
-        self.atom_subset = self.atom_subset.subset(**kwargs)
-        self.atom_filter = self.atom_subset.selection
+        return Coordinates(self.frames, atom_subset=self.atom_subset.subset(**kwargs))
 
 
 class MeanCoordinates(Coordinates):
@@ -158,16 +159,13 @@ class CoordinatesMap:
         self.atom_subset = self.coordinates.atom_subset
         self.function = function
 
-
     def __iter__(self):
         for frame in self.coordinates:
             yield self.function(frame)
 
     def __getitem__(self, item):
         if isinstance(item, slice):
-            sliced = copy(self)
-            sliced.coordinates = self.coordinates[item]
-            return sliced
+            return self.__class__(self.coordinates[item], self.function)
         else:
             frame = self.function(self.coordinates.__getitem__(item))
             frame.coordinates = self
@@ -178,10 +176,14 @@ class CoordinatesMap:
         return len(self.coordinates.frames)
 
     def __hash__(self):
-        return merge_hashes(_hash(self.coordinates), _hash(self.function.__code__))
+        if hasattr(self.function, '__code__'):
+            f_hash = _hash(self.function.__code__)
+        elif hasattr(self.function, 'func'):
+            f_hash = _hash(self.function.func.__code__)
+        return merge_hashes(_hash(self.coordinates), f_hash)
 
     def subset(self, **kwargs):
-        self.coordinates.subset(**kwargs)
+        return CoordinatesMap(self.coordinates.subset(**kwargs), self.function)
 
 
 class CoordinatesFilter:
@@ -207,7 +209,7 @@ class CoordinatesFilter:
 def map_coordinates(func):
     @wraps(func)
     def wrapped(coordinates, *args, **kwargs):
-        return CoordinatesMap(coordinates, lambda x: func(x, *args, **kwargs))
+        return CoordinatesMap(coordinates, partial(func, *args, **kwargs))
     return wrapped
 
 
