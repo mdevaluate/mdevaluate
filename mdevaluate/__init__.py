@@ -17,14 +17,19 @@ def trajectory_from_xtc(xtc_file, generate_index=True):
     return gromacs.XTCReader(xtc_file)
 
 
-def load_simulation(directory, xtc='*.xtc', gro='*.gro'):
+def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro'):
     """
     Load a simulation from adirectory.
     """
+    tpr_glob = glob(os.path.join(directory, tpr))
+    if tpr_glob is not None and len(tpr_glob) is 1:
+        print('Loading tpology: {}'.format(tpr_glob[0]))
+        atom_set = atoms.from_tprfile(tpr_glob[0])
+    else:
+        gro_file, = glob(os.path.join(directory, gro))
+        atom_set = atoms.from_grofile(gro_file)
     xtc_file, = glob(os.path.join(directory, xtc))
-    gro_file, = glob(os.path.join(directory, gro))
+    print('Loading trajectory: {}'.format(xtc_file))
     frames = trajectory_from_xtc(xtc_file)
-    atom_set = atoms.from_grofile(gro_file)
+    
     return coordinates.Coordinates(frames, atom_subset=atom_set)
-
-#__all__ = ['atoms', 'coordinates']
