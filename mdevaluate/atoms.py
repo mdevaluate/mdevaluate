@@ -7,6 +7,8 @@ import numpy as np
 
 from scipy.spatial import KDTree
 
+from pygmx import TPXReader
+
 
 def compare_regex(list, exp):
     """
@@ -35,6 +37,20 @@ def from_grofile(grofile, index_file=None):
     return Atoms(_atoms_from_grofile(grofile), indices).subset()
 
 
+def from_tprfile(tprfile):
+    """
+    Load atoms from a compiled tpr file.
+
+    Args:
+        tprile (str): Filename of the tpr file
+
+    Returns:
+        AtomSubset: All atoms in tprfile
+    """
+    tpr = TPXReader(tprfile)
+    return Atoms(tpr.atoms, charges=tpr.charge, masses=tpr.mass).subset()
+
+
 class Atoms:
     """
     Basic container class for atom information.
@@ -51,10 +67,12 @@ class Atoms:
 
     """
 
-    def __init__(self, atoms, indices=None):
+    def __init__(self, atoms, indices=None, masses=None, charges=None):
         self.residue_ids, self.residue_names, self.atom_names = atoms.T
         self.residue_ids = np.array([int(m) for m in self.residue_ids])
         self.indices = indices
+        self.masses = masses
+        self.charges = charges
 
     def subset(self, *args, **kwargs):
         """
