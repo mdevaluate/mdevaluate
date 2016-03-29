@@ -53,11 +53,11 @@ def get_filename(function, checksum, description, *args):
 
 def checksum(function, *args):
     """Get the checksum of a function call."""
-    hashes = [_hash(function.__code__)]
+    hashes = [_hash(function)]
     for arg in args:
-        if isinstance(arg, types.FunctionType):
-            hashes.append(_hash(arg.__code__))
-        elif isinstance(arg, functools.partial):
+        #if isinstance(arg, types.FunctionType):
+        #    hashes.append(_hash(arg.__code__))
+        if isinstance(arg, functools.partial):
             hashes.append(checksum(arg.func, *arg.args, *arg.keywords.values()))
         else:
             hashes.append(_hash(arg))
