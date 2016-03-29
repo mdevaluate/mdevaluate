@@ -18,10 +18,10 @@ def hash_anything(arg):
         try:
             return hash(arg)
         except TypeError:
-            bstr = bytes(arg)
+            bstr = str(arg).encode()
     m = hashlib.md5()
     m.update(bstr)
-    return m.digest()
+    return int.from_bytes(m.digest(), 'big')
 
 
 def merge_hashes(*hashes):
