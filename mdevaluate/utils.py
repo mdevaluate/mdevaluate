@@ -9,7 +9,12 @@ def hash_anything(arg):
     try:
         return hash(arg)
     except TypeError:
-        return hash(str(arg))
+        s = ''
+        if isinstance(arg, np.ndarray):
+            s = arg.tostring()
+        else:
+            s = str(arg)
+        return hash(s)
 
 
 def merge_hashes(*hashes):
@@ -54,6 +59,8 @@ def filon_fourier_transformation(time, correlation,
             Approximation algorithmus for the derivative of the correlation function.
             Possible values are: 'linear', 'stencil' or a list of derivatives.
         imag (opt.): If imaginary part of the integral should be calculated.
+
+
 
     Reference:
         [1] T. Blochowicz, Broadband dielectric spectroscopy in neat and binary
