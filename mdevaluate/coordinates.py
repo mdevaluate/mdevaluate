@@ -180,9 +180,9 @@ class CoordinatesMap:
 
     def __hash__(self):
         if hasattr(self.function, '__code__'):
-            f_hash = _hash(self.function.__code__)
+            f_hash = _hash(self.function)
         elif hasattr(self.function, 'func'):
-            f_hash = _hash(self.function.func.__code__)
+            f_hash = _hash(self.function.func)
         return merge_hashes(_hash(self.coordinates), f_hash)
 
     def subset(self, **kwargs):
