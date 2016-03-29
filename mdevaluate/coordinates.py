@@ -129,6 +129,9 @@ class Coordinates:
     def __hash__(self):
         return merge_hashes(_hash(self.frames), _hash(self.atom_filter), _hash(self._slice))
 
+    def __repr__(self):
+        return "Coordinates <{}>: {}".format(self.frames.filename, self.atom_subset)
+
     def subset(self, **kwargs):
         return Coordinates(self.frames, atom_subset=self.atom_subset.subset(**kwargs))
 
