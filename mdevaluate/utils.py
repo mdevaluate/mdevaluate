@@ -1,25 +1,32 @@
 """
 Collection of utility functions.
 """
+import hashlib
+
 import numpy as np
 
 
 def hash_anything(arg):
-    """Return a hash value for the current state of any argument."""
-    try:
-        return hash(arg)
-    except TypeError:
-        s = ''
-        if isinstance(arg, np.ndarray):
-            s = arg.tostring()
-        else:
-            s = str(arg)
-        return hash(s)
+    """Return a md5 hash value for the current state of any argument."""
+    if isinstance(arg, bytes):
+        bstr = arg
+    elif isinstance(arg, str):
+        bstr = arg.encode()
+    elif isinstance(arg, np.ndarray):
+        bstr = arg.tostring()
+    else:
+        try:
+            return hash(arg)
+        except TypeError:
+            bstr = bytes(arg)
+    m = hashlib.md5()
+    m.update(bstr)
+    return m.digest()
 
 
 def merge_hashes(*hashes):
     """Merge several hashes to one hash value."""
-    return hash(''.join([str(h) for h in hashes]))
+    return hash_anything(''.join([str(h) for h in hashes]))
 
 
 def five_point_stencil(xdata, ydata):
