@@ -12,6 +12,8 @@ def hash_anything(arg):
         bstr = arg
     elif isinstance(arg, str):
         bstr = arg.encode()
+    elif hasattr(arg, '__code__'):
+        bstr = arg.__code__.co_code
     elif isinstance(arg, np.ndarray):
         bstr = arg.tostring()
     else:
