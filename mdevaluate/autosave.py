@@ -5,9 +5,15 @@ from .utils import merge_hashes, hash_anything as _hash
 import functools
 autosave_directory = None
 load_autosave_data = False
+verbose_print = True
 
 
-def enable(dir, load_data=True):
+def notify(msg):
+    if verbose_print:
+        print(msg)
+
+
+def enable(dir, load_data=True, verbose=True):
     """
     Enable auto saving results of functions decorated with @autosave_data.
 
@@ -15,12 +21,13 @@ def enable(dir, load_data=True):
         dir: Directory where the data should be saved.
         load_data (opt., bool): If data should also be loaded.
     """
-    global autosave_directory, load_autosave_data
+    global autosave_directory, load_autosave_data, verbose_print
+    verbose_print = verbose
     absolute = os.path.abspath(dir)
     os.makedirs(absolute, exist_ok=True)
     autosave_directory = absolute
     load_autosave_data = load_data
-    print('Enabled autosave in directory: {}'.format(autosave_directory))
+    notify('Enabled autosave in directory: {}'.format(autosave_directory))
 
 
 def disable():
@@ -86,11 +93,11 @@ def autosave_data(nargs, kwargs_keys=None):
                 csum = checksum(function, *relevant_args)
                 filename = get_filename(function, csum, description, *relevant_args)
                 if autoload and verify_file(filename, csum):
-                    print('Loading result from file: {}'.format(filename))
+                    notify('Loading result from file: {}'.format(filename))
                     result = np.load(filename)
                 else:
                     result = function(*args, **kwargs)
-                    print('Saving result to file: {}'.format(filename))
+                    notify('Saving result to file: {}'.format(filename))
                     np.save(filename, result)
                 #if return_checksum:
                 #    result = result, csum
