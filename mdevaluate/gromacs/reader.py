@@ -154,6 +154,22 @@ class BaseReader:
     def __enter__(self, *_):
         return self
 
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state['fd']
+        del state['reader']
+        del state['xdr_reader']
+        state['filepos'] = self.get_position()
+        return state
+
+    def __setstate__(self, state):
+        filepos = state.pop('filepos')
+        self.__dict__.update(state)
+        self.fd = open(self.filename, 'rb')
+        self.reader = SubscriptableReader(self.fd)
+        self.xdr_reader = NumpyUnpacker(self.reader)
+        self.set_position(filepos)
+
     def get_position(self):
         return self.fd.tell()
 
@@ -336,12 +352,12 @@ class XTCReader(BaseReader):
         return [self[i].time for i in indices]
 
     def __hash__(self):
-        return merge_hashes(hash(self.filename), hash_anything(self._cache))
+        return merge_hashes(hash_anything(self.filename), hash_anything(self._cache))
 
 
 class TRRHeader:
     __slots__ = ['ir_size', 'e_size', 'box_size', 'vir_size', 'pres_size', 'top_size', 'sym_size', 'x_size', 'v_size',
-                 'f_size', 'n_atoms', 'step', 'nre', 't', 'λ', 'is_double']
+                 'f_size', 'n_atoms', 'step', 'nre', 't', '_lambda', 'is_double']
 
     @property
     def frame_size(self):
@@ -430,7 +446,7 @@ class TRRReader(BaseReader):
         self.xdr_reader = unpacker
 
         header.t = self._unpack_float(header.is_double)
-        header.λ = self._unpack_float(header.is_double)
+        header._lambda = self._unpack_float(header.is_double)
 
         return header
 
