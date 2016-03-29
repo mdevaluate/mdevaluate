@@ -3,6 +3,7 @@ import re
 from scipy.spatial.distance import cdist
 from .pbc import pbc_diff
 from .gromacs import _atoms_from_grofile, load_indices
+from .utils import hash_anything as _hash
 import numpy as np
 
 from scipy.spatial import KDTree
@@ -162,11 +163,13 @@ class AtomSubset:
 
     @property
     def description(self):
-        return "\n".join(["{}{} {}".format(resid, resname, atom_names) for resid, resname, atom_names in
-                          zip(self.residue_ids, self.residue_names, self.atom_names)
+        return "\n".join(["{}{} {}".format(resid, resname, atom_names)
+                          for resid, resname, atom_names in zip(self.residue_ids, self.residue_names, self.atom_names)
                           ])
+
     def __hash__(self):
-        return hash(self.description)
+        return _hash(self.description)
+
 
 def center_of_mass(position, mass=None):
     if mass is not None:
