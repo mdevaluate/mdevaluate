@@ -20,6 +20,7 @@ def enable(dir, load_data=True):
     os.makedirs(absolute, exist_ok=True)
     autosave_directory = absolute
     load_autosave_data = load_data
+    print('Enabled autosave in directory: {}'.format(autosave_directory))
 
 
 def disable():
