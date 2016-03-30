@@ -16,6 +16,48 @@ Contents:
 Loading simulation data
 -----------------------
 
+.. note::
+  The process of loading simulations has been simplified in the latest version of mdevaluate.
+  The previous way is described below for completeness and people with an older code base.
+
+Mdevaulate provides a convenient function :func:`mdevaluate.load_simulation`
+that loads a simulation more or less automatically.
+It takes a path as input and looks for all files it needs in this directory.
+
+For information about the topology either a `tpr` or `gro` a file is read,
+where the former is the preferred choice.
+Trajectory data will be read from a xtc file.
+If the directory contains more than one file of any type, the desired file
+has to be specified with the appropiate keyword argument.
+For details see :func:`mdevaluate.load_simulation`.
+
+The function will return a coordinates object, for the whoole system.
+A subset of the system may be obtained directly from the coordinates object by
+calling its :func:`mdevaluate.coordinates.Coordinates.subset` method.
+This function accepts the same input as :func:`mdevaluate.atoms.AtomSubset.subset`.
+A new feature that was introduced in the function is the possibility to chose
+atoms with regular expressions.
+
+Example
++++++++
+
+The following code loads the example trajectory and selects a subset of all CW atoms.
+Since there are two CW atoms in each molecule (CW1 and CW2) a regular expression is
+used when selecting the subset.
+
+::
+
+  import mdevaluate as md
+
+  trajectory = md.load_simulation('/data/niels/tutorial')
+  CW_atoms = trajectory.subset(atom_name='CW.')
+
+And that's it, now one can evaluate stuff for this subset of atoms.
+
+
+The deprecated way of loading simulations
+----------------------------------------
+
 For the evaluation, two data sets are necessary:
 
 1. Information about the atoms of the simulation, which is read from gro-files

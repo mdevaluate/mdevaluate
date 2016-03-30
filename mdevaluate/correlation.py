@@ -1,8 +1,11 @@
 import numpy as np
+from scipy.special import legendre
 from itertools import chain
 from functools import reduce
 from .coordinates import pbc_diff
 from .meta import annotate
+from .autosave import autosave_data
+from .utils import filon_fourier_transformation
 
 
 def log_indices(first, last, num=100):
@@ -28,12 +31,13 @@ def subensemble_correlation(selector_function, correlation_function=correlation)
     return c
 
 
-def shifted_correlation(function,
-                        frames,
-                        index_distribution=log_indices,
-                        segments=10,
-                        window=0.5,
-                        correlation=correlation):
+@autosave_data(nargs=2, kwargs_keys=(
+    'index_distribution', 'correlation', 'segments', 'window', 'average'
+))
+def shifted_correlation(function, frames,
+                        index_distribution=log_indices, correlation=correlation,
+                        segments=10, window=0.5,
+                        average=False,):
     """
     Calculate the time series for a correlation function
 
@@ -73,7 +77,10 @@ def shifted_correlation(function,
         return correlation(function, map(frames.__getitem__, shifted_idx))
 
     result = np.array([list(correlate(start_frame)) for start_frame in start_frames])
-    return idx, result
+    if average:
+        result = result.mean(axis=0)
+    times = np.array([frames[i].time for i in idx]) - frames[0].time
+    return times, result
 
 
 def msd(start, frame, box=None):
@@ -94,6 +101,22 @@ def isf(start, frame, q, box=None):
     vec = pbc_diff(start, frame, box)  # start-frame
     distance = (vec ** 2).sum(axis=1) ** .5
     return np.sinc(distance * q / np.pi).mean()
+
+
+def rotational_autocorrelation(onset, frame, order=2):
+    """
+    Compute the rotaional autocorrelation of the legendre polynamial for the given vectors.
+
+    Args:
+        onset, frame: CoordinateFrames of vectors
+        order (opt.): Order of the legendre polynomial.
+
+    Returns:
+        Skalar value of the correltaion function.
+    """
+    scalar_prod = (onset * frame).sum(axis=-1)
+    poly = legendre(order)
+    return poly(scalar_prod).mean()
 
 
 @annotate.untested
@@ -125,9 +148,24 @@ def oaf_indexed(index_from, index_to):
                                     frame[index_to] - frame[index_from])
 
 
+
 @annotate.unfinished
 def van_hove(start, end, bins, box=None):
     vec = pbc_diff(start, end, box)
     delta_r = ((vec)**2).sum(axis=1) ** .5
 
     return 1 / len(start) * np.histogram(delta_r, bins)[0]
+
+
+def susceptibility(time, correlation, **kwargs):
+    """
+    Calculate the susceptibility of a correlation function.
+
+    Args:
+        time: Timesteps of the correlation data
+        correlation: Value of the correlation function
+        **kwargs (opt.):
+            Additional keyword arguments will be passed to :func:`filon_fourier_transformation`.
+    """
+    frequencies, fourier = filon_fourier_transformation(time, correlation, imag=False, **kwargs)
+    return frequencies, frequencies * fourier

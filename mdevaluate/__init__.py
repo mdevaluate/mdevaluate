@@ -1,5 +1,8 @@
-from . import atoms, coordinates, correlation, coordinates, distribution, evaluation, functions, gromacs, pbc, simulation, autosave
 import os
+from glob import glob
+
+from . import atoms, coordinates, correlation, coordinates, distribution, functions, gromacs, pbc, simulation, autosave
+
 
 def trajectory_from_xtc(xtc_file, generate_index=True):
     """
@@ -14,4 +17,38 @@ def trajectory_from_xtc(xtc_file, generate_index=True):
     return gromacs.XTCReader(xtc_file)
 
 
-__all__ = ['atoms', 'coordinates']
+def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro'):
+    """
+    Load a simulation from a directory.
+
+    Args:
+        directory: The directory where the simulation is located
+        xtc (opt.): Descriptor of the trajectory file
+        tpr (opt.): Descriptors of the tpr file
+        gro (opt.): Descriptors of the gro file
+
+    Only one topology filename has to be specified, tpr files will be prefered.
+    The function uses :func:`trajectory_from_xtc` to load the xtc file, hence a new
+    xtc-index file will be generated if necessary.
+
+    The file descriptors can use unix style pathname expansion to define the filenames.
+    For example: 'out/nojump*.xtc' would match xtc files in a subdirectory `out` that
+    start with `nojump` and end with `.xtc`.
+
+    For more details see: https://docs.python.org/3/library/glob.html
+    """
+    tpr_glob = glob(os.path.join(directory, tpr))
+    gro_glob = glob(os.path.join(directory, gro))
+    if tpr_glob is not None and len(tpr_glob) is 1:
+        print('Loading topology: {}'.format(tpr_glob[0]))
+        atom_set = atoms.from_tprfile(tpr_glob[0])
+    elif gro_glob is not None and len(gro_glob) is 1:
+        print('Loading topology: {}'.format(gro_glob[0]))
+        atom_set = atoms.from_grofile(gro_glob[0])
+    else:
+        raise FileNotFoundError('Topology file could not be identified.')
+    xtc_file, = glob(os.path.join(directory, xtc))
+    print('Loading trajectory: {}'.format(xtc_file))
+    frames = trajectory_from_xtc(xtc_file)
+
+    return coordinates.Coordinates(frames, atom_subset=atom_set)

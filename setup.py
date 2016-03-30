@@ -21,7 +21,7 @@ setup(
               'mdevaluate.gromacs',
               'mdevaluate.meta'],
 
-    version='1.0.0',
+    version='1.1.0',
     requires=['numpy', 'scipy', 'Cython'],
     ext_modules=cythonize(extensions),
 
