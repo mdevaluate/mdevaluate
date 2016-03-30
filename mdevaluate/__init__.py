@@ -17,7 +17,7 @@ def trajectory_from_xtc(xtc_file, generate_index=True):
     return gromacs.XTCReader(xtc_file)
 
 
-def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro'):
+def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file=None):
     """
     Load a simulation from a directory.
 
@@ -26,6 +26,7 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro'):
         xtc (opt.): Descriptor of the trajectory file
         tpr (opt.): Descriptors of the tpr file
         gro (opt.): Descriptors of the gro file
+        index_file: Name of a index file that will be loaded with the gro file.
 
     Only one topology filename has to be specified, tpr files will be prefered.
     The function uses :func:`trajectory_from_xtc` to load the xtc file, hence a new
@@ -44,7 +45,7 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro'):
         atom_set = atoms.from_tprfile(tpr_glob[0])
     elif gro_glob is not None and len(gro_glob) is 1:
         print('Loading topology: {}'.format(gro_glob[0]))
-        atom_set = atoms.from_grofile(gro_glob[0])
+        atom_set = atoms.from_grofile(gro_glob[0], index_file)
     else:
         raise FileNotFoundError('Topology file could not be identified.')
     xtc_file, = glob(os.path.join(directory, xtc))
