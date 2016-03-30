@@ -19,7 +19,23 @@ def trajectory_from_xtc(xtc_file, generate_index=True):
 
 def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro'):
     """
-    Load a simulation from adirectory.
+    Load a simulation from a directory.
+
+    Args:
+        directory: The directory where the simulation is located
+        xtc (opt.): Descriptor of the trajectory file
+        tpr (opt.): Descriptors of the tpr file
+        gro (opt.): Descriptors of the gro file
+
+    Only one topology filename has to be specified, tpr files will be prefered.
+    The function uses :func:`trajectory_from_xtc` to load the xtc file, hence a new
+    xtc-index file will be generated if necessary.
+
+    The file descriptors can use unix style pathname expansion to define the filenames.
+    For example: 'out/nojump*.xtc' would match xtc files in a subdirectory `out` that
+    start with `nojump` and end with `.xtc`.
+
+    For more details see: https://docs.python.org/3/library/glob.html
     """
     tpr_glob = glob(os.path.join(directory, tpr))
     gro_glob = glob(os.path.join(directory, gro))
