@@ -2,8 +2,21 @@
 Collection of utility functions.
 """
 import hashlib
+import functools
 
 import numpy as np
+
+
+def hash_partial(partial):
+    print('Hashing partial.')
+    hashes = [hash_anything(partial.func)]
+    for arg in partial.args:
+        hashes.append(hash_anything(arg))
+    keys = list(partial.keywords.keys())
+    keys.sort()
+    for key in keys:
+        hashes.append(hash_anything(partial.keywords[key]))
+    return merge_hashes(*hashes)
 
 
 def hash_anything(arg):
@@ -14,8 +27,10 @@ def hash_anything(arg):
         bstr = arg.encode()
     elif hasattr(arg, '__code__'):
         bstr = arg.__code__.co_code
+    elif isinstance(arg, functools.partial):
+        return hash_partial(arg)
     elif isinstance(arg, np.ndarray):
-        bstr = arg.tostring()
+        bstr = arg.tobytes()
     else:
         try:
             return hash(arg)

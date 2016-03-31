@@ -55,12 +55,7 @@ def checksum(function, *args):
     """Get the checksum of a function call."""
     hashes = [_hash(function)]
     for arg in args:
-        #if isinstance(arg, types.FunctionType):
-        #    hashes.append(_hash(arg.__code__))
-        if isinstance(arg, functools.partial):
-            hashes.append(checksum(arg.func, *arg.args, *arg.keywords.values()))
-        else:
-            hashes.append(_hash(arg))
+        hashes.append(_hash(arg))
     return merge_hashes(*hashes)
 
 
