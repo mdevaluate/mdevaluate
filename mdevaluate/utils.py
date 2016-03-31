@@ -8,7 +8,6 @@ import numpy as np
 
 
 def hash_partial(partial):
-    print('Hashing partial.')
     hashes = [hash_anything(partial.func)]
     for arg in partial.args:
         hashes.append(hash_anything(arg))
