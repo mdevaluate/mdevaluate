@@ -83,9 +83,7 @@ def filon_fourier_transformation(time, correlation,
             Possible values are: 'linear', 'stencil' or a list of derivatives.
         imag (opt.): If imaginary part of the integral should be calculated.
 
-
-
-    Reference:
+    References:
         [1] T. Blochowicz, Broadband dielectric spectroscopy in neat and binary
         molecular glass formers, Ph.D. thesis, Uni-versität Bayreuth (2003)
     """
@@ -117,6 +115,6 @@ def filon_fourier_transformation(time, correlation,
             correlation[0]/frequencies +
             (np.sin(frequencies * time[1:]) - np.sin(frequencies * time[:-1])) / frequencies**2
             )
-    fourier = (derivative * integral).sum(axis=0) / derivative.size
+    fourier = (derivative * integral).sum(axis=0)
 
     return frequencies.reshape(-1,), fourier
