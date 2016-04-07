@@ -179,11 +179,11 @@ class CoordinatesMap:
         return len(self.coordinates.frames)
 
     def __hash__(self):
-        if hasattr(self.function, '__code__'):
-            f_hash = _hash(self.function)
-        elif hasattr(self.function, 'func'):
-            f_hash = _hash(self.function.func)
-        return merge_hashes(_hash(self.coordinates), f_hash)
+        #if hasattr(self.function, '__code__'):
+        #    f_hash = _hash(self.function)
+        #elif hasattr(self.function, 'func'):
+        #    f_hash = _hash(self.function.func)
+        return merge_hashes(_hash(self.coordinates), _hash(self.function))
 
     def subset(self, **kwargs):
         return CoordinatesMap(self.coordinates.subset(**kwargs), self.function)
