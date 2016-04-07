@@ -16,7 +16,7 @@ def compare_regex(list, exp):
     Compare a list of strings with a regular expression.
     """
     regex = re.compile(exp)
-    return np.array([regex.search(s) is not None for s in list])
+    return np.array([regex.match(s) is not None for s in list])
 
 
 def from_grofile(grofile, index_file=None):
