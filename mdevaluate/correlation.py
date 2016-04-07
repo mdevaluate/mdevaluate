@@ -9,7 +9,6 @@ from .utils import filon_fourier_transformation
 
 
 def log_indices(first, last, num=100):
-    # TODO: The function doesn't work for a first index not equal to 0
     ls = np.logspace(0, np.log10(last - first + 1), num=num)
     return np.unique(np.int_(ls) - 1 + first)
 
@@ -146,7 +145,6 @@ def oaf_indexed(index_from, index_to):
     """
     return lambda start, frame: oaf(start[index_to] - start[index_from],
                                     frame[index_to] - frame[index_from])
-
 
 
 @annotate.unfinished
