@@ -17,16 +17,17 @@ def trajectory_from_xtc(xtc_file, generate_index=True):
     return gromacs.XTCReader(xtc_file)
 
 
-def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file=None):
+def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file=None, caching=False):
     """
     Load a simulation from a directory.
 
     Args:
-        directory: The directory where the simulation is located
+        directory:  The directory where the simulation is located
         xtc (opt.): Descriptor of the trajectory file
         tpr (opt.): Descriptors of the tpr file
         gro (opt.): Descriptors of the gro file
-        index_file: Name of a index file that will be loaded with the gro file.
+        index_file: Name of a index file that will be loaded with the gro file
+        caching:    If caching should be activated in the Coordinates
 
     Only one topology filename has to be specified, tpr files will be prefered.
     The function uses :func:`trajectory_from_xtc` to load the xtc file, hence a new
@@ -52,4 +53,4 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
     print('Loading trajectory: {}'.format(xtc_file))
     frames = trajectory_from_xtc(xtc_file)
 
-    return coordinates.Coordinates(frames, atom_subset=atom_set)
+    return coordinates.Coordinates(frames, atom_subset=atom_set, caching=caching)

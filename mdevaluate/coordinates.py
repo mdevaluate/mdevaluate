@@ -1,6 +1,6 @@
 import numpy as np
 from functools import wraps
-from functools import partial
+from functools import partial, lru_cache
 from copy import copy
 from .atoms import AtomSubset
 from .pbc import pbc_diff
@@ -85,7 +85,17 @@ class Coordinates:
     Atoms may be selected by specifing a atom_subset or a atom_filter.
     """
 
-    def __init__(self, frames, atom_filter=None, atom_subset: AtomSubset=None):
+    def __init__(self, frames, atom_filter=None, atom_subset: AtomSubset=None, caching=False):
+        """
+        Args:
+            frames: The trajectory reader
+            atom_filter (opt.): A mask which selects a subset of the system
+            atom_subset (opt.): A AtomSubset that selects a subset of the system
+            caching (opt.):
+                If frames should be cached. If no bool is given, the value will be used
+                as the maxsize of lru_cache, which can be a number or None. Use None to
+                never discard any frame.
+        """
         self.frames = frames
         self._slice = slice(0, len(self.frames))
         assert atom_filter is None or atom_subset is None, "Cannot use both: subset and filter"
@@ -99,9 +109,26 @@ class Coordinates:
         else:
             self.atom_filter = np.ones(shape=(len(frames[0].coordinates),), dtype=bool)
 
+        if isinstance(caching, bool):
+            self.get_frame = lru_cache(maxsize=128)(self.get_frame)
+        else:
+            self.get_frame = lru_cache(maxsize=caching)(self.get_frame)
+
     def slice(self, slice):
         for i in range(len(self))[slice]:
             yield self[i]
+
+    def get_frame(self, fnr):
+        try:
+            if self.atom_filter is not None:
+                frame = self.frames[fnr].coordinates[self.atom_filter].view(CoordinateFrame)
+            else:
+                frame = self.frames.__getitem__(fnr).coordinates.view(CoordinateFrame)
+            frame.coordinates = self
+            frame.step = fnr
+            return frame
+        except EOFError:
+            raise IndexError
 
     def __iter__(self):
         return self.slice(self._slice)
@@ -112,16 +139,7 @@ class Coordinates:
             sliced._slice = item
             return sliced
         else:
-            try:
-                if self.atom_filter is not None:
-                    frame = self.frames[item].coordinates[self.atom_filter].view(CoordinateFrame)
-                else:
-                    frame = self.frames.__getitem__(item).coordinates.view(CoordinateFrame)
-                frame.coordinates = self
-                frame.step = item
-                return frame
-            except EOFError:
-                raise IndexError
+            return self.get_frame(item)
 
     def __len__(self):
         return len(self.frames)
@@ -179,10 +197,6 @@ class CoordinatesMap:
         return len(self.coordinates.frames)
 
     def __hash__(self):
-        #if hasattr(self.function, '__code__'):
-        #    f_hash = _hash(self.function)
-        #elif hasattr(self.function, 'func'):
-        #    f_hash = _hash(self.function.func)
         return merge_hashes(_hash(self.coordinates), _hash(self.function))
 
     def subset(self, **kwargs):
