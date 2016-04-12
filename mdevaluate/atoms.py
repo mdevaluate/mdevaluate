@@ -101,6 +101,16 @@ class AtomSubset:
         self.atoms = atoms
 
     def subset(self, atom_name=None, residue_name=None, residue_id=None, indices=None):
+        """
+        Return a subset of the system. The selection is specified by one or more of
+        the keyworss below. Names are matched as a regular expression with `re.match`.
+
+        Args:
+            atom_name:      Specification of the atom name
+            residue_name:   Specification of the resiude name
+            residue_id:     Residue ID
+            indices:        List of atom indices
+        """
         new_subset = self
         if atom_name is not None:
             new_subset &= AtomSubset(self.atoms, compare_regex(self.atoms.atom_names, atom_name))

@@ -119,6 +119,7 @@ class Coordinates:
             yield self[i]
 
     def get_frame(self, fnr):
+        """Returns the `fnr`th frame."""
         try:
             if self.atom_filter is not None:
                 frame = self.frames[fnr].coordinates[self.atom_filter].view(CoordinateFrame)
@@ -129,6 +130,11 @@ class Coordinates:
             return frame
         except EOFError:
             raise IndexError
+
+    def clear_cache(self):
+        """Clears the frame cache, if it is enabled."""
+        if hasattr(self.get_frame, 'clear_cache'):
+            self.get_frame.clear_cache()
 
     def __iter__(self):
         return self.slice(self._slice)
@@ -150,6 +156,7 @@ class Coordinates:
     def __repr__(self):
         return "Coordinates <{}>: {}".format(self.frames.filename, self.atom_subset)
 
+    @wraps(AtomSubset.subset)
     def subset(self, **kwargs):
         return Coordinates(self.frames, atom_subset=self.atom_subset.subset(**kwargs))
 
@@ -199,6 +206,7 @@ class CoordinatesMap:
     def __hash__(self):
         return merge_hashes(_hash(self.coordinates), _hash(self.function))
 
+    @wraps(Coordinates.subset)
     def subset(self, **kwargs):
         return CoordinatesMap(self.coordinates.subset(**kwargs), self.function)
 
