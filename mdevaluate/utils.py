@@ -59,9 +59,9 @@ def five_point_stencil(xdata, ydata):
 
     See: https://en.wikipedia.org/wiki/Five-point_stencil
     """
-    return xdata[1:-1], (
-        (-ydata[3:] + 8 * ydata[2:-1] - 8 * ydata[1:-2] + ydata[:-3]) /
-        (12 * (xdata[2:-1] - xdata[1:-2]))
+    return xdata[2:-2], (
+        (-ydata[4:] + 8 * ydata[3:-1] - 8 * ydata[1:-3] + ydata[:-4]) /
+        (3 * (xdata[4:] - xdata[:-4]))
         )
 
 
