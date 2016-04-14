@@ -102,10 +102,10 @@ def filon_fourier_transformation(time, correlation,
         time = time.reshape(-1, 1)
         derivative = derivative.reshape(-1, 1)
     elif np.iterable(derivative) and len(time) is len(derivative):
-        pass
+        derivative.reshape(-1, 1)
     else:
         raise NotImplementedError(
-            'Invalid approximation method {}. Possible values are "linear", "stencil" or "direct".'
+            'Invalid approximation method {}. Possible values are "linear", "stencil" or a list of values.'
             )
     time = time.reshape(-1, 1)
 
