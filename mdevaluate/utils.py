@@ -8,6 +8,10 @@ import numpy as np
 
 
 def hash_partial(partial):
+    """
+    Hashes `functools.partail` objects by their function and arguments.
+    Keyword argmuents are sorted by name, to preserve order between python sessions.
+    """
     hashes = [hash_anything(partial.func)]
     for arg in partial.args:
         hashes.append(hash_anything(arg))
@@ -57,6 +61,9 @@ def five_point_stencil(xdata, ydata):
     Returns:
         Values where the derivative was estimated and the value of the derivative at these points.
 
+    This algorithm is only valid for values on a regular grid, for unevenly distributed
+    data it is only an approximation, albeit a quite good one.
+
     See: https://en.wikipedia.org/wiki/Five-point_stencil
     """
     return xdata[2:-2], (
@@ -70,7 +77,7 @@ def filon_fourier_transformation(time, correlation,
                                  ):
     """
     Fourier-transformation for slow varrying functions. The filon algorithmus is
-    described in detail in [1].
+    described in detail in ref [1], ch. 3.2.3.
 
     Args:
         time: List of times where the correlation function was sampled.
@@ -83,13 +90,19 @@ def filon_fourier_transformation(time, correlation,
             Possible values are: 'linear', 'stencil' or a list of derivatives.
         imag (opt.): If imaginary part of the integral should be calculated.
 
+    If frequencies are not explicitly given they will be evenly placed on a log scale
+    in the interval [1/tmax, 0.1/tmin] where tmin and tmax are the smallest respectively
+    the biggest time (greater than 0) of the provided times. The frequencies are cut off
+    at high values by one decade, since the fourier transformation deviates quite strongly
+    in this regime.
+
     References:
         [1] T. Blochowicz, Broadband dielectric spectroscopy in neat and binary
         molecular glass formers, Ph.D. thesis, Uni-versität Bayreuth (2003)
     """
     if frequencies is None:
         f_min = 1 / time[time > 0][-1]
-        f_max = 1 / time[time > 0][0]
+        f_max = 0.1 / time[time > 0][0]
         frequencies = 2*np.pi*np.logspace(
             np.log10(f_min), np.log10(f_max), num=100
         )
@@ -98,8 +111,8 @@ def filon_fourier_transformation(time, correlation,
     if derivative is 'linear':
         derivative = (np.diff(correlation) / np.diff(time)).reshape(-1, 1)
     elif derivative is 'stencil':
-        time, derivative = five_point_stencil(time, correlation)
-        time = time.reshape(-1, 1)
+        _, derivative = five_point_stencil(time, correlation)
+        time = ((time[2:-1]*time[1:-2])**.5).reshape(-1, 1)
         derivative = derivative.reshape(-1, 1)
     elif np.iterable(derivative) and len(time) is len(derivative):
         derivative.reshape(-1, 1)
