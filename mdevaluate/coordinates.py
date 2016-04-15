@@ -331,11 +331,11 @@ def vectors(coordinates, atoms_a, atoms_b, normed=False):
         ])
     """
     coords_a = coordinates[atoms_a]
-    if coords_a.shape > 2:
+    if len(coords_a.shape) > 2:
         coords_a = coords_a.mean(axis=0)
     coords_b = coordinates[atoms_b]
-    if coords_b.shape > 2:
+    if len(coords_b.shape) > 2:
         coords_b = coords_b.mean(axis=0)
     vectors = coords_a - coords_b
-    norm = np.vector_lengths(vectors, axis=-1).reshape(-1, 1) if normed else 1
+    norm = np.linalg.norm(vectors, axis=-1).reshape(-1, 1) if normed else 1
     return vectors / norm
