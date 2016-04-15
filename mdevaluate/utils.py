@@ -131,3 +131,22 @@ def filon_fourier_transformation(time, correlation,
     fourier = (derivative * integral).sum(axis=0)
 
     return frequencies.reshape(-1,), fourier
+
+
+def mask2indices(mask):
+    """
+    Return the selected indices of an array mask.
+    If the mask is two-dimensional, the indices will be calculated for the second axis.
+
+    Example:
+        >>> mask2indices([True, False, True, False])
+        array([0, 2])
+        >>> mask2indices([[True, True, False], [True, False, True]])
+        array([[0, 1], [0, 2]])
+    """
+    mask = np.array(mask)
+    if len(mask.shape) == 1:
+        indices = np.arange(len(mask))[mask]
+    else:
+        indices = np.array([np.arange(len(m))[m] for m in mask])
+    return indices
