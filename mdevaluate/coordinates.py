@@ -4,7 +4,7 @@ from functools import partial, lru_cache
 from copy import copy
 from .atoms import AtomSubset
 from .pbc import pbc_diff
-from .utils import hash_anything as _hash, merge_hashes
+from .utils import hash_anything as _hash, merge_hashes, mask2indices
 
 
 def rotate_axis(coords, axis):
@@ -51,6 +51,16 @@ def spherical_coordinates(x, y, z):
     radius, phi = polar_coordinates(x, y)
     theta = np.arccos(z / radius)
     return radius, phi, theta
+
+
+def radial_selector(frame, coordinates, rmin, rmax):
+    """
+    Return a selection of all atoms with radius in the interval [rmin, rmax].
+    """
+    crd = coordinates[frame.step]
+    rad, _ = polar_coordinates(crd[:, 0], crd[:, 1])
+    selector = (rad >= rmin) & (rad <= rmax)
+    return mask2indices(selector)
 
 
 class CoordinateFrame(np.ndarray):
