@@ -289,3 +289,43 @@ def pore_coordinates(coordinates, origin, sym_axis='z'):
         rot_axis = sym_axis
 
     return rotate_axis(coordinates - origin, rot_axis)
+
+
+@map_coordinates
+def vectors(coordinates, atoms_a, atoms_b, normed=False):
+    """
+    Compute the vectors between the atoms of two subsets.
+
+    Args:
+        coordinates: The Coordinates object the atoms will be taken from
+        atoms_a: Mask or indices of the first atom subset
+        atoms_b: Mask or indices of the second atom subset
+        normed (opt.): If the vectors should be normed
+
+    The defintion of atoms_a/b can be any possible subript of a numpy array.
+    They can, for example, be given as a masking array of bool values with the
+    same length as the frames of the coordinates. Or they can be a list of
+    indices selecting the atoms of these indices from each frame.
+
+    It is possible to compute the mean of several atoms before calculating the vectors,
+    by using a two-dimensional list of indices. The following code computes the vectors
+    between atoms 0, 3, 6 and the mean coordinate of atoms 1, 4, 7 and 2, 5, 8::
+
+        >>> inds_a = [0, 3, 6]
+        >>> inds_b = [[1, 4, 7], [2, 5, 8]]
+        >>> vectors(coords, inds_a, inds_b)
+        array([
+            coords[0] - (coords[1] + coords[2])/2,
+            coords[3] - (coords[4] + coords[5])/2,
+            coords[6] - (coords[7] + coords[8])/2,
+        ])
+    """
+    coords_a = coordinates[atoms_a]
+    if coords_a.shape > 2:
+        coords_a = coords_a.mean(axis=0)
+    coords_b = coordinates[atoms_b]
+    if coords_b.shape > 2:
+        coords_b = coords_b.mean(axis=0)
+    vectors = coords_a - coords_b
+    norm = np.vector_lengths(vectors, axis=-1).reshape(-1, 1) if normed else 1
+    return vectors / norm
