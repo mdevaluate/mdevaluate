@@ -6,6 +6,8 @@ import functools
 
 import numpy as np
 
+from scipy.interpolate import interp1d
+
 
 def hash_partial(partial):
     """
@@ -150,3 +152,35 @@ def mask2indices(mask):
     else:
         indices = np.array([np.arange(len(m))[m] for m in mask])
     return indices
+
+
+def superpose(x1, y1, x2, y2, N=100, damping=1.0):
+    if x2[0] == 0:
+        x2 = x2[1:]
+        y2 = y2[1:]
+
+    reg1 = x1 < x2[0]
+    reg2 = x2 > x1[-1]
+    x_ol = np.logspace(
+        np.log10(max(x1[~reg1][0], x2[~reg2][0])),
+        np.log10(min(x1[~reg1][-1], x2[~reg2][-1]) - 0.1),
+        (sum(~reg1)+sum(~reg2))/2
+    )
+
+    def w(x):
+        A = x_ol.min()
+        B = x_ol.max()
+        return (np.log10(B / x)/np.log10(B / A))**damping
+
+    xdata = np.concatenate((
+            x1[reg1],
+            x_ol,
+            x2[reg2]))
+    y1_interp = interp1d(x1[~reg1], y1[~reg1])
+    y2_interp = interp1d(x2[~reg2], y2[~reg2])
+    ydata = np.concatenate((
+        y1[x1 < x2.min()],
+        w(x_ol)*y1_interp(x_ol) + (1 - w(x_ol))*y2_interp(x_ol),
+        y2[x2 > x1.max()]
+        ))
+    return xdata, ydata
