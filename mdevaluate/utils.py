@@ -104,7 +104,7 @@ def filon_fourier_transformation(time, correlation,
     """
     if frequencies is None:
         f_min = 1 / time[time > 0][-1]
-        f_max = 0.1 / time[time > 0][0]
+        f_max = 0.05**(1.2 - correlation[correlation > 0][0]) / time[time > 0][0]
         frequencies = 2*np.pi*np.logspace(
             np.log10(f_min), np.log10(f_max), num=100
         )
@@ -162,8 +162,8 @@ def superpose(x1, y1, x2, y2, N=100, damping=1.0):
     reg1 = x1 < x2[0]
     reg2 = x2 > x1[-1]
     x_ol = np.logspace(
-        np.log10(max(x1[~reg1][0], x2[~reg2][0])),
-        np.log10(min(x1[~reg1][-1], x2[~reg2][-1]) - 0.1),
+        np.log10(max(x1[~reg1][0], x2[~reg2][0]) + 0.001),
+        np.log10(min(x1[~reg1][-1], x2[~reg2][-1]) - 0.001),
         (sum(~reg1)+sum(~reg2))/2
     )
 
