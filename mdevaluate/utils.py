@@ -148,9 +148,9 @@ def mask2indices(mask):
     """
     mask = np.array(mask)
     if len(mask.shape) == 1:
-        indices = np.arange(len(mask))[mask]
+        indices = np.where(mask)
     else:
-        indices = np.array([np.arange(len(m))[m] for m in mask])
+        indices = np.array([np.where(m) for m in mask])
     return indices
 
 
