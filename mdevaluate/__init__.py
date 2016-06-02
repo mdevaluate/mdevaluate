@@ -24,8 +24,8 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
     Args:
         directory:  The directory where the simulation is located
         xtc (opt.): Descriptor of the trajectory file
-        tpr (opt.): Descriptors of the tpr file
-        gro (opt.): Descriptors of the gro file
+        tpr (opt.): Descriptors of the tpr file, if this is None no tpr file will be used.
+        gro (opt.): Descriptors of the gro file, if this is None no gro file will be used.
         index_file: Name of a index file that will be loaded with the gro file
         caching:    If caching should be activated in the Coordinates
 
@@ -39,8 +39,9 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
 
     For more details see: https://docs.python.org/3/library/glob.html
     """
-    tpr_glob = glob(os.path.join(directory, tpr))
-    gro_glob = glob(os.path.join(directory, gro))
+
+    tpr_glob = glob(os.path.join(directory, tpr)) if tpr is not None else None
+    gro_glob = glob(os.path.join(directory, gro)) if gro is not None else None
     if tpr_glob is not None and len(tpr_glob) is 1:
         print('Loading topology: {}'.format(tpr_glob[0]))
         atom_set = atoms.from_tprfile(tpr_glob[0])
