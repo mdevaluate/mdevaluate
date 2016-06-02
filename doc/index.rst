@@ -15,7 +15,8 @@ Contents
    :maxdepth: 1
 
    installation
-   tutorial
+   guide
+   contribution
    modules
 
 Indices and tables

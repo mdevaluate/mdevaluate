@@ -293,5 +293,8 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-intersphinx_mapping = {'python': ('http://docs.python.org/3/', None),
-                       'ipython': ('http://ipython.org/ipython-doc/dev/', None), }
+intersphinx_mapping = {
+    'python': ('http://docs.python.org/3/', None),
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+    'ipython': ('http://ipython.org/ipython-doc/dev/', None),
+    }

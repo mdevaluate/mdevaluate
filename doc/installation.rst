@@ -5,21 +5,16 @@ The mdevaluate package has to be installed to the local python distribution.
 Simply importing the modules will not work, since some of the gromacs related
 stuff has to be compiled, which is done with cython when installing the package.
 
-The easiest way to use mdevaluate on the institutes network is to use the anaconda3 module::
+The easiest way to use mdevaluate on the institutes network is to use the mdevaluate module::
 
-  module load anaconda3
+  export MODULEPATH=$MODULEPATH:/autohome/niels/modulefiles
+  module load mdevaluate
 
-This will provide a recent python 3.5 environment.
-Addtionally the mdevaluate package has to be added to the `PYTHONPATH`, which may be done in your `.bashrc` file::
-
-  export PYTHONPATH=/autohome/niels/.local/lib/python3.5/site-packages:$PYTHONPATH
-
-The above described python installation provides Python 3 and all relevant packages
-for scientific computing.
+This will provide a recent python 3.5 environment through the anaconda3 module
+with all relevant packages for scientific computing already installed.
 If any package is missing, you can install it locally with::
 
   pip install PACKAGE --user
-
 
 Manual Installation
 +++++++++++++++++++
@@ -41,7 +36,7 @@ The package depends on several python packages that can all be installed via pip
 In a future version of mdevaluate the whole gromacs dependency (and thereby the C/C++ dependencies)
 will be moved to a separate package ``pygmx``.
 The latest version of mdevaluate now depends partailly on this new package, hence it has to be installed to.
-See the `pygmx repository <https://bitbucket.org/fkp-md/pygmx>`_ for instructions.
+See the `pygmx repository <https://chaos3.fkp.physik.tu-darmstadt.de/diffusion/GMX/>`_ for instructions.
 
 Installation
 ------------
