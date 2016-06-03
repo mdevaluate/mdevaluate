@@ -129,7 +129,7 @@ class Coordinates:
             yield self[i]
 
     def get_frame(self, fnr):
-        """Returns the `fnr`th frame."""
+        """Returns the fnr-th frame."""
         try:
             if self.atom_filter is not None:
                 frame = self.frames[fnr].coordinates[self.atom_filter].view(CoordinateFrame)
