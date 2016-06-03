@@ -7,16 +7,21 @@ stuff has to be compiled, which is done with cython when installing the package.
 
 The easiest way to use mdevaluate on the institutes network is to use the mdevaluate module::
 
-  export MODULEPATH=$MODULEPATH:/data/niels/modules/modulefiles
-  module load mdevaluate
+  module use /data/niels/modules/modulefiles
+  module load mdevaluate/1.2
 
-This will provide a recent python 3.5 environment through the anaconda3 module
+Mdevaluate is provided in different versions: Numbered *release* versions (e.g. 1.2)
+and the special version `dev`, which provides the latest version of the code.
+The `dev` version should not be used in *production* (e.g. in the end phase of a thesis)
+since it may contain broken code.
+
+The module will provide a recent python 3.5 environment through the anaconda3 module
 with all relevant packages for scientific computing already installed.
 After loading th module you can for example start a notebook by running::
 
   jupyter-notebook
 
-If any package is missing, you can install it locally with::
+If any package is missing, it can be installed locally with::
 
   pip install PACKAGE --user
 
