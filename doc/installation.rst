@@ -1,5 +1,5 @@
-Installation
-============
+Getting started
+===============
 
 The mdevaluate package has to be installed to the local python distribution.
 Simply importing the modules will not work, since some of the gromacs related
@@ -7,11 +7,15 @@ stuff has to be compiled, which is done with cython when installing the package.
 
 The easiest way to use mdevaluate on the institutes network is to use the mdevaluate module::
 
-  export MODULEPATH=$MODULEPATH:/autohome/niels/modulefiles
+  export MODULEPATH=$MODULEPATH:/data/niels/modules/modulefiles
   module load mdevaluate
 
 This will provide a recent python 3.5 environment through the anaconda3 module
 with all relevant packages for scientific computing already installed.
+After loading th module you can for example start a notebook by running::
+
+  jupyter-notebook
+
 If any package is missing, you can install it locally with::
 
   pip install PACKAGE --user
