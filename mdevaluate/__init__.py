@@ -1,8 +1,9 @@
 import os
 from glob import glob
 
-from . import atoms, coordinates, correlation, distribution, functions, gromacs, pbc, simulation, autosave
+from . import atoms, coordinates, correlation, distribution, functions, pbc, simulation, autosave
 
+from pygmx import gromacs
 
 def trajectory_from_xtc(xtc_file, generate_index=True):
     """

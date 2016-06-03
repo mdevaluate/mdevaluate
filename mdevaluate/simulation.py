@@ -1,8 +1,9 @@
 __author__ = 'mbartelm'
 import os
 from glob import glob
-from .gromacs import atoms_from_grofile, load_indices
-from .gromacs import XTCReader, TRRReader
+
+from pygmx.gromacs import atoms_from_grofile, load_indices
+from pygmx.gromacs import XTCReader, TRRReader
 
 
 class GromacsSimulationResult:
@@ -15,10 +16,10 @@ class GromacsSimulationResult:
                  index_files=None):
 
         self.simulation_dir = sim_dir
-        
+
         self.index_files = glob(os.path.join(sim_dir, "*.ndx"))
-        
-        
+
+
         if index_files is not None:
             self.index_files += index_files
         self._load_index_files()

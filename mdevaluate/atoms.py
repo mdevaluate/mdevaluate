@@ -2,13 +2,13 @@ import re
 
 from scipy.spatial.distance import cdist
 from .pbc import pbc_diff
-from .gromacs import _atoms_from_grofile, load_indices
 from .utils import hash_anything as _hash
 import numpy as np
 
 from scipy.spatial import KDTree
 
 from pygmx import TPXReader
+from pygmx.gromacs import _atoms_from_grofile, load_indices
 
 
 def compare_regex(list, exp):
