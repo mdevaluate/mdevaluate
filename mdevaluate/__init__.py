@@ -5,6 +5,8 @@ from . import atoms, coordinates, correlation, distribution, functions, pbc, sim
 
 from pygmx import gromacs
 
+__version__ = '1.2'
+
 def trajectory_from_xtc(xtc_file, generate_index=True):
     """
     Load a trajectory from a xtc file. If no index file is found,

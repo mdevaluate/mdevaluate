@@ -2,10 +2,6 @@
 Evaluation of static properties
 ===============================
 
-
-Static properties of the system, like density distribution or pair correlation function,
-can be evaluatet with the :mod:`mdevaluate.distribution` module.
-
 .. note::
   All examples in this section assume, that the packges has been imported and a trajectory was loaded::
 
@@ -13,6 +9,8 @@ can be evaluatet with the :mod:`mdevaluate.distribution` module.
 
     coords = mdevaluate.load_simulation('/path/to/simulation')
 
+Static properties of the system, like density distribution or pair correlation function,
+can be evaluatet with the :mod:`mdevaluate.distribution` module.
 It provides the function :func:`mdevaluate.distribution.time_average`
 that computes the average of a property over the whole trajectory.
 An example call of this function is::

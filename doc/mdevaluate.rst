@@ -4,7 +4,6 @@ Subpackages
 
 .. toctree::
 
-    mdevaluate.gromacs
     mdevaluate.meta
 
 Submodules

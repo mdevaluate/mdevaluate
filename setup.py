@@ -1,4 +1,5 @@
 from setuptools import setup
+from mdevaluate import __version__
 
 setup(
     name='mdevaluate',
@@ -8,6 +9,6 @@ setup(
     packages=['mdevaluate',
               'mdevaluate.meta'],
 
-    version='1.2',
+    version=__version__,
     requires=['numpy', 'scipy'],
 )
