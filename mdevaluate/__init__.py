@@ -1,9 +1,18 @@
 import os
 from glob import glob
 
-from . import atoms, coordinates, correlation, distribution, functions, pbc, simulation, autosave
+from . import atoms
+from . import coordinates
+from . import correlation
+from . import distribution
+from . import functions
+from . import pbc
+from . import simulation
+from . import autosave
+from . import reader
 
 from pygmx import gromacs
+from pygmx.errors import FileTypeError
 
 __version__ = '1.2'
 
@@ -58,3 +67,53 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
     frames = trajectory_from_xtc(xtc_file)
 
     return coordinates.Coordinates(frames, atom_subset=atom_set, caching=caching)
+
+
+def open(directory, topology='*.tpr', trajectory='*.xtc', cached=False):
+    """
+    Open a simulation from a directory.
+
+    Args:
+        directory: Directory of the simulation.
+        topology (opt.):
+            Descriptor of the topology file (tpr or gro). By default a tpr file is
+            used, if there is exactly one in the directoy.
+        trajectory (opt.): Descriptor of the trajectory (xtc file).
+        cached (opt.):
+            If the trajectory reader should be cached. Can be True, an integer or None.
+            If this is True maxsize is 128, otherwise this is used as maxsize for
+            the cache, None means infinite cache (this is a potential memory leak!).
+
+    Returns:
+        A Coordinate object of the simulation.
+
+    Example:
+        Open a simulation located in '/path/to/sim', where the trajectory is
+        located in a sub-directory '/path/to/sim/out' and named for Example
+        'nojump_traj.xtc'. All read frames will be cached in memory.
+
+        >>> open('/path/to/sim', trajectory='out/nojump*.xtc', cached=None)
+
+    """
+
+    top_glob = glob(os.path.join(directory, topology))
+    if top_glob is not None and len(top_glob) is 1:
+        top_file, = top_glob
+        top_ext = top_file.split('.')[-1]
+        print('Loading topology: {}'.format(top_file))
+        if top_ext == 'tpr':
+            atom_set = atoms.from_tprfile(top_file)
+        elif top_ext == 'gro':
+            atom_set = atoms.from_grofile(top_file)
+        else:
+            raise FileTypeError('Can not open file: {}'.format(top_file))
+
+    else:
+        raise FileNotFoundError('Topology file could not be identified.')
+
+    traj_glob = glob(os.path.join(directory, trajectory))
+    if traj_glob is not None and len(traj_glob) is 1:
+        print('Loading trajectory: {}'.format(traj_glob[0]))
+        frames = reader.open(traj_glob[0], cached=cached)
+
+    return coordinates.Coordinates(frames, atom_subset=atom_set)

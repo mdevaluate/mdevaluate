@@ -105,6 +105,10 @@ class Coordinates:
                 If frames should be cached. If no bool is given, the value will be used
                 as the maxsize of lru_cache, which can be a number or None. Use None to
                 never discard any frame.
+
+        Note:
+            The caching in Coordinates is deprecated, use the CachedReader or the function open
+            from the reader module instead.
         """
         self.frames = frames
         self._slice = slice(0, len(self.frames))
@@ -119,10 +123,11 @@ class Coordinates:
         else:
             self.atom_filter = np.ones(shape=(len(frames[0].coordinates),), dtype=bool)
 
-        if isinstance(caching, bool):
-            self.get_frame = lru_cache(maxsize=128)(self.get_frame)
-        else:
-            self.get_frame = lru_cache(maxsize=caching)(self.get_frame)
+        if caching:
+            if isinstance(caching, bool):
+                self.get_frame = lru_cache(maxsize=128)(self.get_frame)
+            else:
+                self.get_frame = lru_cache(maxsize=caching)(self.get_frame)
 
     def slice(self, slice):
         for i in range(len(self))[slice]:
