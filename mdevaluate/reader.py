@@ -61,6 +61,11 @@ class BaseReader:
 class CachedReader(BaseReader):
     """A reader that has a least-recently-used cache for frames."""
 
+    @property
+    def cache_info(self):
+        """Get Information about the lru cache."""
+        return self._get_item.cache_info()
+
     def __init__(self, filename, maxsize):
         """
         Args:
