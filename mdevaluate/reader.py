@@ -7,7 +7,7 @@ from .utils import hash_anything, merge_hashes
 from functools import lru_cache
 
 import pygmx
-
+from pygmx.errors import InvalidMagicException, InvalidIndexException, FileTypeError
 
 def open(filename, cached=False):
     """
@@ -40,15 +40,25 @@ class BaseReader:
     def filename(self):
         return self.rd.filename
 
-    def __init__(self, filename):
-        self.rd = pygmx.open(filename)
+    def __init__(self, filename, reindex=False):
+        """
+        Args:
+            filename: Trajectory file to open.
+            reindex (bool, opt.): If True, regenerate the index file if necessary.
+        """
+        try:
+            self.rd = pygmx.open(filename)
+        except InvalidMagicException:
+            raise InvalidIndexException('This is not a valid index file: {}'.format(filename))
+        except InvalidIndexException:
+            if reindex:
+                pygmx.gromacs.index_xtcfile(filename)
+                self.rd = pygmx.open(filename)
+            else:
+                raise InvalidIndexException('Index file is invalid, us reindex=True to regenerate.')
 
     def __getitem__(self, item):
-        try:
-            return self.rd[item]
-        except:
-            # TODO: Handle InvalidIndexException
-            raise
+        return self.rd[item]
 
     def __len__(self):
         return len(self.rd)
