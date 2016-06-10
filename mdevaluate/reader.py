@@ -7,7 +7,7 @@ from .utils import hash_anything, merge_hashes
 from functools import lru_cache
 
 import pygmx
-from pygmx.errors import InvalidMagicException, InvalidIndexException, FileTypeError
+from pygmx.errors import InvalidMagicException, InvalidIndexException
 
 def open(filename, cached=False):
     """
