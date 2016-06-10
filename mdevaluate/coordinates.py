@@ -48,8 +48,9 @@ def polar_coordinates(x, y):
 
 def spherical_coordinates(x, y, z):
     """Convert cartesian to spherical coordinates."""
-    radius, phi = polar_coordinates(x, y)
-    theta = np.arccos(z / radius)
+    xy, phi = polar_coordinates(x, y)
+    theta = np.arccos(z / xy)
+    radius = (x**2 + y**2 + z**2)*0.5
     return radius, phi, theta
 
 
@@ -66,7 +67,7 @@ def radial_selector(frame, coordinates, rmin, rmax):
 class CoordinateFrame(np.ndarray):
     @property
     def box(self):
-        return self.coordinates.frames[self.step].box
+        return np.array(self.coordinates.frames[self.step].box)
 
     @property
     def time(self):
