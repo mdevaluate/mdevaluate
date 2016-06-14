@@ -23,6 +23,7 @@ def open(filename, cached=False):
             Use cached=None to get an unbound cache.
 
     """
+
     if cached is not False:
         if isinstance(cached, bool):
             maxsize = 128
@@ -75,6 +76,10 @@ class CachedReader(BaseReader):
     def cache_info(self):
         """Get Information about the lru cache."""
         return self._get_item.cache_info()
+
+    def clear_cache(self):
+        """Clear the cache of the frames."""
+        self._get_item.cache_clear()
 
     def __init__(self, filename, maxsize):
         """
