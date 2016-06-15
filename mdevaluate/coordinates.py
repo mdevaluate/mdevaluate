@@ -212,6 +212,8 @@ class CoordinatesMap:
             return self.__class__(self.coordinates[item], self.function)
         else:
             frame = self.function(self.coordinates.__getitem__(item))
+            if not isinstance(frame, CoordinateFrame):
+                frame = frame.view(CoordinateFrame)
             frame.coordinates = self
             frame.step = item
             return frame
