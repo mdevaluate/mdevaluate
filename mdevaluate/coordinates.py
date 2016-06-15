@@ -39,9 +39,13 @@ def rotate_axis(coords, axis):
     return rotated
 
 
+def spherical_radius(x, y, z):
+    return (x**2 + y**2 + z**2)**0.5
+
+
 def polar_coordinates(x, y):
     """Convert cartesian to polar coordinates."""
-    radius = np.sqrt(x**2 + y**2)
+    radius = spherical_radius(x, y, 0)
     phi = np.arctan2(y, x)
     return radius, phi
 
@@ -50,7 +54,7 @@ def spherical_coordinates(x, y, z):
     """Convert cartesian to spherical coordinates."""
     xy, phi = polar_coordinates(x, y)
     theta = np.arccos(z / xy)
-    radius = (x**2 + y**2 + z**2)*0.5
+    radius = spherical_radius(x, y, z)
     return radius, phi, theta
 
 
