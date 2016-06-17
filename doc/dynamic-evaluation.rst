@@ -37,7 +37,7 @@ As can be seen ``segments`` gives the number of onset times and ``window`` defin
 hence ``window - 1`` is the part of the simulation the onset times a distributed over.
 
 
-:math:`C(f, R, t_0, t)` is the funtion that actaully correlates the functin :math:`f`.
+:math:`C(f, R, t_0, t)` is the funtion that actaully correlates the function :math:`f`.
 For standard correlations the functions :math:`C(...)` and :math:`f` are defined as:
 
 .. math:: C(f, R, t_0, t) = f(R(t_0), R(t_0 + t))

@@ -7,3 +7,4 @@ User Guide
   loading
   static-evaluation
   dynamic-evaluation
+  special-topics

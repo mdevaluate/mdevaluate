@@ -26,12 +26,48 @@ Packages:
 
 A more `detailed explanation <https://docs.python.org/3/tutorial/modules.html>`_ can be found in the official python documentation.
 
+Extending the documentation
++++++++++++++++++++++++++++
+
+One very important part of software is its documentation.
+Especially for modular packages like ``mdevaluate`` it is crucial to have a good coverage of the API,
+since users need to know which functions are provided and how they are used.
+To help others by extending the documentation is thereby a nice way of contributing to mdevaluate.
+
+The documentation is generated with a third party tools named `Sphinx <http://www.sphinx-doc.org/en/stable/>`_.
+The contents of the documentation are based on the source code (for the reference guide)
+and additional documents, written in the markup language *reStructuredText* (rst).
+The source of every page can be viewed in the browser through the *View page source* link in the upper right of the page.
+The name of the rst files can also be derived from the page URL.
+The rst files are placed in the ``doc`` directory of the repository.
+
+Extending the documentation can be done in various ways, e.g.
+
+- Correct, clarify or extend exsiting sections
+- Add new sections about the general use of mdevaluate
+- Add use cases to the special topics section.
+
+To add a new sections to special topics, first create a new file for this guide in ``doc/special``.
+Then add the name of this file (without the .rst extension) to the toctree in the file ``special-topics.rst``.
+Finally write about the guide in newly created file.
+
+Building the docs
+-----------------
+
+When you have made changes to the docs, first re-build them locally.
+You will need to have the ``sphinx`` python package installed and of course a working environment for ``mdevaluate``.
+When those requirements are fullfilled build the docs by:
+
+1. Navigate to the ``doc`` directory
+2. Run ``make html`` in the shell
+3. View the produced html files in the browser: ``firefox _build/html/index.html``
+
 Organization of the code
 ++++++++++++++++++++++++
 
 
 
-The code for the evaluation software is organized in two python packges:
+The code for the evaluation software is organized in two python packages:
 
 - ``pygmx``: This package provides a python wrapper for the Gromacs library and
   thereby functionality to read many of the file formats used within Gromacs.
@@ -71,6 +107,11 @@ distribution.py
 ...............
 
 Functionality to evaluate distribution functions.
+
+reader.py
+.........
+
+Defines reader classes that handle trajectory reading and caching.
 
 utils.py
 ........

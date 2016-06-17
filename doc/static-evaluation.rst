@@ -7,7 +7,7 @@ Evaluation of static properties
 
     import mdevaluate.distribution as dist
 
-    coords = mdevaluate.load_simulation('/path/to/simulation')
+    coords = mdevaluate.open('/path/to/simulation')
 
 Static properties of the system, like density distribution or pair correlation function,
 can be evaluatet with the :mod:`mdevaluate.distribution` module.
