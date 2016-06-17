@@ -68,6 +68,21 @@ def radial_selector(frame, coordinates, rmin, rmax):
     return mask2indices(selector)
 
 
+def spatial_selector(frame, radii, rmin, rmax):
+    """
+    Select a subset of atoms which have an radius between rmin and rmax.
+
+    Args:
+        frame: The coordinates of the actual trajectory
+        radii: A trajectory with coordinates mapped to the radius
+        rmin, rmax: Minimum and maximum value of the radius
+    """
+    r = radii[frame.step]
+    selector = (rmin <= r) & (rmax >= r)
+    return mask2indices(selector)
+
+
+
 class CoordinateFrame(np.ndarray):
     @property
     def box(self):
