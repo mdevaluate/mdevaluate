@@ -15,14 +15,14 @@ Modules:
   Any python file (e.g. ``test.py``) is called a module. A module can be imported (``import test``) an then used
   in other python code if it is in the python path, for example the working directory.
   In principle, importing a package means simply executing the code inside the file.
-  All defintions, like variables or functions, are then available under the modules name.
+  All definitions, like variables or functions, are then available under the modules name.
 
 Packages:
   Python modules can be grouped into packages. A python package is simply a folder,
   which contains at least one mandatory file ``__init__.py``. This file is the entry
   point into the module that is imported if the package is imported.
   All modules in the folder are treated as submodules, which can be accessed via
-  a dot syntax, e.g. ``import package.test``. Packges can also contain subpackages.
+  a dot syntax, e.g. ``import package.test``. Packages can also contain sub packages.
 
 A more `detailed explanation <https://docs.python.org/3/tutorial/modules.html>`_ can be found in the official python documentation.
 
@@ -43,7 +43,7 @@ The rst files are placed in the ``doc`` directory of the repository.
 
 Extending the documentation can be done in various ways, e.g.
 
-- Correct, clarify or extend exsiting sections
+- Correct, clarify or extend existing sections
 - Add new sections about the general use of mdevaluate
 - Add use cases to the special topics section.
 
@@ -56,7 +56,7 @@ Building the docs
 
 When you have made changes to the docs, first re-build them locally.
 You will need to have the ``sphinx`` python package installed and of course a working environment for ``mdevaluate``.
-When those requirements are fullfilled build the docs by:
+When those requirements are fulfilled build the docs by:
 
 1. Navigate to the ``doc`` directory
 2. Run ``make html`` in the shell
@@ -83,7 +83,7 @@ Below the content of the submodules of the package is described.
 atoms.py
 ........
 
-Defintion of the ``Atom`` class and related stuff for atom selection and information.
+Definition of the ``Atom`` class and related stuff for atom selection and information.
 
 autosave.py
 ...........
@@ -148,12 +148,12 @@ All changes to the code are done in your local clone of the repository.
 If a feature is complete, or at least works, the code can be pushed to the remote,
 to make it accessible for others.
 
-A standard workflow to submit new code is the following
+A standard work flow to submit new code is the following
 
 1. Create a new **branch** in your local repository
 2. **Commit** the changes to your local repository
 3. **Merge** the branch into master
-4. **Push** the changes to the remote reposiory
+4. **Push** the changes to the remote repository
 
 Pulling updates from remote
 ---------------------------
@@ -175,11 +175,11 @@ To create a new branch locally enter the following commands::
   $ git checkout my-feature
 
 First switch to the master branch to make sure the new branch is based on it.
-Then create the new branch, called `my-fetaure` and switch to it.
+Then create the new branch, called `my-feature` and switch to it.
 Now you can start making changes in the code.
 
-Commiting changes
------------------
+Committing changes
+------------------
 
 A bundle of changes in the code is called a *commit*.
 These changes can happen in different files and should be associated with each other.
@@ -189,7 +189,7 @@ The command::
   $ git diff atoms.py
 
 will show you all changes that were made in the file since the latest commit.
-Before commiting changes have to be *staged*, which is done by::
+Before committing changes have to be *staged*, which is done by::
 
   $ git add atoms.py utils.py
 
@@ -205,7 +205,7 @@ Merging into master
 -------------------
 
 When all changes are made and the new feature should be made public, first the branch has to be merged into master.
-Most of the time, the master branch will have been updated, therfore first pull any updates::
+Most of the time, the master branch will have been updated, therefore first pull any updates::
 
   $ git checkout master
   $ git pull
@@ -218,7 +218,7 @@ If no conflicting changes were made, merging works automatically.
 If for example the same line was modified in a commit in master and your commits, a merge conflict will occur.
 Git tells you which files have conflicts and asks you to resolve these.
 The respective lines will be marked with conflict-resolution markers in the files.
-The most basic way of resolving a conflivt is by editing these files and choosing the appropiate version of the code.
+The most basic way of resolving a conflict is by editing these files and choosing the appropriate version of the code.
 See the `git documentation <https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#Basic-Merge-Conflicts>`_ for an explanation.
 After resolving the conflict, the files need to be staged and the merge has to be committed::
 

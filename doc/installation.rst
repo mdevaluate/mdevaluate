@@ -2,7 +2,7 @@ Getting started
 ===============
 
 The mdevaluate package has to be installed to the local python distribution.
-Simply importing the modules will not work, since some of the gromacs related
+Simply importing the modules will not work, since some of the Gromacs related
 stuff has to be compiled, which is done with cython when installing the package.
 
 The easiest way to use mdevaluate on the institutes network is to use the mdevaluate module::
@@ -29,7 +29,7 @@ Manual Installation
 +++++++++++++++++++
 
 The second option is to install the package manually to a local python installation.
-Before installing mdevaluate, some python packges need to be installed on the system.
+Before installing mdevaluate, some python packages need to be installed on the system.
 It should also be emphasized that mdevaluate will only run in **Python 3.5**.
 
 Requirements
@@ -44,7 +44,7 @@ The package depends on several python packages that can all be installed via pip
 
 In a future version of mdevaluate the whole gromacs dependency (and thereby the C/C++ dependencies)
 will be moved to a separate package ``pygmx``.
-The latest version of mdevaluate now depends partailly on this new package, hence it has to be installed to.
+The latest version of mdevaluate now depends partially on this new package, hence it has to be installed to.
 See the `pygmx repository <https://chaos3.fkp.physik.tu-darmstadt.de/diffusion/GMX/>`_ for instructions.
 
 Installation

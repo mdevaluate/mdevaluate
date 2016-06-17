@@ -1,14 +1,14 @@
 Spatial Resolved Analysis
 =========================
 
-This section describes how spatially resolved correlation can be analysed with mdevaluate.
-This guide assumes that the variable ``traj`` holds a trajectory where the subset of atoms that should be analysed are selected.
+This section describes how spatially resolved correlation can be analyzed with mdevaluate.
+This guide assumes that the variable ``traj`` holds a trajectory where the subset of atoms that should be analyzed are selected.
 For example::
 
   traj = md.open('/path/to/sim', cached=1000).subset(atom_name='OW')
 
-Which would load a simulation from the directory ``/path/to/sim`` and select als ``OW`` atoms.
-Note that for this usecase, the caching is quite usefull since it enables us to iterate over spatial regions
+Which would load a simulation from the directory ``/path/to/sim`` and select all ``OW`` atoms.
+Note that for this use case, the caching is quite useful since it enables us to iterate over spatial regions
 without significant time penalty.
 Moving on let's define the function that will be correlated, in this case the ISF for water::
 

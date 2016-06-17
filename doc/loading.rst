@@ -13,10 +13,10 @@ For information about the topology either a `tpr` or `gro` a file is read,
 where the former is the preferred choice.
 Trajectory data will be read from a xtc file.
 If the directory contains more than one file of any type, the desired file
-has to be specified with the appropiate keyword argument.
+has to be specified with the appropriate keyword argument.
 For details see :func:`mdevaluate.load_simulation`.
 
-The function will return a coordinates object, for the whoole system.
+The function will return a coordinates object, for the whole system.
 A subset of the system may be obtained directly from the coordinates object by
 calling its :func:`mdevaluate.coordinates.Coordinates.subset` method.
 This function accepts the same input as :func:`mdevaluate.atoms.AtomSubset.subset`.
@@ -42,12 +42,12 @@ And that's it, now one can evaluate stuff for this subset of atoms.
 Specifying data files
 ---------------------
 
-The above example only works if the directory contains excactly one tpr file and
+The above example only works if the directory contains exactly one tpr file and
 one xtc file.
 If your data files are located in subdirectories or multiple files of these types exist,
 they can be specified by the keywords ``topology`` and ``trajectory``.
 Those filenames can be a relative path to the simulation directory and can also make
-use of *shell globbing*. For example::
+use of *shell globing*. For example::
 
   traj = md.open('/path/to/sim', topology='atoms.gro', trajectory='out/traj_*.xtc')
 
@@ -56,8 +56,8 @@ only atom and residue names will be read from those files.
 Information about atom masses and charges for example will only be read from tpr files,
 therefore it is generally recommended to use the latter topologies.
 
-The trajectory above is specified through a shell globbing, meaning the ``*`` may be
-expanded to any string (without contaning a forward slash).
+The trajectory above is specified through a shell globing, meaning the ``*`` may be
+expanded to any string (without containing a forward slash).
 If more than one file exists which match this pattern an error will be raised,
 since the trajectory can not be identified clearly.
 
@@ -78,7 +78,7 @@ Caching has to be activated when opening a trajectory::
   traj = md.open('/path/to/sim', cached=True)
 
 The ``cached`` keyword takes either a boolean, a integer or None as input value.
-The value of ``cached`` controlls the size of the cache and therby the additonal memory usage.
+The value of ``cached`` controls the size of the cache and thereby the additional memory usage.
 Setting it to True will activate the caching with a maximum size of 128 frames,
 with an integer any other maximum size may be set.
 The special value ``None`` will set the cache size to infinite, so all frames will be cached.
@@ -147,7 +147,7 @@ Trajectory
 
 The trajectory is read from xtc-files or trr-files, usually the former are used.
 For effective data loading, these files have to be indexed **once** before they can be used with mdevaluate.
-This is done with the commandline tool ``index-xtc``::
+This is done with the command line tool ``index-xtc``::
 
   $ index-xtc /data/niels/tutorial/traj.xtc
 
@@ -165,7 +165,7 @@ From this trajectory, single frames can be selected by index::
   print(frame.coordinates)
 
 .. warning::
-  To this time, even though implented, the usage of trr-files has not been fully tested.
+  To this time, even though implemented, the usage of trr-files has not been fully tested.
 
 Coordinates
 +++++++++++
@@ -187,6 +187,6 @@ To compute a center of mass of the amim molecule::
   masses = [14]*2 + [1]*15 + [12]*8
   com_amim = coordinates.centers_of_mass(cords_amim, masses=masses)
 
-Note that the coordinate transformtion is not limited to center of masses at all.
+Note that the coordinate transformation is not limited to center of masses at all.
 Look at the definition of :func:`centers_of_mass` for hints how to implement a different transformation.
 On important bit is the decorator ``@coordinates_map`` that is necessary for the transformation to work.
