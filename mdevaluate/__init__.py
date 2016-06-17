@@ -69,7 +69,7 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
     return coordinates.Coordinates(frames, atom_subset=atom_set, caching=caching)
 
 
-def open(directory, topology='*.tpr', trajectory='*.xtc', cached=False):
+def open(directory, topology='*.tpr', trajectory='*.xtc', index_file=None, cached=False):
     """
     Open a simulation from a directory.
 
@@ -79,6 +79,8 @@ def open(directory, topology='*.tpr', trajectory='*.xtc', cached=False):
             Descriptor of the topology file (tpr or gro). By default a tpr file is
             used, if there is exactly one in the directoy.
         trajectory (opt.): Descriptor of the trajectory (xtc file).
+        index_file (opt.):
+            If the topology is loaded from a gro file, an index file can be specified.
         cached (opt.):
             If the trajectory reader should be cached. Can be True, an integer or None.
             If this is True maxsize is 128, otherwise this is used as maxsize for
@@ -104,7 +106,7 @@ def open(directory, topology='*.tpr', trajectory='*.xtc', cached=False):
         if top_ext == 'tpr':
             atom_set = atoms.from_tprfile(top_file)
         elif top_ext == 'gro':
-            atom_set = atoms.from_grofile(top_file)
+            atom_set = atoms.from_grofile(top_file, index_file)
         else:
             raise FileTypeError('Can not open file: {}'.format(top_file))
 
