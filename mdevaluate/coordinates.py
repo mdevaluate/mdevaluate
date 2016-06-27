@@ -39,13 +39,19 @@ def rotate_axis(coords, axis):
     return rotated
 
 
-def spherical_radius(x, y, z):
-    return (x**2 + y**2 + z**2)**0.5
+def spherical_radius(frame, origin=None):
+    """
+    Transform a frame of cartesian coordinates into the sperical radius.
+    If origin=None the center of the box is taken as the coordinates origin.
+    """
+    if origin is None:
+        origin = frame.box.diagonal() / 2
+    return ((frame - origin)**2).sum(axis=-1)**0.5
 
 
 def polar_coordinates(x, y):
     """Convert cartesian to polar coordinates."""
-    radius = spherical_radius(x, y, 0)
+    radius = (x**2 + y**2)**0.5
     phi = np.arctan2(y, x)
     return radius, phi
 
@@ -54,7 +60,7 @@ def spherical_coordinates(x, y, z):
     """Convert cartesian to spherical coordinates."""
     xy, phi = polar_coordinates(x, y)
     theta = np.arccos(z / xy)
-    radius = spherical_radius(x, y, z)
+    radius = (x**2 + y**2 + z**2)**0.5
     return radius, phi, theta
 
 
@@ -68,19 +74,23 @@ def radial_selector(frame, coordinates, rmin, rmax):
     return mask2indices(selector)
 
 
-def spatial_selector(frame, radii, rmin, rmax):
+def spatial_selector(frame, transform, rmin, rmax):
     """
-    Select a subset of atoms which have an radius between rmin and rmax.
+    Select a subset of atoms which have a radius between rmin and rmax.
+    Coordinates are filtered by the condition::
+        rmin <= transform(frame) <= rmax
 
     Args:
         frame: The coordinates of the actual trajectory
-        radii: A trajectory with coordinates mapped to the radius
-        rmin, rmax: Minimum and maximum value of the radius
+        transform:
+            A function that transforms the coordinates of the frames into
+            the one-dimensional spatial coordinate (e.g. radius).
+        rmin: Minimum value of the radius
+        rmax: Maximum value of the radius
     """
-    r = radii[frame.step]
+    r = transform(frame)
     selector = (rmin <= r) & (rmax >= r)
     return mask2indices(selector)
-
 
 
 class CoordinateFrame(np.ndarray):
