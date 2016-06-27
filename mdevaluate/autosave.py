@@ -1,5 +1,4 @@
 import os
-import types
 import numpy as np
 from .utils import merge_hashes, hash_anything as _hash
 import functools
@@ -23,9 +22,9 @@ def enable(dir, load_data=True, verbose=True):
     """
     global autosave_directory, load_autosave_data, verbose_print
     verbose_print = verbose
-    absolute = os.path.abspath(dir)
-    os.makedirs(absolute, exist_ok=True)
-    autosave_directory = absolute
+    # absolute = os.path.abspath(dir)
+    # os.makedirs(absolute, exist_ok=True)
+    autosave_directory = dir
     load_autosave_data = load_data
     notify('Enabled autosave in directory: {}'.format(autosave_directory))
 
@@ -39,6 +38,14 @@ def disable():
     load_autosave_data = False
 
 
+def get_directory(reader):
+    """Get the autosave directory for a trajectory reader."""
+    outdir = os.path.dirname(reader.filename)
+    savedir = os.path.join(outdir, autosave_directory)
+    os.makedirs(savedir, exist_ok=True)
+    return savedir
+
+
 def get_filename(function, checksum, description, *args):
     """Get the autosave filename for a specific function call."""
     func_desc = function.__name__
@@ -47,8 +54,14 @@ def get_filename(function, checksum, description, *args):
             func_desc += '_{}'.format(arg.__name__)
         elif isinstance(arg, functools.partial):
             func_desc += '_{}'.format(arg.func.__name__)
-    filename = '{}_{}.{}.npy'.format(func_desc, description, checksum)
-    return os.path.join(autosave_directory, filename)
+
+        if hasattr(arg, 'frames'):
+            savedir = get_directory(arg.frames)
+
+        if hasattr(arg, 'description'):
+            description += arg.description
+    filename = '{}_{}.npz'.format(func_desc, description)
+    return os.path.join(savedir, filename)
 
 
 def checksum(function, *args):
@@ -61,7 +74,25 @@ def checksum(function, *args):
 
 def verify_file(filename, checksum):
     """Verify if the file matches the function call."""
-    return os.path.exists(filename)
+    file_checksum = 0
+    if os.path.exists(filename):
+        data = np.load(filename)
+        if 'checksum' in data:
+            file_checksum = data['checksum']
+    return file_checksum == checksum
+
+
+def save_data(filename, checksum, data):
+    """Save data and checksum to a file."""
+    notify('Saving result to file: {}'.format(filename))
+    np.savez(filename, checksum=checksum, data=data)
+
+
+def load_data(filename):
+    """Load data from a npz file."""
+    notify('Loading result from file: {}'.format(filename))
+    fdata = np.load(filename)
+    return fdata['data']
 
 
 def autosave_data(nargs, kwargs_keys=None):
@@ -77,7 +108,6 @@ def autosave_data(nargs, kwargs_keys=None):
         def autosave(*args, **kwargs):
             description = kwargs.pop('description', '')
             autoload = kwargs.pop('autoload', True) and load_autosave_data
-            #return_checksum = kwargs.pop('checksum', False)
             if autosave_directory is not None:
                 relevant_args = list(args[:nargs])
                 if kwargs_keys is not None:
@@ -88,14 +118,10 @@ def autosave_data(nargs, kwargs_keys=None):
                 csum = checksum(function, *relevant_args)
                 filename = get_filename(function, csum, description, *relevant_args)
                 if autoload and verify_file(filename, csum):
-                    notify('Loading result from file: {}'.format(filename))
-                    result = np.load(filename)
+                    result = load_data(filename)
                 else:
                     result = function(*args, **kwargs)
-                    notify('Saving result to file: {}'.format(filename))
-                    np.save(filename, result)
-                #if return_checksum:
-                #    result = result, csum
+                    save_data(filename, csum, result)
             else:
                 result = function(*args, **kwargs)
 
