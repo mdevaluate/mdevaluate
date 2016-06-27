@@ -9,7 +9,7 @@ from functools import lru_cache
 import pygmx
 from pygmx.errors import InvalidMagicException, InvalidIndexException
 
-def open(filename, cached=False):
+def open(filename, cached=False, reindex=False):
     """
     Opens a trajectory file with the apropiate reader.
 
@@ -21,6 +21,7 @@ def open(filename, cached=False):
             If Reader should be cached with lru_cache. If this is True, maxsize for
             the cache is 128, otherwise the argument is passed as maxsize.
             Use cached=None to get an unbound cache.
+        reindex (opt.): Regenerate the index of the xtc-file
 
     """
 
@@ -29,9 +30,9 @@ def open(filename, cached=False):
             maxsize = 128
         else:
             maxsize = cached
-        return CachedReader(filename, maxsize)
+        return CachedReader(filename, maxsize, reindex=reindex)
     else:
-        return BaseReader(filename)
+        return BaseReader(filename, reindex=reindex)
 
 
 class BaseReader:

@@ -69,7 +69,8 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
     return coordinates.Coordinates(frames, atom_subset=atom_set, caching=caching)
 
 
-def open(directory, topology='*.tpr', trajectory='*.xtc', index_file=None, cached=False):
+def open(directory, topology='*.tpr', trajectory='*.xtc',
+         index_file=None, cached=False, reindex=True):
     """
     Open a simulation from a directory.
 
@@ -85,6 +86,7 @@ def open(directory, topology='*.tpr', trajectory='*.xtc', index_file=None, cache
             If the trajectory reader should be cached. Can be True, an integer or None.
             If this is True maxsize is 128, otherwise this is used as maxsize for
             the cache, None means infinite cache (this is a potential memory leak!).
+        reindex (opt.): Regenerate the xtc-index if necessary.
 
     Returns:
         A Coordinate object of the simulation.
@@ -116,6 +118,8 @@ def open(directory, topology='*.tpr', trajectory='*.xtc', index_file=None, cache
     traj_glob = glob(os.path.join(directory, trajectory))
     if traj_glob is not None and len(traj_glob) is 1:
         print('Loading trajectory: {}'.format(traj_glob[0]))
-        frames = reader.open(traj_glob[0], cached=cached)
+        frames = reader.open(traj_glob[0], cached=cached, reindex=reindex)
+    else:
+        raise FileNotFoundError('Trajectory file could not be identified.')
 
     return coordinates.Coordinates(frames, atom_subset=atom_set)
