@@ -108,7 +108,7 @@ class AtomSubset:
         Args:
             atom_name:      Specification of the atom name
             residue_name:   Specification of the resiude name
-            residue_id:     Residue ID
+            residue_id:     Residue ID or list of IDs
             indices:        List of atom indices
         """
         new_subset = self
@@ -118,7 +118,12 @@ class AtomSubset:
             new_subset &= AtomSubset(self.atoms, compare_regex(self.atoms.residue_names,
                                                                residue_name))
         if residue_id is not None:
-            new_subset &= AtomSubset(self.atoms, self.atoms.residue_ids == residue_id)
+            if np.iterable(residue_id):
+                selection = np.zeros(len(self.selection), dtype='bool')
+                selection[np.in1d(self.atoms.residue_ids, residue_id)] = True
+                new_subset &= AtomSubset(self.atoms, selection)
+            else:
+                new_subset &= AtomSubset(self.atoms, self.atoms.residue_ids == residue_id)
 
         if indices is not None:
             selection = np.zeros(len(self.selection), dtype='bool')
