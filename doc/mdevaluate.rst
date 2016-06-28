@@ -1,13 +1,19 @@
 
-Subpackages
------------
+Module contents
+---------------
 
-.. toctree::
+.. automodule:: mdevaluate
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-    mdevaluate.meta
+mdevaluate.autosave
+...................
 
-Submodules
-----------
+.. automodule:: mdevaluate.autosave
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 mdevaluate.atoms
 ................
@@ -74,10 +80,11 @@ mdevaluate.simulation
     :show-inheritance:
 
 
-Module contents
----------------
 
-.. automodule:: mdevaluate
-    :members:
-    :undoc-members:
-    :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+
+    mdevaluate.meta
