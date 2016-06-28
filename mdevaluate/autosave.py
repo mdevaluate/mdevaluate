@@ -58,9 +58,9 @@ def get_filename(function, checksum, description, *args):
         if hasattr(arg, 'frames'):
             savedir = get_directory(arg.frames)
 
-        if hasattr(arg, 'description'):
-            description += arg.description
-    filename = '{}_{}.npz'.format(func_desc, description)
+        if hasattr(arg, 'description') and arg.description != '':
+            description += '_{}'.format(arg.description)
+    filename = '{}_{}.npz'.format(func_desc.strip('_'), description.strip('_'))
     return os.path.join(savedir, filename)
 
 

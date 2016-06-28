@@ -205,6 +205,14 @@ class Coordinates:
     def subset(self, **kwargs):
         return Coordinates(self.frames, atom_subset=self.atom_subset.subset(**kwargs))
 
+    @property
+    def description(self):
+        return self.atom_subset.description
+
+    @description.setter
+    def description(self, desc):
+        self.atom_subset.description = desc
+
 
 class MeanCoordinates(Coordinates):
 
@@ -256,6 +264,14 @@ class CoordinatesMap:
     @wraps(Coordinates.subset)
     def subset(self, **kwargs):
         return CoordinatesMap(self.coordinates.subset(**kwargs), self.function)
+
+    @property
+    def description(self):
+        return self.atom_subset.description
+
+    @description.setter
+    def description(self, desc):
+        self.atom_subset.description = desc
 
 
 class CoordinatesFilter:

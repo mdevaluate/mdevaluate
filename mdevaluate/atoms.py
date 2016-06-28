@@ -94,11 +94,18 @@ class AtomMismatch(Exception):
 
 class AtomSubset:
 
-    def __init__(self, atoms, selection=None):
+    def __init__(self, atoms, selection=None, description=''):
+        """
+        Args:
+            atoms: Base atom object
+            selection (opt.): Selected atoms
+            description (opt.): Descriptive string of the subset.
+        """
         if selection is None:
             selection = np.ones(len(atoms), dtype='bool')
         self.selection = selection
         self.atoms = atoms
+        self.description = description
 
     def subset(self, atom_name=None, residue_name=None, residue_id=None, indices=None):
         """
@@ -113,10 +120,19 @@ class AtomSubset:
         """
         new_subset = self
         if atom_name is not None:
-            new_subset &= AtomSubset(self.atoms, compare_regex(self.atoms.atom_names, atom_name))
+            new_subset &= AtomSubset(
+                self.atoms,
+                selection=compare_regex(self.atoms.atom_names, atom_name),
+                description=atom_name
+            )
+
         if residue_name is not None:
-            new_subset &= AtomSubset(self.atoms, compare_regex(self.atoms.residue_names,
-                                                               residue_name))
+            new_subset &= AtomSubset(
+                self.atoms,
+                selection=compare_regex(self.atoms.residue_names, residue_name),
+                description=residue_name
+            )
+
         if residue_id is not None:
             if np.iterable(residue_id):
                 selection = np.zeros(len(self.selection), dtype='bool')
@@ -155,29 +171,29 @@ class AtomSubset:
         return self.subset(indices=self.indices[0].__getitem__(slice))
 
     def __and__(self, other):
-        selection = (self.selection & other.selection)
         if self.atoms != other.atoms:
             raise AtomMismatch
-
-        return AtomSubset(self.atoms, selection)
+        selection = (self.selection & other.selection)
+        description = '{}_{}'.format(self.description, other.description).strip('_')
+        return AtomSubset(self.atoms, selection, description)
 
     def __or__(self, other):
-        selection = (self.selection | other.selection)
         if self.atoms != other.atoms:
             raise AtomMismatch
-
-        return AtomSubset(self.atoms, selection)
+        selection = (self.selection | other.selection)
+        description = '{}_{}'.format(self.description, other.description).strip('_')
+        return AtomSubset(self.atoms, selection, description)
 
     def __invert__(self):
         selection = ~self.selection
-        return AtomSubset(self.atoms, selection)
+        return AtomSubset(self.atoms, selection, self.description)
 
     def __repr__(self):
         return 'Subset of Atoms ({} of {})'.format(len(self.atoms.residue_names[self.selection]),
                                                    len(self.atoms))
 
     @property
-    def description(self):
+    def summary(self):
         return "\n".join(["{}{} {}".format(resid, resname, atom_names)
                           for resid, resname, atom_names in zip(self.residue_ids, self.residue_names, self.atom_names)
                           ])
