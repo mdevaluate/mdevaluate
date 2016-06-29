@@ -98,6 +98,11 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
 
         >>> open('/path/to/sim', trajectory='out/nojump*.xtc', cached=None)
 
+    The file descriptors can use unix style pathname expansion to define the filenames.
+    For example: 'out/nojump*.xtc' would match xtc files in a subdirectory `out` that
+    start with `nojump` and end with `.xtc`.
+
+    For more details see: https://docs.python.org/3/library/glob.html
     """
 
     top_glob = glob(os.path.join(directory, topology))

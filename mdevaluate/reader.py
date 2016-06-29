@@ -9,6 +9,7 @@ from functools import lru_cache
 import pygmx
 from pygmx.errors import InvalidMagicException, InvalidIndexException
 
+
 def open(filename, cached=False, reindex=False):
     """
     Opens a trajectory file with the apropiate reader.

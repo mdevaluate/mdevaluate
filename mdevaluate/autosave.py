@@ -14,7 +14,7 @@ def notify(msg):
 
 def enable(dir, load_data=True, verbose=True):
     """
-    Enable auto saving results of functions decorated with @autosave_data.
+    Enable auto saving results of functions decorated with :func:`autosave_data`.
 
     Args:
         dir: Directory where the data should be saved.

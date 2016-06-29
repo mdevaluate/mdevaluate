@@ -12,12 +12,12 @@ def time_average(function, coordinates, coordinates_b=None, pool=None, verbose=F
     Args:
         function:
             The function that will be averaged, it has to accept exactly one argument
-            which is the current atom set.
+            which is the current atom set
         coordinates: The coordinates object of the simulation
         pool (multiprocessing.Pool, opt.):
             A multiprocessing pool which will be used for cocurrent calculation of the
-            averaged function.
-        verbose (bool, opt.): If
+            averaged function
+        verbose (bool, opt.): Be verbose about the progress
 
     """
     if pool is not None:
