@@ -14,7 +14,8 @@ from . import reader
 from pygmx import gromacs
 from pygmx.errors import FileTypeError
 
-__version__ = '1.2'
+__version__ = '16.06'
+
 
 def trajectory_from_xtc(xtc_file, generate_index=True):
     """
