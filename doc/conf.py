@@ -17,6 +17,7 @@ import sys
 import os
 import shlex
 
+sys.path.insert(0, os.path.abspath('..'))
 import mdevaluate
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -59,7 +60,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'mdevaluate'
-#copyright = '2015, mbartelm'
+copyright = '2016, Niels Müller'
 author = 'Niels Müller'
 
 # The version info for the project you're documenting, acts as replacement for

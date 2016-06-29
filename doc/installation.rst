@@ -7,12 +7,16 @@ stuff has to be compiled, which is done with cython when installing the package.
 
 The easiest way to use mdevaluate on the institutes network is to use the mdevaluate module::
 
-  module load mdevaluate/1.2
+  module load mdevaluate/16.06
 
-Mdevaluate is provided in different versions: Numbered *release* versions (e.g. 1.2)
-and the special version `dev`, which provides the latest version of the code.
-The `dev` version should not be used in *production* (e.g. in the end phase of a thesis)
-since it may contain broken code.
+The mdevaluate module is provided in different versions.
+Since there is no real *release schedule*, the version numbers are arbitrary and
+follow a `Calendar Versioning scheme <http://calver.org>`_.
+The idea of these versions is to provide a fixed version of the code from time to time,
+which will not be changed, except maybe for major bugs, and assure that scripts don't stop working.
+The special version `dev` provides the latest version of the code.
+It should not be used in *production* (e.g. in the end phase of a thesis)
+since it may contain broken code or function signatures may change.
 
 The module will provide a recent python 3.5 environment through the anaconda3 module
 with all relevant packages for scientific computing already installed.
@@ -36,15 +40,11 @@ Requirements
 
 The package depends on several python packages that can all be installed via pip or conda:
 
-- Cython
 - NumPy
 - SciPy
-- pygmx
 
-In a future version of mdevaluate the whole gromacs dependency (and thereby the C/C++ dependencies)
-will be moved to a separate package ``pygmx``.
-The latest version of mdevaluate now depends partially on this new package, hence it has to be installed to.
-See the `pygmx repository <https://chaos3.fkp.physik.tu-darmstadt.de/diffusion/GMX/>`_ for instructions.
+The most important dependency is ``pygmx``, which uses the Gromacs C-library to read data files.
+See the `pygmx repository <https://chaos3.fkp.physik.tu-darmstadt.de/diffusion/GMX/>`_ for installation instructions.
 
 Installation
 ------------
@@ -54,4 +54,4 @@ Navigate to the source directory and run the installation::
 
   python3 setup.py install
 
-This will compile and install the package to your local python version.
+This will compile and install the package to your local python distribution.
