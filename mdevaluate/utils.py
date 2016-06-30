@@ -24,6 +24,17 @@ def hash_partial(partial):
     return merge_hashes(*hashes)
 
 
+def hash_code(func):
+    """
+    Hash an object with a __code__ attribute, e.g. a function.
+    """
+    hashes = [hash_anything(func.__code__.co_code)]
+    if func.__closure__ is not None:
+        for cell in func.__closure__:
+            hashes.append(hash_anything(cell.cell_contents))
+    return merge_hashes(*hashes)
+
+
 def hash_anything(arg):
     """Return a md5 hash value for the current state of any argument."""
     if isinstance(arg, bytes):
@@ -31,7 +42,7 @@ def hash_anything(arg):
     elif isinstance(arg, str):
         bstr = arg.encode()
     elif hasattr(arg, '__code__'):
-        bstr = arg.__code__.co_code
+        return hash_code(arg)
     elif isinstance(arg, functools.partial):
         return hash_partial(arg)
     elif isinstance(arg, np.ndarray):
