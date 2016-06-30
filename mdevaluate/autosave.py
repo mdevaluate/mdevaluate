@@ -1,10 +1,12 @@
 import os
+from warnings import warn
 import numpy as np
 from .utils import merge_hashes, hash_anything as _hash
 import functools
 autosave_directory = None
 load_autosave_data = False
 verbose_print = True
+user_autosave_directory = os.path.join(os.environ['HOME'], '.mdevaluate/autosave')
 
 
 def notify(msg):
@@ -42,6 +44,9 @@ def get_directory(reader):
     """Get the autosave directory for a trajectory reader."""
     outdir = os.path.dirname(reader.filename)
     savedir = os.path.join(outdir, autosave_directory)
+    if not os.access(savedir, os.W_OK):
+        savedir = os.path.join(user_autosave_directory, savedir.lstrip('/'))
+        warn('Switched autosave directory to {}, since original location is not writeable.'.format(savedir))
     os.makedirs(savedir, exist_ok=True)
     return savedir
 
