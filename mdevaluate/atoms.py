@@ -38,18 +38,23 @@ def from_grofile(grofile, index_file=None):
     return Atoms(_atoms_from_grofile(grofile), indices).subset()
 
 
-def from_tprfile(tprfile):
+def from_tprfile(tprfile, index_file=None):
     """
     Load atoms from a compiled tpr file.
 
     Args:
         tprile (str): Filename of the tpr file
+        index_file (opt.): Index file that should be loaded alongside.
 
     Returns:
         AtomSubset: All atoms in tprfile
     """
     tpr = TPXReader(tprfile)
-    return Atoms(tpr.atoms, charges=tpr.charge, masses=tpr.mass).subset()
+    if index_file is not None:
+        indices = load_indices(index_file)
+    else:
+        indices = None
+    return Atoms(tpr.atoms, indices=indices, charges=tpr.charge, masses=tpr.mass).subset()
 
 
 class Atoms:

@@ -81,8 +81,7 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
             Descriptor of the topology file (tpr or gro). By default a tpr file is
             used, if there is exactly one in the directoy.
         trajectory (opt.): Descriptor of the trajectory (xtc file).
-        index_file (opt.):
-            If the topology is loaded from a gro file, an index file can be specified.
+        index_file (opt.): An index file that will be loaded alongside with the topology.
         cached (opt.):
             If the trajectory reader should be cached. Can be True, an integer or None.
             If this is True maxsize is 128, otherwise this is used as maxsize for
@@ -111,8 +110,14 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
         top_file, = top_glob
         top_ext = top_file.split('.')[-1]
         print('Loading topology: {}'.format(top_file))
+        if index_file is not None:
+            index_glob = glob(os.path.join(directory, index_file))
+            if index_glob is not None:
+                index_file = index_glob[0]
+            else:
+                index_file = None
         if top_ext == 'tpr':
-            atom_set = atoms.from_tprfile(top_file)
+            atom_set = atoms.from_tprfile(top_file, index_file)
         elif top_ext == 'gro':
             atom_set = atoms.from_grofile(top_file, index_file)
         else:
