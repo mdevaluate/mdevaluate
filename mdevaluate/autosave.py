@@ -44,6 +44,11 @@ def get_directory(reader):
     """Get the autosave directory for a trajectory reader."""
     outdir = os.path.dirname(reader.filename)
     savedir = os.path.join(outdir, autosave_directory)
+    if not os.path.exists(savedir):
+        try:
+            os.makedirs(savedir)
+        except PermissionError:
+            pass
     if not os.access(savedir, os.W_OK):
         savedir = os.path.join(user_autosave_directory, savedir.lstrip('/'))
         warn('Switched autosave directory to {}, since original location is not writeable.'.format(savedir))
