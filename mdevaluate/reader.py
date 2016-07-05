@@ -83,7 +83,7 @@ class CachedReader(BaseReader):
         """Clear the cache of the frames."""
         self._get_item.cache_clear()
 
-    def __init__(self, filename, maxsize):
+    def __init__(self, filename, maxsize, reindex=False):
         """
         Args:
             filename (str): Trajectory file that will be opened.
