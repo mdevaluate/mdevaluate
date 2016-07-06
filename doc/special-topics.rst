@@ -8,3 +8,4 @@ This part of the documentation describes advanced ways of the use of mdevaluate.
 
    special/autosave
    special/spatial
+   special/overlap

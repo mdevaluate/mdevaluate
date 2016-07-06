@@ -155,6 +155,33 @@ def van_hove(start, end, bins, box=None):
     return 1 / len(start) * np.histogram(delta_r, bins)[0]
 
 
+def overlap(onset, frame, crds_tree, radius):
+    """
+    Compute the overlap with a reference configuration defined in a CoordinatesTree.
+
+    Args:
+        onset: Initial frame, this is only used to get the frame index
+        frame: The current configuration
+        crds_tree: A CoordinatesTree of the reference configurations
+        radius: The cutoff radius for the overlap
+
+    This function is intended to be used with :func:`shifted_correlation`.
+    As usual the first two arguments are used internally and the remaining ones
+    should be defined with :func:`functools.partial`.
+
+    If the overlap of a subset of the system should be calculated, this has to be
+    defined through a selection of the reference configurations in the CoordinatesTree.
+
+    Example:
+        >>> shifted_correlation(
+        ...     partial(overlap, crds_tree=CoordinatesTree(traj), radius=0.11),
+        ...     traj
+        ... )
+    """
+    tree = crds_tree[onset.step]
+    return (tree.query(frame)[0] <= radius).sum() / tree.n
+
+
 def susceptibility(time, correlation, **kwargs):
     """
     Calculate the susceptibility of a correlation function.

@@ -300,4 +300,5 @@ intersphinx_mapping = {
     'python': ('http://docs.python.org/3/', None),
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'ipython': ('http://ipython.org/ipython-doc/dev/', None),
+    'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
     }

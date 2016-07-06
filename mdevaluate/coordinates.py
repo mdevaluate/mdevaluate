@@ -1,7 +1,10 @@
-import numpy as np
 from functools import wraps
 from functools import partial, lru_cache
 from copy import copy
+
+import numpy as np
+from scipy.spatial import cKDTree, KDTree
+
 from .atoms import AtomSubset
 from .pbc import pbc_diff
 from .utils import hash_anything as _hash, merge_hashes, mask2indices
@@ -78,7 +81,8 @@ def spatial_selector(frame, transform, rmin, rmax):
     """
     Select a subset of atoms which have a radius between rmin and rmax.
     Coordinates are filtered by the condition::
-        rmin <= transform(frame) <= rmax
+
+      rmin <= transform(frame) <= rmax
 
     Args:
         frame: The coordinates of the actual trajectory
@@ -292,6 +296,53 @@ class CoordinatesFilter:
         else:
             frame = self.coordinates[item]
             return frame[self.atom_filter]
+
+
+class CoordinatesKDTree:
+    """
+    A KDTree of coordinates frames. The KDtrees are cached by a :func:`functools.lru_cache`.
+    Uses :class:`scipy.spatial.cKDTree` by default, since it's significantly faster.
+    Make sure to use scipy 0.17 or later or switch to the normal KDTree, since cKDTree has
+    a memory leak in earlier versions.
+    """
+
+    def clear_cache(self):
+        """Clear the LRU cache."""
+        self._get_tree_at_index.cache_clear()
+
+    @property
+    def cache_info(self):
+        """Return info about the state of the cache."""
+        return self._get_tree_at_index.cache_info()
+
+    def _get_tree_at_index(self, index):
+        frame = self.frames[index]
+        return self.kdtree(frame[self.selector(frame)])
+
+    def __init__(self, frames, selector=None, maxcache=128, ckdtree=True):
+        """
+        Args:
+            frames: Trajectory of the simulation, can be Coordinates object or reader
+            selector: Selector function that selects a subset of each frame
+            maxcache: Maxsize of the :func:`~functools.lru_cache`
+            ckdtree: Use :class:`~scipy.spatial.cKDTree` or :class:`~scipy.spatial.KDTree` if False
+        """
+        if selector is not None:
+            self.selector = selector
+        else:
+            self.selector = lambda x: slice(None)
+        self.frames = frames
+        self.kdtree = cKDTree if ckdtree else KDTree
+        self._get_tree_at_index = lru_cache(maxsize=maxcache)(self._get_tree_at_index)
+
+    def __getitem__(self, index):
+        return self._get_tree_at_index(index)
+
+    def __hash__(self):
+        return merge_hashes(_hash(self.selector), _hash(self.frames))
+
+    def __eq__(self, other):
+        return super().__eq__(other)
 
 
 def map_coordinates(func):
