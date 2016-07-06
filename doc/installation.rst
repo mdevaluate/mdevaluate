@@ -49,7 +49,7 @@ See the `pygmx repository <https://chaos3.fkp.physik.tu-darmstadt.de/diffusion/G
 Installation
 ------------
 
-First obtain the source code of mdevaluate from the `git repository <https://bitbucket.org/fkp-md/mdevaluate>`_.
+First obtain the source code of mdevaluate from the `git repository <https://chaos3.fkp.physik.tu-darmstadt.de/diffusion/MDE/>`_.
 Navigate to the source directory and run the installation::
 
   python3 setup.py install
