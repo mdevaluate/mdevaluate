@@ -6,7 +6,7 @@ import numpy as np
 from scipy.spatial import cKDTree, KDTree
 
 from .atoms import AtomSubset
-from .pbc import pbc_diff
+from .pbc import pbc_diff, whole
 from .utils import hash_anything as _hash, merge_hashes, mask2indices
 
 
@@ -125,6 +125,10 @@ class CoordinateFrame(np.ndarray):
     @property
     def atom_names(self):
         return self.coordinates.atom_subset.atom_names
+
+    @property
+    def whole(self):
+        return whole(self)
 
     def __new__(subtype, shape, dtype=float, buffer=None, offset=0, strides=None, order=None,
                 coordinates=None, step=None, box=None):
