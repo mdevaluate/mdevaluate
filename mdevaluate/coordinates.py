@@ -106,6 +106,26 @@ class CoordinateFrame(np.ndarray):
     def time(self):
         return self.coordinates.frames[self.step].time
 
+    @property
+    def masses(self):
+        return self.coordinates.atoms.masses[self.coordinates.atom_subset.selection]
+
+    @property
+    def charges(self):
+        return self.coordinates.atoms.charges[self.coordinates.atom_subset.selection]
+
+    @property
+    def residue_ids(self):
+        return self.coordinates.atom_subset.residue_ids
+
+    @property
+    def residue_names(self):
+        return self.coordinates.atom_subset.residue_names
+
+    @property
+    def atom_names(self):
+        return self.coordinates.atom_subset.atom_names
+
     def __new__(subtype, shape, dtype=float, buffer=None, offset=0, strides=None, order=None,
                 coordinates=None, step=None, box=None):
         obj = np.ndarray.__new__(subtype, shape, dtype, buffer, offset, strides)
