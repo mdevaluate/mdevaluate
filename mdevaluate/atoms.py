@@ -5,7 +5,11 @@ from .pbc import pbc_diff
 from .utils import hash_anything as _hash
 import numpy as np
 
-from scipy.spatial import KDTree
+import scipy
+if scipy.version.version >= '0.17.0':
+    from scipy.spatial import cKDTree as KDTree
+else:
+    from scipy.spatial import KDTree
 
 from pygmx import TPXReader
 from pygmx.gromacs import _atoms_from_grofile, load_indices
