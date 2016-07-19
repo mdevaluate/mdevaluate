@@ -70,7 +70,7 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
     return coordinates.Coordinates(frames, atom_subset=atom_set, caching=caching)
 
 
-def open(directory, topology='*.tpr', trajectory='*.xtc',
+def open(directory, topology='**/*.tpr', trajectory='**/*.xtc',
          index_file=None, cached=False, reindex=True):
     """
     Open a simulation from a directory.
@@ -99,19 +99,21 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
         >>> open('/path/to/sim', trajectory='out/nojump*.xtc', cached=None)
 
     The file descriptors can use unix style pathname expansion to define the filenames.
+    The default patterns use the recursive placeholder `**` which matches the base or
+    any subdirctory, thus files in subdirectories with matching file type will be found too.
     For example: 'out/nojump*.xtc' would match xtc files in a subdirectory `out` that
     start with `nojump` and end with `.xtc`.
 
     For more details see: https://docs.python.org/3/library/glob.html
     """
 
-    top_glob = glob(os.path.join(directory, topology))
+    top_glob = glob(os.path.join(directory, topology), recursive=True)
     if top_glob is not None and len(top_glob) is 1:
         top_file, = top_glob
         top_ext = top_file.split('.')[-1]
         print('Loading topology: {}'.format(top_file))
         if index_file is not None:
-            index_glob = glob(os.path.join(directory, index_file))
+            index_glob = glob(os.path.join(directory, index_file), recursive=True)
             if index_glob is not None:
                 index_file = index_glob[0]
             else:
@@ -126,7 +128,7 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
     else:
         raise FileNotFoundError('Topology file could not be identified.')
 
-    traj_glob = glob(os.path.join(directory, trajectory))
+    traj_glob = glob(os.path.join(directory, trajectory), recursive=True)
     if traj_glob is not None and len(traj_glob) is 1:
         print('Loading trajectory: {}'.format(traj_glob[0]))
         frames = reader.open(traj_glob[0], cached=cached, reindex=reindex)
