@@ -1,10 +1,13 @@
+import warnings
+
 import numpy as np
+
 from .coordinates import pbc_diff, rotate_axis, polar_coordinates, spherical_coordinates
 from .atoms import next_neighbors
 from .autosave import autosave_data
 
 
-@autosave_data(nargs=2, kwargs_keys=('coordinates_b'))
+@autosave_data(nargs=2, kwargs_keys=('coordinates_b',))
 def time_average(function, coordinates, coordinates_b=None, pool=None, verbose=False):
     """
     Compute the time average of a function.
@@ -86,6 +89,54 @@ def radial_pair_distribution(atoms, bins, box=None):
     density = (number_of_atoms - 1) / np.prod(box)
 
     return hist / volume / density * (2 / (number_of_atoms - 1))
+
+
+def rdf(atoms_a, atoms_b=None, bins=None, box=None):
+    """
+    Compute the radial pair distribution of one or two sets of atoms.
+
+    .. math::
+       g_{AB}(r) = \\frac{1}{\langle \\rho_B\\rangle N_A}\sum\limits_{i\in A}^{N_A}
+       \sum\limits_{j\in B}^{N_B}\\frac{\delta(r_{ij} -r)}{4\pi r^2}
+
+    For use with :func:`time_average`, define bins through the use of :func:`~functools.partial`,
+    the atom sets are passed to :func:`time_average`, if a second set of atoms should be used
+    specify it as ``coordinates_b`` and it will be passed to this function.
+
+    Args:
+        atoms_a: First set of atoms, used internally
+        atoms_b (opt.): Second set of atoms, used internally
+        bins: Bins of the radial distribution function
+        box (opt.): Simulations box, if not specified this is taken from ``atoms_a.box``
+    """
+    assert bins is not None, 'Bins of the pair distribution have to be defined.'
+    if box is None:
+        box = atoms_a.box.diagonal()
+    if atoms_b is None:
+        atoms_b = atoms_a
+        nr_of_atoms = len(atoms_a)
+        indices = np.triu_indices(nr_of_atoms, k=1)
+    else:
+        nr_a, dim = atoms_a.shape
+        nr_b, dim = atoms_b.shape
+        if nr_a > nr_b:
+            # Make sure atoms_a is always the smaller set.
+            atoms_a, atoms_b = atoms_b, atoms_a
+        fill = np.empty((abs(nr_a - nr_b), dim))
+        fill.fill(np.nan)
+        atoms_a = np.concatenate((atoms_a, fill))
+        nr_of_atoms = max(nr_a, nr_b)
+        indices = np.triu_indices(nr_of_atoms, k=0)
+
+    with warnings.catch_warnings(record=True):
+        diff = pbc_diff(atoms_a[indices[0]], atoms_b[indices[1]], box)
+    diff = diff[~np.isnan(diff).any(axis=1)]
+    dist = (diff**2).sum(axis=1)**0.5
+    volume = 4 / 3 * np.pi * (bins[1:]**3 - bins[:-1]**3)
+    hist, _ = np.histogram(dist, bins)
+    density = len(diff) / np.prod(box)
+
+    return hist / volume / density
 
 
 def distance_distribution(atoms, bins):
