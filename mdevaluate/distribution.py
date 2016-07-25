@@ -5,6 +5,7 @@ import numpy as np
 from .coordinates import pbc_diff, rotate_axis, polar_coordinates, spherical_coordinates
 from .atoms import next_neighbors
 from .autosave import autosave_data
+from .meta.annotate import deprecated
 
 
 @autosave_data(nargs=2, kwargs_keys=('coordinates_b',))
@@ -75,23 +76,7 @@ def time_histogram(function, coordinates, bins, hist_range, pool=None):
     return hist_results
 
 
-def radial_pair_distribution(atoms, bins, box=None):
-    number_of_atoms = len(atoms)
-    # Calculate the upper triangle of differences
-    indices = np.triu_indices(number_of_atoms, k=1)
-
-    # vector between atoms
-    diff = pbc_diff(atoms[indices[0]], atoms[indices[1]], box)
-
-    dist = (diff**2).sum(axis=1)**.5
-    volume = 4 / 3 * np.pi * (bins[1:]**3 - bins[:-1]**3)
-    hist = np.histogram(dist, bins)[0]
-    density = (number_of_atoms - 1) / np.prod(box)
-
-    return hist / volume / density * (2 / (number_of_atoms - 1))
-
-
-def rdf(atoms_a, atoms_b=None, bins=None, box=None):
+def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000):
     """
     Compute the radial pair distribution of one or two sets of atoms.
 
@@ -108,6 +93,10 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None):
         atoms_b (opt.): Second set of atoms, used internally
         bins: Bins of the radial distribution function
         box (opt.): Simulations box, if not specified this is taken from ``atoms_a.box``
+        chunksize (opt.):
+            For large systems (N > 1000) the distaces have to be computed in chunks so the arrays
+            fit into memory, this parameter controlls the size of these chunks. It should be
+            as large as possible, depending on the available memory.
     """
     assert bins is not None, 'Bins of the pair distribution have to be defined.'
     if box is None:
@@ -128,15 +117,40 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None):
         nr_of_atoms = max(nr_a, nr_b)
         indices = np.triu_indices(nr_of_atoms, k=0)
 
-    with warnings.catch_warnings(record=True):
-        diff = pbc_diff(atoms_a[indices[0]], atoms_b[indices[1]], box)
-    diff = diff[~np.isnan(diff).any(axis=1)]
-    dist = (diff**2).sum(axis=1)**0.5
+    # compute the histogram in chunks for large systems
+    hist = 0
+    nr_of_samples = 0
+    for chunk in range(0, len(indices[0]), chunksize):
+        sl = slice(chunk, chunk + chunksize)
+        with warnings.catch_warnings(record=True):
+            diff = pbc_diff(atoms_a[indices[0][sl]], atoms_b[indices[1][sl]], box)
+        diff = diff[~np.isnan(diff).any(axis=1)]
+        dist = (diff**2).sum(axis=1)**0.5
+        nr_of_samples += len(dist)
+        hist += np.histogram(dist, bins)[0]
+
     volume = 4 / 3 * np.pi * (bins[1:]**3 - bins[:-1]**3)
-    hist, _ = np.histogram(dist, bins)
-    density = len(diff) / np.prod(box)
+    density = nr_of_samples / np.prod(box)
 
     return hist / volume / density
+
+
+@deprecated(rdf)
+def radial_pair_distribution(atoms, bins, box=None):
+    warnings.warn('radial_pair_distribution is deprecated, use mdevaluate.distribution.rdf instead', DeprecationWarning)
+    number_of_atoms = len(atoms)
+    # Calculate the upper triangle of differences
+    indices = np.triu_indices(number_of_atoms, k=1)
+
+    # vector between atoms
+    diff = pbc_diff(atoms[indices[0]], atoms[indices[1]], box)
+
+    dist = (diff**2).sum(axis=1)**.5
+    volume = 4 / 3 * np.pi * (bins[1:]**3 - bins[:-1]**3)
+    hist = np.histogram(dist, bins)[0]
+    density = (number_of_atoms - 1) / np.prod(box)
+
+    return hist / volume / density * (2 / (number_of_atoms - 1))
 
 
 def distance_distribution(atoms, bins):
