@@ -3,12 +3,15 @@ import numpy as np
 
 
 def pbc_diff(v1, v2, box):
-    v = v1-v2
+    """
+    Calculate the difference of two vestors, considering optional boundary conditions.
+    """
     if box is None:
-        return v
-
-    v -= (v > box/2)*box
-    v += (v < -box/2) * box
+        v = v1 - v2
+    else:
+        v = v1 % box - v2 % box
+        v -= (v > box/2)*box
+        v += (v < -box/2) * box
 
     return v
 
