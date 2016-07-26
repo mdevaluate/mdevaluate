@@ -1,1 +1,4 @@
-__author__ = 'mbartelm'
+
+def notify(msg, verbose):
+    if verbose:
+        print(msg)

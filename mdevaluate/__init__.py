@@ -11,6 +11,8 @@ from . import simulation
 from . import autosave
 from . import reader
 
+from .meta import notify
+
 from pygmx import gromacs
 from pygmx.errors import FileTypeError
 
@@ -71,7 +73,7 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
 
 
 def open(directory, topology='**/*.tpr', trajectory='**/*.xtc',
-         index_file=None, cached=False, reindex=True):
+         index_file=None, cached=False, reindex=True, verbose=True):
     """
     Open a simulation from a directory.
 
@@ -87,6 +89,7 @@ def open(directory, topology='**/*.tpr', trajectory='**/*.xtc',
             If this is True maxsize is 128, otherwise this is used as maxsize for
             the cache, None means infinite cache (this is a potential memory leak!).
         reindex (opt.): Regenerate the xtc-index if necessary.
+        verbose (opt.): Be verbose about the opened files.
 
     Returns:
         A Coordinate object of the simulation.
@@ -111,7 +114,7 @@ def open(directory, topology='**/*.tpr', trajectory='**/*.xtc',
     if top_glob is not None and len(top_glob) is 1:
         top_file, = top_glob
         top_ext = top_file.split('.')[-1]
-        print('Loading topology: {}'.format(top_file))
+        notify('Loading topology: {}'.format(top_file), verbose)
         if index_file is not None:
             index_glob = glob(os.path.join(directory, index_file), recursive=True)
             if index_glob is not None:
@@ -130,7 +133,7 @@ def open(directory, topology='**/*.tpr', trajectory='**/*.xtc',
 
     traj_glob = glob(os.path.join(directory, trajectory), recursive=True)
     if traj_glob is not None and len(traj_glob) is 1:
-        print('Loading trajectory: {}'.format(traj_glob[0]))
+        notify('Loading trajectory: {}'.format(traj_glob[0]), verbose)
         frames = reader.open(traj_glob[0], cached=cached, reindex=reindex)
     else:
         raise FileNotFoundError('Trajectory file could not be identified.')
