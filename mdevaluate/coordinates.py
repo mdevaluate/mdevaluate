@@ -371,13 +371,13 @@ class CoordinatesKDTree:
 
 def map_coordinates(func):
     @wraps(func)
-    def wrapped(coordinates, *args, **kwargs):
-        return CoordinatesMap(coordinates, partial(func, *args, **kwargs))
+    def wrapped(coordinates, **kwargs):
+        return CoordinatesMap(coordinates, partial(func, **kwargs))
     return wrapped
 
 
 @map_coordinates
-def centers_of_mass(c, masses):
+def centers_of_mass(c, *, masses=None):
     """
 
     A- 1
