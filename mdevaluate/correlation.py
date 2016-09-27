@@ -31,11 +31,11 @@ def subensemble_correlation(selector_function, correlation_function=correlation)
 
 
 @autosave_data(nargs=2, kwargs_keys=(
-    'index_distribution', 'correlation', 'segments', 'window', 'average'
+    'index_distribution', 'correlation', 'segments', 'window', 'skip', 'average'
 ))
 def shifted_correlation(function, frames,
                         index_distribution=log_indices, correlation=correlation,
-                        segments=10, window=0.5,
+                        segments=10, window=0.5, skip=0,
                         average=False,):
     """
     Calculate the time series for a correlation function
@@ -49,12 +49,14 @@ def shifted_correlation(function, frames,
         index_distribution (opt.):
                     A function that returns the indices for which the timeseries
                     will be calculated
-        segments (int, opt.):
-                    The number of segments the time window will be shifted
-        window (number, opt.):
-                    The fraction of the simulation the time series will cover
         correlation (function, opt.):
                     The correlation function
+        segments (int, opt.):
+                    The number of segments the time window will be shifted
+        window (float, opt.):
+                    The fraction of the simulation the time series will cover
+        skip (float, opt.):
+                    The fraction of the trajectory that will be skipped at the beginning.
     Returns:
         tuple:
             A list of length N that contains the indices of the frames at which
@@ -66,8 +68,9 @@ def shifted_correlation(function, frames,
 
         >>> indices, data = shifted_correlation(msd, coords)
     """
-    start_frames = np.int_(np.linspace(0, len(frames) * (1 - window), num=segments, endpoint=False))
-    num_frames = int(len(frames) * window)
+
+    start_frames = np.int_(np.linspace(len(frames)*skip, len(frames) * (1 - window - skip), num=segments, endpoint=False))
+    num_frames = int(len(frames) * (window - skip))
 
     idx = index_distribution(0, num_frames)
 
