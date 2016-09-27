@@ -72,7 +72,7 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
     return coordinates.Coordinates(frames, atom_subset=atom_set, caching=caching)
 
 
-def open(directory, topology='**/*.tpr', trajectory='**/*.xtc',
+def open(directory, topology='*.tpr', trajectory='*.xtc',
          index_file=None, cached=False, reindex=True, verbose=True):
     """
     Open a simulation from a directory.
