@@ -11,4 +11,5 @@ setup(
 
     version=__version__,
     requires=['numpy', 'scipy'],
+    zip_safe=False
 )

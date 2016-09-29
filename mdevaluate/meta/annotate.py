@@ -22,7 +22,7 @@ def untested(f, comment=""):
 
 def deprecated(replacement):
     def decorator(f):
-        msg = '{} is deprecated, use {}.{} instead.'.format(f.__name__, replacement.__module, replacement.__name__)
+        msg = '{} is deprecated, use {}.{} instead.'.format(f.__name__, replacement.__module__, replacement.__name__)
 
         @functools.wraps(f)
         def wrapped(*args, **kwargs):
@@ -30,3 +30,9 @@ def deprecated(replacement):
             return f(*args, **kwargs)
 
         return wrapped
+    return decorator
+
+
+def notify(msg, verbose):
+    if verbose:
+        print(msg)
