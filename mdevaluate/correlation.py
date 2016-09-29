@@ -68,9 +68,9 @@ def shifted_correlation(function, frames,
 
         >>> indices, data = shifted_correlation(msd, coords)
     """
-
+    assert window + skip < 1
     start_frames = np.int_(np.linspace(len(frames)*skip, len(frames) * (1 - window - skip), num=segments, endpoint=False))
-    num_frames = int(len(frames) * (window - skip))
+    num_frames = int(len(frames) * (window))
 
     idx = index_distribution(0, num_frames)
 
