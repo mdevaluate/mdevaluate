@@ -98,3 +98,33 @@ class CachedReader(BaseReader):
 
     def __getitem__(self, item):
         return self._get_item(item)
+
+
+class EnergyReader:
+    """A reader for Gromacs energy files."""
+
+    def __init__(self, edrfile, topology=None):
+        """
+        Args:
+            edrfile: Filename of the energy file
+            topology (opt.): Filename of the topology, speeds up file io since the length of the energy file is known
+        """
+        if topology is not None:
+            top = pygmx.open(topology)
+            steps = top.nsteps // top.nstenergy
+        else:
+            steps = None
+
+        edr = pygmx.open(edrfile)
+        self.time, data = edr.read(steps=steps)
+        self.types, self.units = zip(*edr.types)
+        self.data = data.T
+
+    def __getitem__(self, type):
+        """
+        Get time series of an energy type.
+        """
+        if type in self.types:
+            return self.data[self.types.index(type)]
+        else:
+            raise KeyError('Energy type {} not found in Energy File.'.format(type))

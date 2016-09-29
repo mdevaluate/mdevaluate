@@ -139,3 +139,15 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
         raise FileNotFoundError('Trajectory file could not be identified.')
 
     return coordinates.Coordinates(frames, atom_subset=atom_set)
+
+
+def open_energy(energyfile, topology=None):
+    """
+    Open an energy file with EnergyReader.
+    """
+    edrfile = glob(energyfile)[0]
+    if topology is not None:
+        topfile = glob(os.path.join(os.path.dirname(energyfile), topology))[0]
+    else:
+        topfile = None
+    return reader.EnergyReader(edrfile, topology=topfile)
