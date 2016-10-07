@@ -246,8 +246,23 @@ def distance_to_atoms(ref, atoms, box=None):
     return out
 
 
-def next_neighbors(atoms, number_of_neighbors=1, distance_upper_bound=np.inf):
+def next_neighbors(atoms, query_atoms=None, number_of_neighbors=1, distance_upper_bound=np.inf, distinct=False):
+    """
+    Find the N next neighbors of a set of atoms.
+
+    Args:
+        atoms: The reference atoms and also the atoms which are queried if `query_atoms` is net provided
+        query_atoms (opt.): If this is not None, these atoms will be queried
+        number_of_neighbors (int, opt.): Number of neighboring atoms to find
+        distance_upper_bound (float, opt.): Upper bound of the distance between neighbors
+        distinct (bool, opt.): If this is true, the atoms and query atoms are taken as distinct sets of atoms
+    """
     tree = KDTree(atoms)
-    _, indices = tree.query(atoms, number_of_neighbors + 1,
-                            distance_upper_bound=distance_upper_bound)
-    return indices[:, 1:]  # don't return the atoms itself
+    dnn = 0
+    if query_atoms is None:
+        query_atoms = atoms
+    elif not distinct:
+        dnn = 1
+    dist, indices = tree.query(query_atoms, number_of_neighbors + dnn,
+                               distance_upper_bound=distance_upper_bound)
+    return indices[:, dnn:]
