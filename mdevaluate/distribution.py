@@ -159,9 +159,11 @@ def distance_distribution(atoms, bins):
     return np.histogram(connection_lengths, bins)[0]
 
 
-def tetrahedral_order(atoms):
-    indices = next_neighbors(atoms, number_of_neighbors=4)
-    neighbors = atoms[indices]
+def tetrahedral_order(atoms, reference_atoms=None):
+    if reference_atoms is None:
+        reference_atoms = atoms
+    indices = next_neighbors(reference_atoms, query_atoms=atoms,  number_of_neighbors=4)
+    neighbors = reference_atoms[indices]
     neighbors_1, neighbors_2, neighbors_3, neighbors_4 = \
         neighbors[:, 0, :], neighbors[:, 1, :], neighbors[:, 2, :], neighbors[:, 3, :]
 
@@ -172,10 +174,10 @@ def tetrahedral_order(atoms):
     neighbors_4 -= atoms
 
     # Normed Connection vectors
-    neighbors_1 /= ((neighbors_1**2).sum(axis=1)**.5).reshape(neighbors_1.shape[0], 1)
-    neighbors_2 /= ((neighbors_2**2).sum(axis=1)**.5).reshape(neighbors_1.shape[0], 1)
-    neighbors_3 /= ((neighbors_3**2).sum(axis=1)**.5).reshape(neighbors_1.shape[0], 1)
-    neighbors_4 /= ((neighbors_4**2).sum(axis=1)**.5).reshape(neighbors_1.shape[0], 1)
+    neighbors_1 /= np.linalg.norm(neighbors_1, axis=-1).reshape(-1, 1)
+    neighbors_2 /= np.linalg.norm(neighbors_2, axis=-1).reshape(-1, 1)
+    neighbors_3 /= np.linalg.norm(neighbors_3, axis=-1).reshape(-1, 1)
+    neighbors_4 /= np.linalg.norm(neighbors_4, axis=-1).reshape(-1, 1)
 
     a_1_2 = ((neighbors_1 * neighbors_2).sum(axis=1) + 1 / 3)**2
     a_1_3 = ((neighbors_1 * neighbors_3).sum(axis=1) + 1 / 3)**2
@@ -191,8 +193,9 @@ def tetrahedral_order(atoms):
     return q
 
 
-def tetrahedral_order_distribution(atoms, bins):
-    Q = tetrahedral_order(atoms)
+def tetrahedral_order_distribution(atoms, reference_atoms=None, bins=None):
+    assert bins is not None, 'Bin edges of the distribution have to be specified.'
+    Q = tetrahedral_order(atoms, reference_atoms=reference_atoms)
     return np.histogram(Q, bins=bins)[0]
 
 
