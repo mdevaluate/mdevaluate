@@ -135,24 +135,6 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000):
     return hist / volume / density
 
 
-@deprecated(rdf)
-def radial_pair_distribution(atoms, bins, box=None):
-    warnings.warn('radial_pair_distribution is deprecated, use mdevaluate.distribution.rdf instead', DeprecationWarning)
-    number_of_atoms = len(atoms)
-    # Calculate the upper triangle of differences
-    indices = np.triu_indices(number_of_atoms, k=1)
-
-    # vector between atoms
-    diff = pbc_diff(atoms[indices[0]], atoms[indices[1]], box)
-
-    dist = (diff**2).sum(axis=1)**.5
-    volume = 4 / 3 * np.pi * (bins[1:]**3 - bins[:-1]**3)
-    hist = np.histogram(dist, bins)[0]
-    density = (number_of_atoms - 1) / np.prod(box)
-
-    return hist / volume / density * (2 / (number_of_atoms - 1))
-
-
 def distance_distribution(atoms, bins):
     connection_vectors = atoms[:-1, :] - atoms[1:, :]
     connection_lengths = (connection_vectors**2).sum(axis=1)**.5
