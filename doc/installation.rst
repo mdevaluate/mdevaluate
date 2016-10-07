@@ -7,7 +7,7 @@ stuff has to be compiled, which is done with cython when installing the package.
 
 The easiest way to use mdevaluate on the institutes network is to use the mdevaluate module::
 
-  module load mdevaluate/16.06
+  module load mdevaluate/16.09
 
 The mdevaluate module is provided in different versions.
 Since there is no real *release schedule*, the version numbers are arbitrary and

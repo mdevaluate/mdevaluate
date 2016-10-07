@@ -18,7 +18,7 @@ For details see :func:`mdevaluate.load_simulation`.
 
 The function will return a coordinates object, for the whole system.
 A subset of the system may be obtained directly from the coordinates object by
-calling its :func:`mdevaluate.coordinates.Coordinates.subset` method.
+calling its :func:`~mdevaluate.coordinates.Coordinates.subset` method.
 This function accepts the same input as :func:`mdevaluate.atoms.AtomSubset.subset`.
 A new feature that was introduced in the function is the possibility to chose
 atoms with regular expressions.
@@ -38,6 +38,22 @@ used when selecting the subset.
   CW_atoms = trajectory.subset(atom_name='CW.')
 
 And that's it, now one can evaluate stuff for this subset of atoms.
+
+Selecting a subset
+------------------
+
+As shown in the example above it is often necessary to select a subset of the system for analysis.
+This can be a special group of atoms (e.g. all C atoms) or a whole residue for which the center of mass should be computed.
+Subsets are selected with the :func:`~mdevaluate.Coordinates.subset` method of Coordinates objects.
+
+This method accepts four keyword arguments, with which the atom name, residue name and residue id or atom indices can be specified.
+The former two name arguments accept a regular expression which allows two include several different names in one subset.
+Some examples:
+
+- All carbon atoms (which are named CW1, CT1, CA, ...): ``tr.subset(atom_name='C.*')``
+- Atoms NA1, NA2 and OW: ``tr.subset(atom_name='NA.|OW')``
+- All oxygen atoms of residue EG: ``tr.subset(atom_name='O.*', residue_name='EG')``
+
 
 Specifying data files
 ---------------------

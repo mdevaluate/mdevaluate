@@ -63,18 +63,26 @@ mdevaluate.functions
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.pbc module
-.....................
+mdevaluate.pbc
+..............
 
 .. automodule:: mdevaluate.pbc
     :members:
     :undoc-members:
     :show-inheritance:
 
-mdevaluate.simulation
+mdevaluate.reader
 .....................
 
-.. automodule:: mdevaluate.simulation
+.. automodule:: mdevaluate.reader
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+mdevaluate.utils
+.....................
+
+.. automodule:: mdevaluate.utils
     :members:
     :undoc-members:
     :show-inheritance:

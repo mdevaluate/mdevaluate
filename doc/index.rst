@@ -16,6 +16,7 @@ Contents
 
    installation
    guide
+   gallery/index
    contribution
    modules
 

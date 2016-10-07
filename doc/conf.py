@@ -42,6 +42,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     #    'sphinx.ext.autosummary',
     #    'sphinx.ext.inheritance_diagram',
+    'sphinx_gallery.gen_gallery',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -303,3 +304,9 @@ intersphinx_mapping = {
     'ipython': ('http://ipython.org/ipython-doc/dev/', None),
     'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
     }
+
+sphinx_gallery_conf = {
+    # path to your examples scripts
+    'examples_dirs' : '../examples',
+    # path where to save gallery generated examples
+    'gallery_dirs'  : 'gallery'}
