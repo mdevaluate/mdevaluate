@@ -103,20 +103,14 @@ class CachedReader(BaseReader):
 class EnergyReader:
     """A reader for Gromacs energy files."""
 
-    def __init__(self, edrfile, topology=None):
+    def __init__(self, edrfile):
         """
         Args:
             edrfile: Filename of the energy file
             topology (opt.): Filename of the topology, speeds up file io since the length of the energy file is known
         """
-        if topology is not None:
-            top = pygmx.open(topology)
-            steps = top.nsteps // top.nstenergy
-        else:
-            steps = None
-
         edr = pygmx.open(edrfile)
-        self.time, data = edr.read(steps=steps)
+        self.time, data = edr.read()
         self.types, self.units = zip(*edr.types)
         self.data = data.T
 
