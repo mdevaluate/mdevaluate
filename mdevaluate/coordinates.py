@@ -295,11 +295,14 @@ class CoordinatesMap:
 
     @property
     def description(self):
-        return self.atom_subset.description
+        if hasattr(self, '_description'):
+            return self._description
+        else:
+            return '{}_{}'.format(self.function.__name__, self.atom_subset.description)
 
     @description.setter
     def description(self, desc):
-        self.atom_subset.description = desc
+        self._description = desc
 
 
 class CoordinatesFilter:
