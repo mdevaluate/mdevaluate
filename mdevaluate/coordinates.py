@@ -298,7 +298,11 @@ class CoordinatesMap:
         if hasattr(self, '_description'):
             return self._description
         else:
-            return '{}_{}'.format(self.function.__name__, self.atom_subset.description)
+            if isinstance(self.function, partial):
+                fname = self.function.func.__name__
+            else:
+                fname = self.function.__name__
+            return '{}_{}'.format(fname, self.atom_subset.description)
 
     @description.setter
     def description(self, desc):
