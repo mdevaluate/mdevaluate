@@ -195,3 +195,10 @@ def superpose(x1, y1, x2, y2, N=100, damping=1.0):
         y2[x2 > x1.max()]
         ))
     return xdata, ydata
+
+
+def runningmean(data, nav):
+    """
+    Compute the running mean of a 1-dimenional array for `nav` points.
+    """
+    return np.convolve(data, np.ones((nav,))/nav, mode='valid')
