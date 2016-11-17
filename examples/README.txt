@@ -1,2 +1,2 @@
-Collection of Example Scripts
-=============================
+Example Gallery
+===============
