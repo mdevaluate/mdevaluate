@@ -40,6 +40,29 @@ def disable():
     load_autosave_data = False
 
 
+class disabled:
+    """
+    A context manager that disbales the autosave module within its context.
+
+    Example:
+        import mdevaluate as md
+        md.autosave.enable('data')
+        with md.autosave.disabled():
+            # Autosave functionality is disabled within this context.
+            md.correlation.shifted_correlation(
+                ...
+            )
+
+        # After the context is exited, autosave will work as before.
+    """
+    def __enter__(self):
+        self._autosave_directory = autosave_directory
+        disable()
+
+    def __exit__(self, *args):
+        enable(self._autosave_directory)
+
+
 def get_directory(reader):
     """Get the autosave directory for a trajectory reader."""
     outdir = os.path.dirname(reader.filename)
