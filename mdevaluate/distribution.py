@@ -6,6 +6,7 @@ from .coordinates import pbc_diff, rotate_axis, polar_coordinates, spherical_coo
 from .atoms import next_neighbors
 from .autosave import autosave_data
 from .meta.annotate import deprecated
+from .utils import runningmean
 
 
 @autosave_data(nargs=2, kwargs_keys=('coordinates_b',))
@@ -76,7 +77,7 @@ def time_histogram(function, coordinates, bins, hist_range, pool=None):
     return hist_results
 
 
-def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000):
+def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=False):
     """
     Compute the radial pair distribution of one or two sets of atoms.
 
@@ -97,6 +98,7 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000):
             For large systems (N > 1000) the distaces have to be computed in chunks so the arrays
             fit into memory, this parameter controlls the size of these chunks. It should be
             as large as possible, depending on the available memory.
+        returnx (opt.): If True the x ordinate of the histogram is returned.
     """
     assert bins is not None, 'Bins of the pair distribution have to be defined.'
     if box is None:
@@ -132,7 +134,11 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000):
     volume = 4 / 3 * np.pi * (bins[1:]**3 - bins[:-1]**3)
     density = nr_of_samples / np.prod(box)
 
-    return hist / volume / density
+    res = hist / volume / density
+    if returnx:
+        return np.vstack((runningmean(bins, 2), res))
+    else:
+        return res
 
 
 def distance_distribution(atoms, bins):
@@ -181,7 +187,7 @@ def tetrahedral_order_distribution(atoms, reference_atoms=None, bins=None):
     return np.histogram(Q, bins=bins)[0]
 
 
-def radial_density(atoms, bins, symmetry_axis=(0, 0, 1), origin=(0, 0, 0), height=1):
+def radial_density(atoms, bins, symmetry_axis=(0, 0, 1), origin=(0, 0, 0), height=1, returnx=False):
     """
     Calculate the radial density distribution.
 
@@ -200,12 +206,18 @@ def radial_density(atoms, bins, symmetry_axis=(0, 0, 1), origin=(0, 0, 0), heigh
             Origin of the rotational symmetry, e.g. center of the pore.
         height (opt.):
             Height of the pore, necessary for correct normalization of the density.
+        returnx (opt.):
+            If True, the x ordinate of the distribution is returned.
     """
     cartesian = rotate_axis(atoms - origin, symmetry_axis)
     radius, _ = polar_coordinates(cartesian[:, 0], cartesian[:, 1])
     hist = np.histogram(radius, bins=bins)[0]
     volume = np.pi * (bins[1:]**2 - bins[:-1]**2) * height
-    return hist / volume
+    res = hist / volume
+    if returnx:
+        return np.vstack((runningmean(bins, 2), res))
+    else:
+        return res
 
 
 def shell_density(atoms, shell_radius, bins, shell_thickness=0.5,
@@ -254,3 +266,16 @@ def mixing_ratio_distribution(atoms_a, atoms_b, bins_ratio, bins_density,
     good_inds = (density_a != 0) & (density_b != 0)
     hist, _ = np.histogram(mixing_ratio[good_inds], bins=bins_ratio, weights=weights_ratio)
     return hist
+
+
+def next_neighbor_distribution(atoms, reference=None, number_of_neighbors=4, bins=None, normed=True):
+    """
+    Compute the distribution of next neighbors with the same residue name.
+    """
+    assert bins is not None, 'Bins have to be specified.'
+    if reference is None:
+        reference = atoms
+    nn = next_neighbors(reference, query_atoms=atoms, number_of_neighbors=number_of_neighbors)
+    resname_nn = reference.residue_names[nn]
+    count_nn = (resname_nn == atoms.residue_names.reshape(-1, 1)).sum(axis=1)
+    return np.histogram(count_nn, bins=bins, normed=normed)[0]
