@@ -19,6 +19,8 @@ def compare_regex(list, exp):
     """
     Compare a list of strings with a regular expression.
     """
+    if not exp.endswith('$'):
+        exp += '$'
     regex = re.compile(exp)
     return np.array([regex.match(s) is not None for s in list])
 
