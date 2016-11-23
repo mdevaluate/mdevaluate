@@ -1,5 +1,6 @@
 
 import numpy as np
+import numba
 
 
 def pbc_diff(v1, v2, box):
@@ -13,6 +14,14 @@ def pbc_diff(v1, v2, box):
         v -= (v > box/2)*box
         v += (v < -box/2) * box
 
+    return v
+
+
+@numba.jit(nopython=True)
+def pbc_diff_numba(ri, rj, box):
+    v = ri % box - rj % box
+    v -= (v > box/2)*box
+    v += (v < -box/2) * box
     return v
 
 

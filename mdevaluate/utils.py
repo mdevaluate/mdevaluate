@@ -3,8 +3,10 @@ Collection of utility functions.
 """
 import hashlib
 import functools
+from types import FunctionType
 
 import numpy as np
+import numba
 
 from scipy.interpolate import interp1d
 
@@ -202,3 +204,36 @@ def runningmean(data, nav):
     Compute the running mean of a 1-dimenional array for `nav` points.
     """
     return np.convolve(data, np.ones((nav,))/nav, mode='valid')
+
+
+def coherent_sum(func, coord_a, coord_b):
+    """
+    Perform a coherent sum over two arrays: :math:`\frac{1}{N_a N_b}\sum_i\sum_j f(X_a[i], X_b[j])`.
+    For numpy arrays ofthis is equal to::
+
+        N, d = x.shape
+        M, d = y.shape
+        coherent_sum(f, x, y) == f(x.reshape(N, 1, d), x.reshape(1, M, d)).sum()
+
+    Args:
+        func: The function is called for each two items in both arrays, this should return a scalar value.
+        coord_a, coord_b: The two arrays.
+        normed (opt.): If the result should be normalized by the number of summands.
+
+    """
+    if isinstance(func, FunctionType):
+        func = numba.jit(func, nopython=True, cache=True)
+    @numba.jit(nopython=True)
+    def cohsum(coord_a, coord_b):
+        res = 0
+        for i in range(len(coord_a)):
+            for j in range(len(coord_b)):
+                res += func(coord_a[i], coord_b[j])
+        return res
+
+    return cohsum(coord_a, coord_b)
+
+
+@numba.jit
+def norm(vec):
+    return (vec**2).sum()**0.5

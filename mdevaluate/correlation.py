@@ -1,11 +1,13 @@
 import numpy as np
+import numba
 from scipy.special import legendre
 from itertools import chain
 from functools import reduce
-from .coordinates import pbc_diff
+
+from .pbc import pbc_diff, pbc_diff_numba
 from .meta import annotate
 from .autosave import autosave_data
-from .utils import filon_fourier_transformation
+from .utils import filon_fourier_transformation, norm, coherent_sum
 
 
 def log_indices(first, last, num=100):
@@ -197,3 +199,21 @@ def susceptibility(time, correlation, **kwargs):
     """
     frequencies, fourier = filon_fourier_transformation(time, correlation, imag=False, **kwargs)
     return frequencies, frequencies * fourier
+
+
+def coherent_scattering_function(onset, frame, q):
+    """
+    Calculate the coherent scattering function.
+    """
+    box = onset.box.diagonal()
+    #q /= np.pi
+    @numba.jit(nopython=True, cache=True)
+    def scfunc(x, y):
+        sqdist = 0
+        for i in range(len(x)):
+            d = x[i] - y[i]
+            d -= (d > box[i]/2)*box[i]
+            d += (d < -box[i]/2)*box[i]
+            sqdist += d**2
+        return np.sinc(sqdist**0.5 * q / np.pi)
+    return coherent_sum(scfunc, onset.pbc, frame.pbc) / len(onset)
