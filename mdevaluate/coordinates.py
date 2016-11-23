@@ -130,6 +130,10 @@ class CoordinateFrame(np.ndarray):
     def whole(self):
         return whole(self)
 
+    @property
+    def pbc(self):
+        return self % self.box.diagonal()
+
     def __new__(subtype, shape, dtype=float, buffer=None, offset=0, strides=None, order=None,
                 coordinates=None, step=None, box=None):
         obj = np.ndarray.__new__(subtype, shape, dtype, buffer, offset, strides)
