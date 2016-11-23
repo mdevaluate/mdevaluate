@@ -49,13 +49,12 @@ def whole(frame, residue_ids=None, len_res=None):
     masses = frame.masses.reshape(nr_res, len_res, 1) / frame.masses[:len_res].sum()
     com = (residues * masses).sum(axis=1).reshape(-1, 1, 3)
     com_dist = residues - com
+
     correction = np.zeros(residues.shape)
-    if len(np.unique(box)) == 1:
-        box = box[0]
-        correction[com_dist > box/2] = -box
-        correction[com_dist < -box/2] = box
-    else:
-        raise NotImplementedError('Non cubic box is not implemented.')
+    n, m, d = np.where(com_dist > box/2)
+    correction[n, m, d] = -box[d]
+    n, m, d = np.where(com_dist < -box/2)
+    correction[n, m, d] = box[d]
 
     whole_frame = residues + correction
     return whole_frame.reshape(nr_res*len_res, 3)
