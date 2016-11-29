@@ -37,7 +37,7 @@ def subensemble_correlation(selector_function, correlation_function=correlation)
 ))
 def shifted_correlation(function, frames,
                         index_distribution=log_indices, correlation=correlation,
-                        segments=10, window=0.5, skip=0,
+                        segments=10, window=0.5, skip=None,
                         average=False,):
     """
     Calculate the time series for a correlation function
@@ -58,7 +58,9 @@ def shifted_correlation(function, frames,
         window (float, opt.):
                     The fraction of the simulation the time series will cover
         skip (float, opt.):
-                    The fraction of the trajectory that will be skipped at the beginning.
+                    The fraction of the trajectory that will be skipped at the beginning,
+                    if this is None the start index of the frames slice will be used,
+                    which defaults to 0.
     Returns:
         tuple:
             A list of length N that contains the indices of the frames at which
@@ -70,8 +72,13 @@ def shifted_correlation(function, frames,
 
         >>> indices, data = shifted_correlation(msd, coords)
     """
+    skip = skip or (frames._slice.start / len(frames))
     assert window + skip < 1
-    start_frames = np.int_(np.linspace(len(frames)*skip, len(frames) * (1 - window - skip), num=segments, endpoint=False))
+
+    start_frames = np.linspace(
+        len(frames) * skip, len(frames) * (1 - window - skip),
+        num=segments, endpoint=False, dtype=int
+    )
     num_frames = int(len(frames) * (window))
 
     idx = index_distribution(0, num_frames)
