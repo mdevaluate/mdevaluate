@@ -206,14 +206,19 @@ def coherent_scattering_function(onset, frame, q):
     Calculate the coherent scattering function.
     """
     box = onset.box.diagonal()
-    #q /= np.pi
+    dimension = len(box)
+
     @numba.jit(nopython=True, cache=True)
     def scfunc(x, y):
         sqdist = 0
-        for i in range(len(x)):
+        for i in range(dimension):
             d = x[i] - y[i]
-            d -= (d > box[i]/2)*box[i]
-            d += (d < -box[i]/2)*box[i]
+            if d > box[i] / 2:
+                d -= box[i]
+            if d < -box[i] / 2:
+                d += box[i]
             sqdist += d**2
-        return np.sinc(sqdist**0.5 * q / np.pi)
+        x = sqdist**0.5 * q
+        return np.sin(x) / x
+
     return coherent_sum(scfunc, onset.pbc, frame.pbc) / len(onset)

@@ -11,8 +11,8 @@ def pbc_diff(v1, v2, box):
         v = v1 - v2
     else:
         v = v1 % box - v2 % box
-        v -= (v > box/2)*box
-        v += (v < -box/2) * box
+        v -= (v > box / 2) * box
+        v += (v < -box / 2) * box
 
     return v
 
@@ -20,8 +20,8 @@ def pbc_diff(v1, v2, box):
 @numba.jit(nopython=True)
 def pbc_diff_numba(ri, rj, box):
     v = ri % box - rj % box
-    v -= (v > box/2)*box
-    v += (v < -box/2) * box
+    v -= (v > box / 2) * box
+    v += (v < -box / 2) * box
     return v
 
 
@@ -51,10 +51,10 @@ def whole(frame, residue_ids=None, len_res=None):
     com_dist = residues - com
 
     correction = np.zeros(residues.shape)
-    n, m, d = np.where(com_dist > box/2)
+    n, m, d = np.where(com_dist > box / 2)
     correction[n, m, d] = -box[d]
-    n, m, d = np.where(com_dist < -box/2)
+    n, m, d = np.where(com_dist < -box / 2)
     correction[n, m, d] = box[d]
 
     whole_frame = residues + correction
-    return whole_frame.reshape(nr_res*len_res, 3)
+    return whole_frame.reshape(nr_res * len_res, 3)

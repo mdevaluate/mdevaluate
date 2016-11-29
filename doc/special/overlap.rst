@@ -63,7 +63,7 @@ An example of a spatial resolved analysis, where ``OW`` is loaded as above::
       rmin=1.0,
       rmax=1.5
   )
-  tree = md.correlation.CoordinatesKDTree(OW, selector=selector)
+  tree = md.coordinates.CoordinatesKDTree(OW, selector=selector)
   Qol = md.correlation.shifted_correlation(
       partial(md.correlation.overlap, crds_tree=tree, radius=0.11),
       OW
