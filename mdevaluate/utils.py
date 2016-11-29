@@ -39,7 +39,9 @@ def hash_code(func):
 
 def hash_anything(arg):
     """Return a md5 hash value for the current state of any argument."""
-    if isinstance(arg, bytes):
+    if arg is None:
+        bstr = b'None'
+    elif isinstance(arg, bytes):
         bstr = arg
     elif isinstance(arg, str):
         bstr = arg.encode()

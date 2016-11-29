@@ -73,7 +73,7 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
 
 
 def open(directory, topology='*.tpr', trajectory='*.xtc',
-         index_file=None, cached=False, reindex=True, verbose=True):
+         index_file=None, cached=False, reindex=True, verbose=True, nojump=False):
     """
     Open a simulation from a directory.
 
@@ -90,6 +90,7 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
             the cache, None means infinite cache (this is a potential memory leak!).
         reindex (opt.): Regenerate the xtc-index if necessary.
         verbose (opt.): Be verbose about the opened files.
+        nojump (opt.): If nojump matrixes should be generated. They will alwyas be loaded if present.
 
     Returns:
         A Coordinate object of the simulation.
@@ -138,7 +139,13 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
     else:
         raise FileNotFoundError('Trajectory file could not be identified.')
 
-    return coordinates.Coordinates(frames, atom_subset=atom_set)
+    coords = coordinates.Coordinates(frames, atom_subset=atom_set)
+    if nojump:
+        try:
+            frames.nojump_matrixes
+        except reader.NojumpError:
+            reader.generate_nojump_matrixes(coords)
+    return coords
 
 
 def open_energy(energyfile):
