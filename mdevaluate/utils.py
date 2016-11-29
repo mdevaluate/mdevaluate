@@ -118,7 +118,7 @@ def filon_fourier_transformation(time, correlation,
     if frequencies is None:
         f_min = 1 / time[time > 0][-1]
         f_max = 0.05**(1.2 - correlation[correlation > 0][0]) / time[time > 0][0]
-        frequencies = 2*np.pi*np.logspace(
+        frequencies = 2 * np.pi * np.logspace(
             np.log10(f_min), np.log10(f_max), num=100
         )
     frequencies.reshape(1, -1)
@@ -127,23 +127,22 @@ def filon_fourier_transformation(time, correlation,
         derivative = (np.diff(correlation) / np.diff(time)).reshape(-1, 1)
     elif derivative is 'stencil':
         _, derivative = five_point_stencil(time, correlation)
-        time = ((time[2:-1]*time[1:-2])**.5).reshape(-1, 1)
+        time = ((time[2:-1] * time[1:-2])**.5).reshape(-1, 1)
         derivative = derivative.reshape(-1, 1)
     elif np.iterable(derivative) and len(time) is len(derivative):
         derivative.reshape(-1, 1)
     else:
         raise NotImplementedError(
             'Invalid approximation method {}. Possible values are "linear", "stencil" or a list of values.'
-            )
+        )
     time = time.reshape(-1, 1)
 
     integral = (np.cos(frequencies * time[1:]) - np.cos(frequencies * time[:-1])) / frequencies**2
-    if imag:
-        integral = integral + 1j * (
-            correlation[0]/frequencies +
-            (np.sin(frequencies * time[1:]) - np.sin(frequencies * time[:-1])) / frequencies**2
-            )
     fourier = (derivative * integral).sum(axis=0)
+
+    if imag:
+        integral = 1j * (np.sin(frequencies * time[1:]) - np.sin(frequencies * time[:-1])) / frequencies**2
+        fourier += (derivative * integral).sum(axis=0) + 1j * correlation[0] / frequencies
 
     return frequencies.reshape(-1,), fourier
 
