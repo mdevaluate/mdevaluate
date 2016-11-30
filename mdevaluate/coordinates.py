@@ -1,13 +1,18 @@
 from functools import wraps
 from functools import partial, lru_cache
 from copy import copy
+import logging
 
 import numpy as np
 from scipy.spatial import cKDTree, KDTree
 
 from .atoms import AtomSubset
-from .pbc import pbc_diff, whole
+from .pbc import whole, nojump
 from .utils import hash_anything as _hash, merge_hashes, mask2indices
+
+
+class UnknownCoordinatesMode(Exception):
+    pass
 
 
 def rotate_axis(coords, axis):
@@ -28,7 +33,7 @@ def rotate_axis(coords, axis):
     ux, uy, uz = rotation_axis
     cross_matrix = np.array([
         [0, -uz, uy],
-        [uz,  0, -ux],
+        [uz, 0, -ux],
         [-uy, ux, 0]
     ])
     rotation_matrix = np.cos(theta) * np.identity(len(axis)) \
@@ -98,6 +103,9 @@ def spatial_selector(frame, transform, rmin, rmax):
 
 
 class CoordinateFrame(np.ndarray):
+
+    _known_modes = ('pbc', 'whole', 'nojump')
+
     @property
     def box(self):
         return np.array(self.coordinates.frames[self.step].box)
@@ -128,18 +136,32 @@ class CoordinateFrame(np.ndarray):
 
     @property
     def whole(self):
-        return whole(self)
+        frame = whole(self)
+        frame.mode = 'whole'
+        return frame
 
     @property
     def pbc(self):
-        return self % self.box.diagonal()
+        frame = self % self.box.diagonal()
+        frame.mode = 'pbc'
+        return frame
+
+    @property
+    def nojump(self):
+        if self.mode != 'nojump':
+            frame = nojump(self)
+            frame.mode = 'nojump'
+            return frame
+        else:
+            return self
 
     def __new__(subtype, shape, dtype=float, buffer=None, offset=0, strides=None, order=None,
-                coordinates=None, step=None, box=None):
+                coordinates=None, step=None, box=None, mode=None):
         obj = np.ndarray.__new__(subtype, shape, dtype, buffer, offset, strides)
 
         obj.coordinates = coordinates
         obj.step = step
+        obj.mode = mode
         return obj
 
     def __array_finalize__(self, obj):
@@ -148,6 +170,7 @@ class CoordinateFrame(np.ndarray):
 
         self.coordinates = getattr(obj, 'coordinates', None)
         self.step = getattr(obj, 'step', None)
+        self.mode = getattr(obj, 'mode', None)
 
 
 class Coordinates:
@@ -157,7 +180,18 @@ class Coordinates:
     Atoms may be selected by specifing a atom_subset or a atom_filter.
     """
 
-    def __init__(self, frames, atom_filter=None, atom_subset: AtomSubset=None, caching=False):
+    @property
+    def mode(self):
+        return self._mode
+
+    @mode.setter
+    def mode(self, val):
+        if val in CoordinateFrame._known_modes:
+            self._mode = val
+        else:
+            raise UnknownCoordinatesMode('No such mode: {}'.format(val))
+
+    def __init__(self, frames, atom_filter=None, atom_subset: AtomSubset=None, caching=False, mode=None):
         """
         Args:
             frames: The trajectory reader
@@ -167,11 +201,13 @@ class Coordinates:
                 If frames should be cached. If no bool is given, the value will be used
                 as the maxsize of lru_cache, which can be a number or None. Use None to
                 never discard any frame.
+            mode
 
         Note:
             The caching in Coordinates is deprecated, use the CachedReader or the function open
             from the reader module instead.
         """
+        self._mode = mode
         self.frames = frames
         self._slice = slice(0, len(self.frames))
         assert atom_filter is None or atom_subset is None, "Cannot use both: subset and filter"
@@ -186,6 +222,7 @@ class Coordinates:
             self.atom_filter = np.ones(shape=(len(frames[0].coordinates),), dtype=bool)
 
         if caching:
+            logging.warning('Caching of Coordinates is deprecated, use caching for Reader instead.')
             if isinstance(caching, bool):
                 self.get_frame = lru_cache(maxsize=128)(self.get_frame)
             else:
@@ -204,9 +241,12 @@ class Coordinates:
                 frame = self.frames.__getitem__(fnr).coordinates.view(CoordinateFrame)
             frame.coordinates = self
             frame.step = fnr
-            return frame
+            if self.mode is not None:
+                frame = getattr(frame, self.mode)
         except EOFError:
             raise IndexError
+
+        return frame
 
     def clear_cache(self):
         """Clears the frame cache, if it is enabled."""
@@ -228,7 +268,7 @@ class Coordinates:
         return len(self.frames)
 
     def __hash__(self):
-        return merge_hashes(_hash(self.frames), _hash(self.atom_filter), _hash(self._slice))
+        return merge_hashes(_hash(self.frames), _hash(self.atom_filter), _hash(self._slice), _hash(self.mode))
 
     def __repr__(self):
         return "Coordinates <{}>: {}".format(self.frames.filename, self.atom_subset)

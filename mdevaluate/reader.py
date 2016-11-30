@@ -5,9 +5,20 @@ Module that provides different readers for trajectory files.
 from .utils import hash_anything, merge_hashes
 
 from functools import lru_cache
+from collections import namedtuple
+from os import path
+import logging
+from array import array
+
+import numpy as np
+from scipy import sparse
 
 import pygmx
 from pygmx.errors import InvalidMagicException, InvalidIndexException
+
+
+class NojumpError(Exception):
+    pass
 
 
 def open(filename, cached=False, reindex=False):
@@ -23,6 +34,7 @@ def open(filename, cached=False, reindex=False):
             the cache is 128, otherwise the argument is passed as maxsize.
             Use cached=None to get an unbound cache.
         reindex (opt.): Regenerate the index of the xtc-file
+        nojump (opt.): If nojump matrixes should be generated.
 
     """
 
@@ -31,9 +43,78 @@ def open(filename, cached=False, reindex=False):
             maxsize = 128
         else:
             maxsize = cached
-        return CachedReader(filename, maxsize, reindex=reindex)
+        reader = CachedReader(filename, maxsize, reindex=reindex)
     else:
-        return BaseReader(filename, reindex=reindex)
+        reader = BaseReader(filename, reindex=reindex)
+
+    return reader
+
+
+def nojump_filename(reader):
+    directory, fname = path.split(reader.filename)
+    return path.join(directory, '.{}.nojump.npz'.format(fname))
+
+CSR_ATTRS = ('data', 'indices', 'indptr')
+NOJUMP_MAGIC = 2016
+
+
+def generate_nojump_matrixes(trajectory):
+    """
+    Create the matrixes with pbc jumps for a trajectory.
+    """
+    logging.info('generate Nojump Matrixes for: {}'.format(trajectory))
+    prev = trajectory[0].whole
+    box = prev.box.diagonal()
+    N = len(trajectory)
+    M = len(prev)
+    SparseData = namedtuple('SparseData', ['data', 'row', 'col'])
+    jump_data = (
+        SparseData(data=array('b'), row=array('l'), col=array('l')),
+        SparseData(data=array('b'), row=array('l'), col=array('l')),
+        SparseData(data=array('b'), row=array('l'), col=array('l'))
+    )
+
+    for i in range(0, N):
+        if i % 500 == 0:
+            logging.debug('Step: {}'.format(i))
+        curr = trajectory[i]
+        delta = ((curr - prev) / box).round().astype(np.int8)
+        for d in range(3):
+            col, = np.where(delta[:, d] != 0)
+            jump_data[d].col.extend(col)
+            jump_data[d].row.extend([i] * len(col))
+            jump_data[d].data.extend(delta[col, d])
+        prev = curr
+
+    trajectory.frames.nojump_matrixes = tuple(
+        sparse.csr_matrix((np.array(m.data), (m.row, m.col)), shape=(N, M)) for m in jump_data
+    )
+
+
+def save_nojump_matrixes(reader, matrixes=None):
+    if matrixes is None:
+        matrixes = reader.nojump_matrixes
+    data = {'checksum': merge_hashes(NOJUMP_MAGIC, hash(reader))}
+    for d, mat in enumerate(matrixes):
+        data['shape'] = mat.shape
+        for attr in CSR_ATTRS:
+            data['{}_{}'.format(attr, d)] = getattr(mat, attr)
+
+    np.savez_compressed(nojump_filename(reader), **data)
+
+
+def load_nojump_matrixes(reader):
+    data = np.load(nojump_filename(reader))
+    if data['checksum'] == merge_hashes(NOJUMP_MAGIC, hash(reader)):
+        reader.nojump_matrixes = tuple(
+            sparse.csr_matrix(
+                tuple(data['{}_{}'.format(attr, d)] for attr in CSR_ATTRS),
+                shape=data['shape']
+            )
+            for d in range(3)
+        )
+    else:
+        logging.info('Invlaid Nojump Data: {}'.format(nojump_filename(reader)))
 
 
 class BaseReader:
@@ -42,6 +123,17 @@ class BaseReader:
     @property
     def filename(self):
         return self.rd.filename
+
+    @property
+    def nojump_matrixes(self):
+        if self._nojump_matrixes is None:
+            raise NojumpError('Nojump Data not available: {}'.format(self.filename))
+        return self._nojump_matrixes
+
+    @nojump_matrixes.setter
+    def nojump_matrixes(self, mats):
+        self._nojump_matrixes = mats
+        save_nojump_matrixes(self)
 
     def __init__(self, filename, reindex=False):
         """
@@ -60,6 +152,10 @@ class BaseReader:
             else:
                 raise InvalidIndexException('Index file is invalid, us reindex=True to regenerate.')
 
+        self._nojump_matrixes = None
+        if path.exists(nojump_filename(self)):
+            load_nojump_matrixes(self)
+
     def __getitem__(self, item):
         return self.rd[item]
 
@@ -67,8 +163,8 @@ class BaseReader:
         return len(self.rd)
 
     def __hash__(self):
-        return merge_hashes(hash_anything(self.rd.filename),
-                            hash_anything(str(self.rd.cache)))
+        hashes = [hash_anything(self.rd.filename), hash_anything(str(self.rd.cache))]
+        return merge_hashes(*hashes)
 
 
 class CachedReader(BaseReader):

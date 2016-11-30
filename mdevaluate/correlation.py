@@ -94,11 +94,11 @@ def shifted_correlation(function, frames,
     return times, result
 
 
-def msd(start, frame, box=None):
+def msd(start, frame):
     """
     Mean square displacement
     """
-    vec = pbc_diff(start, frame, box)
+    vec = start - frame
     return (vec ** 2).sum(axis=1).mean()
 
 
@@ -109,7 +109,7 @@ def isf(start, frame, q, box=None):
 
     :param q: length of scattering vector
     """
-    vec = pbc_diff(start, frame, box)  # start-frame
+    vec = start - frame
     distance = (vec ** 2).sum(axis=1) ** .5
     return np.sinc(distance * q / np.pi).mean()
 

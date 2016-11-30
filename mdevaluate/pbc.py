@@ -58,3 +58,14 @@ def whole(frame, residue_ids=None, len_res=None):
 
     whole_frame = residues + correction
     return whole_frame.reshape(nr_res * len_res, 3)
+
+
+def nojump(frame):
+    """
+    Return the nojump coordinates of a frame, based on a jump matrix.
+    """
+    selection = frame.coordinates.atom_subset.selection
+    delta = np.vstack(
+        [m[:frame.step + 1, selection].sum(axis=0) for m in frame.coordinates.frames.nojump_matrixes]
+    ).T * frame.box
+    return frame - np.array(delta)
