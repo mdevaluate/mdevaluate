@@ -113,6 +113,7 @@ def load_nojump_matrixes(reader):
             )
             for d in range(3)
         )
+        logging.info('Loaded Nojump Matrixes: {}'.format(nojump_filename(reader)))
     else:
         logging.info('Invlaid Nojump Data: {}'.format(nojump_filename(reader)))
 
