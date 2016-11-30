@@ -86,7 +86,7 @@ def five_point_stencil(xdata, ydata):
     return xdata[2:-2], (
         (-ydata[4:] + 8 * ydata[3:-1] - 8 * ydata[1:-3] + ydata[:-4]) /
         (3 * (xdata[4:] - xdata[:-4]))
-        )
+    )
 
 
 def filon_fourier_transformation(time, correlation,
@@ -178,25 +178,22 @@ def superpose(x1, y1, x2, y2, N=100, damping=1.0):
     x_ol = np.logspace(
         np.log10(max(x1[~reg1][0], x2[~reg2][0]) + 0.001),
         np.log10(min(x1[~reg1][-1], x2[~reg2][-1]) - 0.001),
-        (sum(~reg1)+sum(~reg2))/2
+        (sum(~reg1) + sum(~reg2)) / 2
     )
 
     def w(x):
         A = x_ol.min()
         B = x_ol.max()
-        return (np.log10(B / x)/np.log10(B / A))**damping
+        return (np.log10(B / x) / np.log10(B / A))**damping
 
-    xdata = np.concatenate((
-            x1[reg1],
-            x_ol,
-            x2[reg2]))
+    xdata = np.concatenate((x1[reg1], x_ol, x2[reg2]))
     y1_interp = interp1d(x1[~reg1], y1[~reg1])
     y2_interp = interp1d(x2[~reg2], y2[~reg2])
     ydata = np.concatenate((
         y1[x1 < x2.min()],
-        w(x_ol)*y1_interp(x_ol) + (1 - w(x_ol))*y2_interp(x_ol),
+        w(x_ol) * y1_interp(x_ol) + (1 - w(x_ol)) * y2_interp(x_ol),
         y2[x2 > x1.max()]
-        ))
+    ))
     return xdata, ydata
 
 
@@ -204,7 +201,7 @@ def runningmean(data, nav):
     """
     Compute the running mean of a 1-dimenional array for `nav` points.
     """
-    return np.convolve(data, np.ones((nav,))/nav, mode='valid')
+    return np.convolve(data, np.ones((nav,)) / nav, mode='valid')
 
 
 def coherent_sum(func, coord_a, coord_b):
@@ -224,6 +221,7 @@ def coherent_sum(func, coord_a, coord_b):
     """
     if isinstance(func, FunctionType):
         func = numba.jit(func, nopython=True, cache=True)
+
     @numba.jit(nopython=True)
     def cohsum(coord_a, coord_b):
         res = 0
