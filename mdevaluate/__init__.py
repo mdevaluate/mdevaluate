@@ -16,7 +16,7 @@ from .meta import notify
 from pygmx import gromacs
 from pygmx.errors import FileTypeError
 
-__version__ = '16.09'
+__version__ = '16.11'
 
 
 def trajectory_from_xtc(xtc_file, generate_index=True):
