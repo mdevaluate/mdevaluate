@@ -1,16 +1,18 @@
+import logging
 import warnings
 
 import numpy as np
 
-from .coordinates import pbc_diff, rotate_axis, polar_coordinates, spherical_coordinates
+from .coordinates import  rotate_axis, polar_coordinates, spherical_coordinates
 from .atoms import next_neighbors
 from .autosave import autosave_data
 from .meta.annotate import deprecated
 from .utils import runningmean
+from .pbc import pbc_diff
 
 
 @autosave_data(nargs=2, kwargs_keys=('coordinates_b',))
-def time_average(function, coordinates, coordinates_b=None, pool=None, verbose=False):
+def time_average(function, coordinates, coordinates_b=None, pool=None):
     """
     Compute the time average of a function.
 
@@ -22,7 +24,6 @@ def time_average(function, coordinates, coordinates_b=None, pool=None, verbose=F
         pool (multiprocessing.Pool, opt.):
             A multiprocessing pool which will be used for cocurrent calculation of the
             averaged function
-        verbose (bool, opt.): Be verbose about the progress
 
     """
     if pool is not None:
@@ -43,8 +44,8 @@ def time_average(function, coordinates, coordinates_b=None, pool=None, verbose=F
     for ev in evaluated:
         number_of_averages += 1
         result += ev
-        if verbose and number_of_averages % 100 == 0:
-            print(number_of_averages)
+        if number_of_averages % 100 == 0:
+            logging.debug('time_average: number_of_averages')
 
     return result / number_of_averages
 

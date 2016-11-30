@@ -3,6 +3,7 @@ import numba
 from scipy.special import legendre
 from itertools import chain
 from functools import reduce
+import logging
 
 from .pbc import pbc_diff, pbc_diff_numba
 from .meta import annotate
@@ -87,7 +88,11 @@ def shifted_correlation(function, frames,
         shifted_idx = idx + start_frame
         return correlation(function, map(frames.__getitem__, shifted_idx))
 
-    result = np.array([list(correlate(start_frame)) for start_frame in start_frames])
+    result = []
+    for i, start_frame in enumerate(start_frames):
+        logging.debug('shifted_correlation: segment {}/{} (index={})'.format(i, segments, start_frame))
+        result.append(list(correlate(start_frame)))
+    result = np.array(result)
     if average:
         result = result.mean(axis=0)
     times = np.array([frames[i].time for i in idx]) - frames[0].time
@@ -226,6 +231,9 @@ def coherent_scattering_function(onset, frame, q):
                 d += box[i]
             sqdist += d**2
         x = sqdist**0.5 * q
-        return np.sin(x) / x
+        if x == 0:
+            return 1.0
+        else:
+            return np.sin(x) / x
 
     return coherent_sum(scfunc, onset.pbc, frame.pbc) / len(onset)
