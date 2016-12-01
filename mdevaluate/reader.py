@@ -6,6 +6,7 @@ from .utils import hash_anything, merge_hashes
 
 from functools import lru_cache
 from collections import namedtuple
+import os
 from os import path
 import logging
 from array import array
@@ -100,11 +101,16 @@ def save_nojump_matrixes(reader, matrixes=None):
         for attr in CSR_ATTRS:
             data['{}_{}'.format(attr, d)] = getattr(mat, attr)
 
-    np.savez_compressed(nojump_filename(reader), **data)
+    np.savez(nojump_filename(reader), **data)
 
 
 def load_nojump_matrixes(reader):
-    data = np.load(nojump_filename(reader))
+    try:
+        data = np.load(nojump_filename(reader))
+    except AttributeError:
+        # npz-files can be corrupted, propably a bug for big arrays saved with savez_compressed?
+        os.remove(nojump_filename(reader))
+        return
     if data['checksum'] == merge_hashes(NOJUMP_MAGIC, hash(reader)):
         reader.nojump_matrixes = tuple(
             sparse.csr_matrix(
