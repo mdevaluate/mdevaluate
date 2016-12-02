@@ -1,4 +1,7 @@
 """
+Spatially resolved analysis in a cylindrical pore
+=======================================================
+
 Calculate the spatially resolved ISF inside a cylindrical neutral water pore
 In this case the bins describe the shortest distance of an oxygen atom to any wall atom
 """
