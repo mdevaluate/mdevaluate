@@ -59,15 +59,9 @@ CSR_ATTRS = ('data', 'indices', 'indptr')
 NOJUMP_MAGIC = 2016
 
 
-def generate_nojump_matrixes(trajectory):
-    """
-    Create the matrixes with pbc jumps for a trajectory.
-    """
-    logging.info('generate Nojump Matrixes for: {}'.format(trajectory))
+def parse_jumps(trajectory):
     prev = trajectory[0].whole
     box = prev.box.diagonal()
-    N = len(trajectory)
-    M = len(prev)
     SparseData = namedtuple('SparseData', ['data', 'row', 'col'])
     jump_data = (
         SparseData(data=array('b'), row=array('l'), col=array('l')),
@@ -75,17 +69,29 @@ def generate_nojump_matrixes(trajectory):
         SparseData(data=array('b'), row=array('l'), col=array('l'))
     )
 
-    for i in range(0, N):
+    for i, curr in enumerate(trajectory):
         if i % 500 == 0:
-            logging.debug('Step: {}'.format(i))
-        curr = trajectory[i]
+            logging.debug('Parse jumps Step: %d', i)
         delta = ((curr - prev) / box).round().astype(np.int8)
+        prev = curr
         for d in range(3):
             col, = np.where(delta[:, d] != 0)
             jump_data[d].col.extend(col)
             jump_data[d].row.extend([i] * len(col))
             jump_data[d].data.extend(delta[col, d])
-        prev = curr
+
+    return jump_data
+
+
+def generate_nojump_matrixes(trajectory):
+    """
+    Create the matrixes with pbc jumps for a trajectory.
+    """
+    logging.info('generate Nojump Matrixes for: {}'.format(trajectory))
+
+    jump_data = parse_jumps(trajectory)
+    N = len(trajectory)
+    M = len(trajectory[0])
 
     trajectory.frames.nojump_matrixes = tuple(
         sparse.csr_matrix((np.array(m.data), (m.row, m.col)), shape=(N, M)) for m in jump_data
