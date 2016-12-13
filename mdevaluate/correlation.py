@@ -8,7 +8,7 @@ import logging
 from .pbc import pbc_diff, pbc_diff_numba
 from .meta import annotate
 from .autosave import autosave_data
-from .utils import filon_fourier_transformation, norm, coherent_sum
+from .utils import filon_fourier_transformation, norm, coherent_sum, coherent_histogram
 
 
 def log_indices(first, last, num=100):
@@ -90,7 +90,7 @@ def shifted_correlation(function, frames,
 
     result = []
     for i, start_frame in enumerate(start_frames):
-        logging.debug('shifted_correlation: segment {}/{} (index={})'.format(i, segments, start_frame))
+        logging.debug('shifted_correlation: segment {}/{} (index={})'.format(i + 1, segments, start_frame))
         result.append(list(correlate(start_frame)))
     result = np.array(result)
     if average:
@@ -164,12 +164,41 @@ def oaf_indexed(index_from, index_to):
                                     frame[index_to] - frame[index_from])
 
 
-@annotate.unfinished
-def van_hove(start, end, bins, box=None):
-    vec = pbc_diff(start, end, box)
-    delta_r = ((vec)**2).sum(axis=1) ** .5
+def van_hove_self(start, end, bins):
+    """
+    Compute the self part of the Van Hove autocorrelation function.
 
+    ..math::
+      G(r, t) = \sum_i \delta(|\vec r_i(0) - \vec r_i(t)| - r)
+    """
+    vec = start - end
+    delta_r = ((vec)**2).sum(axis=-1)**.5
     return 1 / len(start) * np.histogram(delta_r, bins)[0]
+
+
+def van_hove_distinct(onset, frame, bins):
+    """
+    Compute the self part of the Van Hove autocorrelation function.
+
+    ..math::
+      G(r, t) = \sum_i \delta(|\vec r_i(0) - \vec r_i(t)| - r)
+    """
+    box = onset.box.diagonal()
+    dimension = len(box)
+
+    @numba.jit(nopython=True, cache=True)
+    def scfunc(x, y):
+        sqdist = 0
+        for i in range(dimension):
+            d = x[i] - y[i]
+            if d > box[i] / 2:
+                d -= box[i]
+            if d < -box[i] / 2:
+                d += box[i]
+            sqdist += d**2
+        return sqdist**0.5
+
+    return coherent_histogram(scfunc, onset.pbc, frame.pbc, bins, distinct=True) / len(onset)
 
 
 def overlap(onset, frame, crds_tree, radius):
