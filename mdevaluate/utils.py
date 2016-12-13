@@ -233,6 +233,45 @@ def coherent_sum(func, coord_a, coord_b):
     return cohsum(coord_a, coord_b)
 
 
+def coherent_histogram(func, coord_a, coord_b, bins, distinct=False):
+    """
+    Compute a coherent histogram over two arrays, equivalent to coherent_sum.
+    For numpy arrays ofthis is equal to::
+
+        N, d = x.shape
+        M, d = y.shape
+        bins = np.arange(1, 5, 0.1)
+        coherent_histogram(f, x, y, bins) == histogram(f(x.reshape(N, 1, d), x.reshape(1, M, d)), bins=bins)
+
+    Args:
+        func: The function is called for each two items in both arrays, this should return a scalar value.
+        coord_a, coord_b: The two arrays.
+        bins: The bins used for the histogram must be distributed regular on a linear scale.
+
+    """
+    if isinstance(func, FunctionType):
+        func = numba.jit(func, nopython=True, cache=True)
+
+    assert np.isclose(np.diff(bins).mean(), np.diff(bins)).all(), 'A regular distribution of bins is required.'
+    hmin = bins[0]
+    hmax = bins[-1]
+    N = len(bins) - 1
+    dh = (hmax - hmin) / N
+
+    @numba.jit(nopython=True)
+    def cohsum(coord_a, coord_b):
+        res = np.zeros((N,))
+        for i in range(len(coord_a)):
+            for j in range(len(coord_b)):
+                if not (distinct and i == j):
+                    h = func(coord_a[i], coord_b[j])
+                    if hmin <= h < hmax:
+                        res[int((h - hmin) / dh)] += 1
+        return res
+
+    return cohsum(coord_a, coord_b)
+
+
 @numba.jit
 def norm(vec):
     return (vec**2).sum()**0.5
