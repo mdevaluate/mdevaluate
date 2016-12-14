@@ -19,7 +19,11 @@ setup(
 
     packages=['mdevaluate',
               'mdevaluate.meta'],
-
+    entry_points={
+        'console_scripts': [
+            'index-xtc = mdevaluate.cli:run'
+        ]
+    },
     version=__version__,
     requires=['numpy', 'scipy'],
     zip_safe=False
