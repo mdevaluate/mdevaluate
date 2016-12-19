@@ -9,3 +9,5 @@ logarithmic.c
 coordinates.*.so
 coordinates.c
 .cache/
+doc/gallery
+doc/modules
