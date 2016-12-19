@@ -15,6 +15,7 @@ Contents
    :maxdepth: 1
 
    installation
+   general-hints
    guide
    gallery/index
    contribution

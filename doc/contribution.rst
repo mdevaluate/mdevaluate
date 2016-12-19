@@ -1,5 +1,5 @@
 
-Contribution guide
+Contribution Guide
 ==================
 
 This document aims to lay out the basics of contributing code to the ``mdevaluate`` package.
@@ -13,12 +13,12 @@ Python code is organized in *packages* and *modules*:
 
 Modules:
   Any python file (e.g. ``test.py``) is called a module. A module can be imported (``import test``) an then used
-  in other python code if it is in the python path, for example the working directory.
-  In principle, importing a package means simply executing the code inside the file.
+  in other python code if in the python path, for example the working directory.
+  In principle, importing a package means executing the code inside the file.
   All definitions, like variables or functions, are then available under the modules name.
 
 Packages:
-  Python modules can be grouped into packages. A python package is simply a folder,
+  Python modules can be grouped into packages. A python package is basically a folder,
   which contains at least one mandatory file ``__init__.py``. This file is the entry
   point into the module that is imported if the package is imported.
   All modules in the folder are treated as submodules, which can be accessed via
@@ -29,8 +29,8 @@ A more `detailed explanation <https://docs.python.org/3/tutorial/modules.html>`_
 Extending the documentation
 +++++++++++++++++++++++++++
 
-One very important part of software is its documentation.
-Especially for modular packages like ``mdevaluate`` it is crucial to have a good coverage of the API,
+One of the most important parts of software is its documentation.
+For modular packages like ``mdevaluate`` it's crucial to have a good coverage of the API,
 since users need to know which functions are provided and how they are used.
 To help others by extending the documentation is thereby a nice way of contributing to mdevaluate.
 
@@ -41,7 +41,7 @@ The source of every page can be viewed in the browser through the *View page sou
 The name of the rst files can also be derived from the page URL.
 The rst files are placed in the ``doc`` directory of the repository.
 
-Extending the documentation can be done in various ways, e.g.
+Extending the documentation can be done in different ways, e.g.
 
 - Correct, clarify or extend existing sections
 - Add new sections about the general use of mdevaluate
@@ -49,7 +49,7 @@ Extending the documentation can be done in various ways, e.g.
 
 To add a new sections to special topics, first create a new file for this guide in ``doc/special``.
 Then add the name of this file (without the .rst extension) to the toctree in the file ``special-topics.rst``.
-Finally write about the guide in newly created file.
+Finally write the guide in the newly created file.
 
 Building the docs
 -----------------
@@ -70,7 +70,7 @@ Organization of the code
 The code for the evaluation software is organized in two python packages:
 
 - ``pygmx``: This package provides a python wrapper for the Gromacs library and
-  thereby functionality to read many of the file formats used within Gromacs.
+  thereby functionality to read file formats used within Gromacs.
 - ``mdevaluate``: This package provides functionality for evaluation of molecular
   dynamics simulations. It uses the ``pygmx`` package to read files, but is
   (in theory) not  limited to Gromacs data.
@@ -90,7 +90,7 @@ autosave.py
 
 Experimental functionality for automatic saving and loading of evaluated data,
 like correlation functions. For each function call a checksum is calculated
-from the input, which only changes if the output of the function changes.
+from the input, which changes if the output of the function changes.
 
 coordinates.py
 ..............
@@ -101,12 +101,12 @@ transformations and related functions.
 correlation.py
 ..............
 
-Functionality to evaluate correlation functions.
+Functionality to calculate correlation functions.
 
 distribution.py
 ...............
 
-Functionality to evaluate distribution functions.
+Functionality to calculate distribution functions.
 
 reader.py
 .........
