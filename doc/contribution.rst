@@ -36,7 +36,7 @@ To help others by extending the documentation is thereby a nice way of contribut
 
 The documentation is generated with a third party tools named `Sphinx <http://www.sphinx-doc.org/en/stable/>`_.
 The contents of the documentation are based on the source code (for the reference guide)
-and additional documents, written in the markup language *reStructuredText* (rst).
+and documents written in the markup language *reStructuredText* (rst).
 The source of every page can be viewed in the browser through the *View page source* link in the upper right of the page.
 The name of the rst files can also be derived from the page URL.
 The rst files are placed in the ``doc`` directory of the repository.
@@ -49,7 +49,7 @@ Extending the documentation can be done in different ways, e.g.
 
 To add a new sections to special topics, first create a new file for this guide in ``doc/special``.
 Then add the name of this file (without the .rst extension) to the toctree in the file ``special-topics.rst``.
-Finally write the guide in the newly created file.
+Now write the guide in the newly created file.
 
 Building the docs
 -----------------
@@ -83,7 +83,7 @@ Below the content of the submodules of the package is described.
 atoms.py
 ........
 
-Definition of the ``Atom`` class and related stuff for atom selection and information.
+Definition of the ``Atom`` class and related functions for atom selection and information.
 
 autosave.py
 ...........
@@ -123,14 +123,14 @@ Set up a development environment
 
 The code is hosted in the groups git server https://chaos3.fkp.physik.tu-darmstadt.de,
 use your credentials of the institutes computers for login.
-Authentication has to be done through SSH-Keys, therefore first add the SSH Key of
+Authentication has to be done through SSH-Keys, first add the SSH Key of
 your development machine to your account.
 
 1. Copy the public key from the file ``~/.ssh/id_rsa.pub``
 2. Add it to your account at https://chaos3.fkp.physik.tu-darmstadt.de/settings/panel/ssh/
 3. Clone the repository
 
-::
+.. code-block:: console
 
   $ git clone ssh://vcs@chaos3.fkp.physik.tu-darmstadt.de/diffusion/MDE/mdevaluate.git
 
@@ -158,7 +158,9 @@ A standard work flow to submit new code is the following
 Pulling updates from remote
 ---------------------------
 
-Before working with the code, the latest updates should be pulled for the master branch::
+Before working with the code, the latest updates should be pulled for the master branch
+
+.. code-block:: console
 
   $ git checkout master
   $ git pull
@@ -168,7 +170,9 @@ Create a new branch
 
 Before changing any code, create a new branch in your local repository.
 This helps to keep an overview of all the changes and simplifies merging.
-To create a new branch locally enter the following commands::
+To create a new branch locally enter the following commands
+
+.. code-block:: console
 
   $ git checkout master
   $ git branch my-feature
@@ -184,17 +188,23 @@ Committing changes
 A bundle of changes in the code is called a *commit*.
 These changes can happen in different files and should be associated with each other.
 Let's assume, two files have been changed (``atoms.py`` and ``utils.py``).
-The command::
+The command
+
+.. code-block:: console
 
   $ git diff atoms.py
 
 will show you all changes that were made in the file since the latest commit.
-Before committing changes have to be *staged*, which is done by::
+Before committing changes have to be *staged*, which is done by
+
+.. code-block:: console
 
   $ git add atoms.py utils.py
 
 This my be repeated as often as necessary.
-When all changes for a commit are staged, it can actually be created::
+When all changes for a commit are staged, it can actually be created
+
+.. code-block:: console
 
   $ git commit
 
@@ -205,12 +215,16 @@ Merging into master
 -------------------
 
 When all changes are made and the new feature should be made public, first the branch has to be merged into master.
-Most of the time, the master branch will have been updated, therefore first pull any updates::
+Most of the time, the master branch will have been updated, so first pull any updates
+
+.. code-block:: console
 
   $ git checkout master
   $ git pull
 
-When the master branch is up to date, it can be merged into the feature branch::
+When the master branch is up to date, it can be merged into the feature branch
+
+.. code-block:: console
 
   $ git merge my-feature
 
@@ -220,7 +234,9 @@ Git tells you which files have conflicts and asks you to resolve these.
 The respective lines will be marked with conflict-resolution markers in the files.
 The most basic way of resolving a conflict is by editing these files and choosing the appropriate version of the code.
 See the `git documentation <https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging#Basic-Merge-Conflicts>`_ for an explanation.
-After resolving the conflict, the files need to be staged and the merge has to be committed::
+After resolving the conflict, the files need to be staged and the merge has to be committed
+
+.. code-block:: console
 
   $ git add utils.py
   $ git commit
@@ -230,7 +246,9 @@ The commit message will be generated automatically, indicating the merge.
 Push to remote
 --------------
 
-After merging the changes can be pushed to the remote::
+After merging the changes can be pushed to the remote
+
+.. code-block:: console
 
   $ git push
 
