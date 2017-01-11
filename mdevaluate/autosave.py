@@ -118,14 +118,20 @@ def verify_file(filename, checksum):
 def save_data(filename, checksum, data):
     """Save data and checksum to a file."""
     notify('Saving result to file: {}'.format(filename))
-    np.savez(filename, checksum=checksum, data=data)
+    if isinstance(data, tuple):
+        np.savez(filename, *data, checksum=checksum)
+    else:
+        np.savez(filename, checksum=checksum, data=data)
 
 
 def load_data(filename):
     """Load data from a npz file."""
     notify('Loading result from file: {}'.format(filename))
     fdata = np.load(filename)
-    return fdata['data']
+    if 'data' in fdata:
+        return fdata['data']
+    else:
+        return tuple(fdata[k] for k in fdata if ('arr' in k))
 
 
 def autosave_data(nargs, kwargs_keys=None):
