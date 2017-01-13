@@ -191,7 +191,7 @@ class Coordinates:
         else:
             raise UnknownCoordinatesMode('No such mode: {}'.format(val))
 
-    def __init__(self, frames, atom_filter=None, atom_subset: AtomSubset=None, caching=False, mode=None):
+    def __init__(self, frames, atom_filter=None, atom_subset: AtomSubset=None, mode=None):
         """
         Args:
             frames: The trajectory reader
@@ -220,13 +220,6 @@ class Coordinates:
             self.atoms = atom_subset.atoms
         else:
             self.atom_filter = np.ones(shape=(len(frames[0].coordinates),), dtype=bool)
-
-        if caching:
-            logging.warning('Caching of Coordinates is deprecated, use caching for Reader instead.')
-            if isinstance(caching, bool):
-                self.get_frame = lru_cache(maxsize=128)(self.get_frame)
-            else:
-                self.get_frame = lru_cache(maxsize=caching)(self.get_frame)
 
     def slice(self, slice):
         for i in range(len(self))[slice]:
