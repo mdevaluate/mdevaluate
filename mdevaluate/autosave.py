@@ -118,10 +118,14 @@ def verify_file(filename, checksum):
 def save_data(filename, checksum, data):
     """Save data and checksum to a file."""
     notify('Saving result to file: {}'.format(filename))
-    if isinstance(data, tuple):
-        np.savez(filename, *data, checksum=checksum)
-    else:
-        np.savez(filename, checksum=checksum, data=data)
+    try:
+        data = np.array(data)
+    except ValueError:
+        arr = np.empty((len(data),), dtype=object)
+        arr[:] = data
+        data = arr
+
+    np.savez(filename, checksum=checksum, data=data)
 
 
 def load_data(filename):
@@ -131,7 +135,9 @@ def load_data(filename):
     if 'data' in fdata:
         return fdata['data']
     else:
-        return tuple(fdata[k] for k in fdata if ('arr' in k))
+        data = tuple(fdata[k] for k in sorted(fdata) if ('arr' in k))
+        save_data(filename, fdata['checksum'], data)
+        return data
 
 
 def autosave_data(nargs, kwargs_keys=None):
