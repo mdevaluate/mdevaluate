@@ -94,7 +94,7 @@ def filon_fourier_transformation(time, correlation,
                                  ):
     """
     Fourier-transformation for slow varrying functions. The filon algorithmus is
-    described in detail in ref [1], ch. 3.2.3.
+    described in detail in ref [Blochowicz]_, ch. 3.2.3.
 
     Args:
         time: List of times where the correlation function was sampled.
@@ -113,9 +113,9 @@ def filon_fourier_transformation(time, correlation,
     at high values by one decade, since the fourier transformation deviates quite strongly
     in this regime.
 
-    References:
-        [1] T. Blochowicz, Broadband dielectric spectroscopy in neat and binary
-        molecular glass formers, Ph.D. thesis, Uni-versität Bayreuth (2003)
+    .. [Blochowicz]
+      T. Blochowicz, Broadband dielectric spectroscopy in neat and binary
+      molecular glass formers, Ph.D. thesis, Uni-versität Bayreuth (2003)
     """
     if frequencies is None:
         f_min = 1 / time[time > 0][-1]
@@ -199,15 +199,26 @@ def superpose(x1, y1, x2, y2, N=100, damping=1.0):
 
 def runningmean(data, nav):
     """
-    Compute the running mean of a 1-dimenional array for `nav` points.
+    Compute the running mean of a 1-dimenional array.
+
+    Args:
+        data: Input data of shape (N, )
+        nav: Number of points over which the data will be averaged
+
+    Returns:
+        Array of shape (N-(nav-1), )
     """
     return np.convolve(data, np.ones((nav,)) / nav, mode='valid')
 
 
 def coherent_sum(func, coord_a, coord_b):
     """
-    Perform a coherent sum over two arrays: :math:`\frac{1}{N_a N_b}\sum_i\sum_j f(X_a[i], X_b[j])`.
-    For numpy arrays ofthis is equal to::
+    Perform a coherent sum over two arrays :math:`A, B`.
+
+    .. math::
+      \\frac{1}{N_A N_B}\\sum_i\\sum_j f(A_i, B_j)
+
+    For numpy arrays this is equal to::
 
         N, d = x.shape
         M, d = y.shape
@@ -216,7 +227,6 @@ def coherent_sum(func, coord_a, coord_b):
     Args:
         func: The function is called for each two items in both arrays, this should return a scalar value.
         coord_a, coord_b: The two arrays.
-        normed (opt.): If the result should be normalized by the number of summands.
 
     """
     if isinstance(func, FunctionType):
@@ -270,6 +280,34 @@ def coherent_histogram(func, coord_a, coord_b, bins, distinct=False):
         return res
 
     return cohsum(coord_a, coord_b)
+
+
+def Sq_from_gr(r, gr, q, ρ):
+    """
+    Compute the static structure factor :math:`S(q)` as fourier transform of the pair correlation function :math:`g(r)` [Yarnell]_.
+
+    .. math::
+        S(q) - 1 = (4\\pi \\rho/q)\\int_0^\\infty (g(r) - 1)\\,r \\sin(qr) dr
+
+    Args:
+        r: Radii of the pair correlation function
+        gr: Values of the pair correlation function
+        q: List of q values
+        ρ: Average number density
+
+    .. [Yarnell]
+      Yarnell, J. L., Katz, M. J., Wenzel, R. G., & Koenig, S. H. (1973). Physical Review A, 7(6), 2130–2144.
+      http://doi.org/10.1017/CBO9781107415324.004
+
+    """
+    r = r.reshape(-1, 1)
+    q = q.reshape(1, -1)
+    dr = np.diff(r)
+    discrete_int = (gr[:-1] + gr[1:] - 1) * (r[1:] + r[:-1]) * (np.sin(q * r[1:]) + np.sin(q * r[:-1])) / 2
+    return 1 + 4 * np.pi * ρ / q * (discrete_int * dr).sum(axis=1)
+    return (
+        ((gr - 1) * r).reshape(-1, 1) * np.sin(r.reshape(-1, 1) * q.reshape(1, -1))
+    ).sum(axis=0) * (4 * np.pi * ρ / q) + 1
 
 
 @numba.jit

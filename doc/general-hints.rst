@@ -1,4 +1,4 @@
-General HInts for Python Programming
+General Hints for Python Programming
 ====================================
 
 This page collects some general hints for data centered programming  with Python.
