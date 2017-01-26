@@ -7,6 +7,7 @@ from types import FunctionType
 
 import numpy as np
 import numba
+import pandas as pd
 
 from scipy.interpolate import interp1d
 
@@ -284,10 +285,10 @@ def coherent_histogram(func, coord_a, coord_b, bins, distinct=False):
 
 def Sq_from_gr(r, gr, q, ρ):
     """
-    Compute the static structure factor :math:`S(q)` as fourier transform of the pair correlation function :math:`g(r)` [Yarnell]_.
+    Compute the static structure factor as fourier transform of the pair correlation function. [Yarnell]_
 
     .. math::
-        S(q) - 1 = (4\\pi \\rho/q)\\int_0^\\infty (g(r) - 1)\\,r \\sin(qr) dr
+        S(q) - 1 = (4\\pi \\rho/q)\\int\\limits_0^\\infty (g(r) - 1)\\,r \\sin(qr) dr
 
     Args:
         r: Radii of the pair correlation function
@@ -308,6 +309,36 @@ def Sq_from_gr(r, gr, q, ρ):
     return (
         ((gr - 1) * r).reshape(-1, 1) * np.sin(r.reshape(-1, 1) * q.reshape(1, -1))
     ).sum(axis=0) * (4 * np.pi * ρ / q) + 1
+
+
+def Fqt_from_Grt(data, q):
+    """
+    Calculate the ISF from the van Hove function for a given q value by fourier transform.
+
+    .. math::
+      F_q(t) = \\int\\limits_0^\\infty dr \\; G(r, t) \\frac{\\sin(qr)}{qr}
+
+    Args:
+        data:
+            Input data can be a pandas dataframe with columns 'r', 'time' and 'G'
+            or an array of shape (N, 3), of tuples (r, t, G).
+        q: Value of q.
+
+    Returns:
+        If input data was a dataframe the result will be returned as one too, else two arrays
+        will be returned, which will contain times and values of Fq(t) respectively.
+
+    """
+    if isinstance(data, pd.DataFrame):
+        df = data.copy()
+    else:
+        df = pd.DataFrame(data, columns=['r', 'time', 'G'])
+    df['isf'] = df['G'] * np.sinc(q / np.pi * df['r'])
+    isf = df.groupby('time')['isf'].sum()
+    if isinstance(data, pd.DataFrame):
+        return pd.DataFrame({'time': isf.index, 'isf': isf.values})
+    else:
+        return isf.index, isf.values
 
 
 @numba.jit
