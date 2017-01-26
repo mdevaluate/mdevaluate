@@ -268,19 +268,6 @@ def coherent_scattering_function(onset, frame, q):
     return coherent_sum(scfunc, onset.pbc, frame.pbc) / len(onset)
 
 
-def squared_isf(onset, frame, q):
-    """
-    Calculate the squared ISF, this is needed to calculate the four-point susceptibility.
-    """
-    def scfunc(x, y):
-        return x * y
-
-    d = ((frame - onset)**2).sum(axis=-1)**0.5
-    values = np.sinc(d * q / np.pi)
-    # return (values.reshape(-1, 1) * values.reshape(1, -1)).sum() / len(onset)**2
-    return coherent_sum(scfunc, values, values) / len(onset)**2
-
-
 def non_gaussian(onset, frame):
     """
     Calculate the Non-Gaussian parameter :
