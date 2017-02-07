@@ -119,8 +119,8 @@ def filon_fourier_transformation(time, correlation,
       molecular glass formers, Ph.D. thesis, Uni-versität Bayreuth (2003)
     """
     if frequencies is None:
-        f_min = 1 / time[time > 0][-1]
-        f_max = 0.05**(1.2 - correlation[correlation > 0][0]) / time[time > 0][0]
+        f_min = 1 / max(time)
+        f_max = 0.05**(1.2 - max(correlation)) / min(time[time > 0])
         frequencies = 2 * np.pi * np.logspace(
             np.log10(f_min), np.log10(f_max), num=100
         )
@@ -288,7 +288,7 @@ def Sq_from_gr(r, gr, q, ρ):
     Compute the static structure factor as fourier transform of the pair correlation function. [Yarnell]_
 
     .. math::
-        S(q) - 1 = (4\\pi \\rho/q)\\int\\limits_0^\\infty (g(r) - 1)\\,r \\sin(qr) dr
+        S(q) - 1 = \\frac{4\\pi \\rho}{q}\\int\\limits_0^\\infty (g(r) - 1)\\,r \\sin(qr) dr
 
     Args:
         r: Radii of the pair correlation function
@@ -301,14 +301,8 @@ def Sq_from_gr(r, gr, q, ρ):
       http://doi.org/10.1017/CBO9781107415324.004
 
     """
-    r = r.reshape(-1, 1)
-    q = q.reshape(1, -1)
-    dr = np.diff(r)
-    discrete_int = (gr[:-1] + gr[1:] - 1) * (r[1:] + r[:-1]) * (np.sin(q * r[1:]) + np.sin(q * r[:-1])) / 2
-    return 1 + 4 * np.pi * ρ / q * (discrete_int * dr).sum(axis=1)
-    return (
-        ((gr - 1) * r).reshape(-1, 1) * np.sin(r.reshape(-1, 1) * q.reshape(1, -1))
-    ).sum(axis=0) * (4 * np.pi * ρ / q) + 1
+    ydata = ((gr - 1) * r).reshape(-1, 1) * np.sin(r.reshape(-1, 1) * q.reshape(1, -1))
+    return np.trapz(x=r, y=ydata, axis=0) * (4 * np.pi * ρ / q) + 1
 
 
 def Fqt_from_Grt(data, q):
@@ -336,7 +330,7 @@ def Fqt_from_Grt(data, q):
     df['isf'] = df['G'] * np.sinc(q / np.pi * df['r'])
     isf = df.groupby('time')['isf'].sum()
     if isinstance(data, pd.DataFrame):
-        return pd.DataFrame({'time': isf.index, 'isf': isf.values})
+        return pd.DataFrame({'time': isf.index, 'isf': isf.values, 'q': q})
     else:
         return isf.index, isf.values
 
