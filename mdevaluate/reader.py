@@ -10,6 +10,7 @@ import os
 from os import path
 import logging
 from array import array
+from zipfile import BadZipFile
 
 import numpy as np
 from scipy import sparse
@@ -111,10 +112,12 @@ def save_nojump_matrixes(reader, matrixes=None):
 
 
 def load_nojump_matrixes(reader):
+    zipname = nojump_filename(reader)
     try:
-        data = np.load(nojump_filename(reader))
-    except AttributeError:
+        data = np.load(zipname)
+    except (AttributeError, BadZipFile):
         # npz-files can be corrupted, propably a bug for big arrays saved with savez_compressed?
+        logging.info('Remove zip-File: %s', zipname)
         os.remove(nojump_filename(reader))
         return
     if data['checksum'] == merge_hashes(NOJUMP_MAGIC, hash(reader)):
