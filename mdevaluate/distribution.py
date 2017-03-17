@@ -45,7 +45,7 @@ def time_average(function, coordinates, coordinates_b=None, pool=None):
         number_of_averages += 1
         result += ev
         if number_of_averages % 100 == 0:
-            logging.debug('time_average: number_of_averages')
+            logging.debug('time_average: %d', number_of_averages)
 
     return result / number_of_averages
 
@@ -151,7 +151,7 @@ def distance_distribution(atoms, bins):
 def tetrahedral_order(atoms, reference_atoms=None):
     if reference_atoms is None:
         reference_atoms = atoms
-    indices = next_neighbors(reference_atoms, query_atoms=atoms,  number_of_neighbors=4)
+    indices = next_neighbors(reference_atoms, query_atoms=atoms, number_of_neighbors=4)
     neighbors = reference_atoms[indices]
     neighbors_1, neighbors_2, neighbors_3, neighbors_4 = \
         neighbors[:, 0, :], neighbors[:, 1, :], neighbors[:, 2, :], neighbors[:, 3, :]

@@ -2,13 +2,11 @@ import numpy as np
 import numba
 from scipy.special import legendre
 from itertools import chain
-from functools import reduce
 import logging
 
-from .pbc import pbc_diff, pbc_diff_numba
 from .meta import annotate
 from .autosave import autosave_data
-from .utils import filon_fourier_transformation, norm, coherent_sum, coherent_histogram
+from .utils import filon_fourier_transformation, coherent_sum, coherent_histogram
 
 
 def log_indices(first, last, num=100):
@@ -249,7 +247,7 @@ def coherent_scattering_function(onset, frame, q):
     box = onset.box.diagonal()
     dimension = len(box)
 
-    @numba.jit(nopython=True, cache=True)
+    @numba.jit(nopython=True)
     def scfunc(x, y):
         sqdist = 0
         for i in range(dimension):
