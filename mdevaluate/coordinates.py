@@ -111,6 +111,10 @@ class CoordinateFrame(np.ndarray):
         return np.array(self.coordinates.frames[self.step].box)
 
     @property
+    def volume(self):
+        return self.box.diagonal().cumprod()[-1]
+
+    @property
     def time(self):
         return self.coordinates.frames[self.step].time
 
