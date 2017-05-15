@@ -115,9 +115,9 @@ def load_nojump_matrixes(reader):
     zipname = nojump_filename(reader)
     try:
         data = np.load(zipname)
-    except (AttributeError, BadZipFile):
+    except (AttributeError, BadZipFile, OSError):
         # npz-files can be corrupted, propably a bug for big arrays saved with savez_compressed?
-        logging.info('Remove zip-File: %s', zipname)
+        logging.info('Removing zip-File: %s', zipname)
         os.remove(nojump_filename(reader))
         return
     if data['checksum'] == merge_hashes(NOJUMP_MAGIC, hash(reader)):
