@@ -120,17 +120,22 @@ def load_nojump_matrixes(reader):
         logging.info('Removing zip-File: %s', zipname)
         os.remove(nojump_filename(reader))
         return
-    if data['checksum'] == merge_hashes(NOJUMP_MAGIC, hash(reader)):
-        reader.nojump_matrixes = tuple(
-            sparse.csr_matrix(
-                tuple(data['{}_{}'.format(attr, d)] for attr in CSR_ATTRS),
-                shape=data['shape']
+    try:
+        if data['checksum'] == merge_hashes(NOJUMP_MAGIC, hash(reader)):
+            reader.nojump_matrixes = tuple(
+                sparse.csr_matrix(
+                    tuple(data['{}_{}'.format(attr, d)] for attr in CSR_ATTRS),
+                    shape=data['shape']
+                )
+                for d in range(3)
             )
-            for d in range(3)
-        )
-        logging.info('Loaded Nojump Matrixes: {}'.format(nojump_filename(reader)))
-    else:
-        logging.info('Invlaid Nojump Data: {}'.format(nojump_filename(reader)))
+            logging.info('Loaded Nojump Matrixes: {}'.format(nojump_filename(reader)))
+        else:
+            logging.info('Invlaid Nojump Data: {}'.format(nojump_filename(reader)))
+    except KeyError:
+        logging.info('Removing zip-File: %s', zipname)
+        os.remove(nojump_filename(reader))
+        return
 
 
 class BaseReader:
@@ -201,7 +206,7 @@ class CachedReader(BaseReader):
             filename (str): Trajectory file that will be opened.
             maxsize: Maximum size of the lru_cache or None for infinite cache.
         """
-        super().__init__(filename)
+        super().__init__(filename, reindex=reindex)
         self._get_item = lru_cache(maxsize=maxsize)(self._get_item)
 
     def _get_item(self, item):
