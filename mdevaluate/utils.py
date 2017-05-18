@@ -145,7 +145,7 @@ def filon_fourier_transformation(time, correlation,
 
     if imag:
         integral = 1j * (np.sin(frequencies * time[1:]) - np.sin(frequencies * time[:-1])) / frequencies**2
-        fourier += (derivative * integral).sum(axis=0) + 1j * correlation[0] / frequencies
+        fourier = fourier + (derivative * integral).sum(axis=0) + 1j * correlation[0] / frequencies
 
     return frequencies.reshape(-1,), fourier
 
