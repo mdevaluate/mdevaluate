@@ -338,3 +338,16 @@ def Fqt_from_Grt(data, q):
 @numba.jit
 def norm(vec):
     return (vec**2).sum()**0.5
+
+
+def singledispatchmethod(func):
+    """
+    A decorator to define a genric instance method, analogue to functools.singledispatch.
+    """
+    dispatcher = functools.singledispatch(func)
+
+    def wrapper(*args, **kw):
+        return dispatcher.dispatch(args[1].__class__)(*args, **kw)
+    wrapper.register = dispatcher.register
+    functools.update_wrapper(wrapper, func)
+    return wrapper

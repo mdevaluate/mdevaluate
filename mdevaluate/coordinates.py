@@ -1,5 +1,4 @@
-from functools import wraps
-from functools import partial, lru_cache
+from functools import partial, lru_cache, wraps
 from copy import copy
 import logging
 
@@ -8,7 +7,7 @@ from scipy.spatial import cKDTree, KDTree
 
 from .atoms import AtomSubset
 from .pbc import whole, nojump
-from .utils import hash_anything as _hash, merge_hashes, mask2indices
+from .utils import hash_anything as _hash, merge_hashes, mask2indices, singledispatchmethod
 
 
 class UnknownCoordinatesMode(Exception):
@@ -225,10 +224,6 @@ class Coordinates:
         else:
             self.atom_filter = np.ones(shape=(len(frames[0].coordinates),), dtype=bool)
 
-    def slice(self, slice):
-        for i in range(len(self))[slice]:
-            yield self[i]
-
     def get_frame(self, fnr):
         """Returns the fnr-th frame."""
         try:
@@ -251,15 +246,18 @@ class Coordinates:
             self.get_frame.clear_cache()
 
     def __iter__(self):
-        return self.slice(self._slice)
+        for i in range(len(self))[self._slice]:
+            yield self[i]
 
+    @singledispatchmethod
     def __getitem__(self, item):
-        if isinstance(item, slice):
-            sliced = copy(self)
-            sliced._slice = item
-            return sliced
-        else:
-            return self.get_frame(item)
+        return self.get_frame(item)
+
+    @__getitem__.register(slice)
+    def _(self, item):
+        sliced = copy(self)
+        sliced._slice = item
+        return sliced
 
     def __len__(self):
         return len(self.frames)
