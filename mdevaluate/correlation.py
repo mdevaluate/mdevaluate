@@ -3,10 +3,12 @@ import numba
 from scipy.special import legendre
 from itertools import chain
 import logging
+import dask.array as darray
 
 from .meta import annotate
 from .autosave import autosave_data
 from .utils import filon_fourier_transformation, coherent_sum, coherent_histogram
+from .pbc import pbc_diff
 
 
 def log_indices(first, last, num=100):
@@ -174,29 +176,22 @@ def van_hove_self(start, end, bins):
     return 1 / len(start) * np.histogram(delta_r, bins)[0]
 
 
-def van_hove_distinct(onset, frame, bins):
+def van_hove_distinct(onset, frame, bins, box=None):
     """
-    Compute the self part of the Van Hove autocorrelation function.
+    Compute the distinct part of the Van Hove autocorrelation function.
 
     ..math::
-      G(r, t) = \sum_i \delta(|\vec r_i(0) - \vec r_i(t)| - r)
+      G(r, t) = \sum_{i, j} \delta(|\vec r_i(0) - \vec r_j(t)| - r)
     """
-    box = onset.box.diagonal()
+    if box is None:
+        box = onset.box.diagonal()
     dimension = len(box)
-
-    @numba.jit(nopython=True, cache=True)
-    def scfunc(x, y):
-        sqdist = 0
-        for i in range(dimension):
-            d = x[i] - y[i]
-            if d > box[i] / 2:
-                d -= box[i]
-            if d < -box[i] / 2:
-                d += box[i]
-            sqdist += d**2
-        return sqdist**0.5
-
-    return coherent_histogram(scfunc, onset.pbc, frame.pbc, bins, distinct=True) / len(onset)
+    N = len(onset)
+    onset = darray.from_array(onset, chunks=(500, dimension)).reshape(1, N, dimension)
+    frame = darray.from_array(frame, chunks=(500, dimension)).reshape(N, 1, dimension)
+    dist = (pbc_diff(onset, frame, box)**2).sum(axis=-1)**0.5
+    hist = darray.histogram(dist, bins=bins)[0]
+    return hist.compute()
 
 
 def overlap(onset, frame, crds_tree, radius):
