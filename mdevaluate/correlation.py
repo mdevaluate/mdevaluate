@@ -191,7 +191,7 @@ def van_hove_distinct(onset, frame, bins, box=None):
     frame = darray.from_array(frame, chunks=(500, dimension)).reshape(N, 1, dimension)
     dist = (pbc_diff(onset, frame, box)**2).sum(axis=-1)**0.5
     hist = darray.histogram(dist, bins=bins)[0]
-    return hist.compute()
+    return hist.compute() / N
 
 
 def overlap(onset, frame, crds_tree, radius):
