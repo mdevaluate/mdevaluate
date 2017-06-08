@@ -2,7 +2,7 @@
 Module that provides different readers for trajectory files.
 """
 
-from .utils import hash_anything, merge_hashes
+from .checksum import checksum
 
 from functools import lru_cache
 from collections import namedtuple
@@ -183,9 +183,8 @@ class BaseReader:
     def __len__(self):
         return len(self.rd)
 
-    def __hash__(self):
-        hashes = [hash_anything(self.rd.filename), hash_anything(str(self.rd.cache))]
-        return merge_hashes(*hashes)
+    def __checksum__(self):
+        return checksum(self.rd.filename, str(self.rd.cache))
 
 
 class CachedReader(BaseReader):

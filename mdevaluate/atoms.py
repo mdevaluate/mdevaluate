@@ -2,7 +2,7 @@ import re
 
 from scipy.spatial.distance import cdist
 from .pbc import pbc_diff
-from .utils import hash_anything as _hash
+from .checksum import checksum
 import numpy as np
 
 import scipy
@@ -209,8 +209,8 @@ class AtomSubset:
                           for resid, resname, atom_names in zip(self.residue_ids, self.residue_names, self.atom_names)
                           ])
 
-    def __hash__(self):
-        return _hash(self.description)
+    def __checksum__(self):
+        return checksum(self.description)
 
 
 def center_of_mass(position, mass=None):

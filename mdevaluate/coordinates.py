@@ -7,7 +7,8 @@ from scipy.spatial import cKDTree, KDTree
 
 from .atoms import AtomSubset
 from .pbc import whole, nojump
-from .utils import hash_anything as _hash, merge_hashes, mask2indices, singledispatchmethod
+from .utils import mask2indices, singledispatchmethod
+from .checksum import checksum
 
 
 class UnknownCoordinatesMode(Exception):
@@ -262,8 +263,8 @@ class Coordinates:
     def __len__(self):
         return len(self.frames)
 
-    def __hash__(self):
-        return merge_hashes(_hash(self.frames), _hash(self.atom_filter), _hash(self._slice), _hash(self.mode))
+    def __checksum__(self):
+        return checksum(self.frames, self.atom_filter, self._slice, self.mode)
 
     def __repr__(self):
         return "Coordinates <{}>: {}".format(self.frames.filename, self.atom_subset)
@@ -325,8 +326,8 @@ class CoordinatesMap:
     def __len__(self):
         return len(self.coordinates.frames)
 
-    def __hash__(self):
-        return merge_hashes(_hash(self.coordinates), _hash(self.function))
+    def __checksum__(self):
+        return checksum(self.coordinates, self.function)
 
     @wraps(Coordinates.subset)
     def subset(self, **kwargs):
@@ -408,8 +409,8 @@ class CoordinatesKDTree:
     def __getitem__(self, index):
         return self._get_tree_at_index(index)
 
-    def __hash__(self):
-        return merge_hashes(_hash(self.selector), _hash(self.frames))
+    def __checksum__(self):
+        return checksum(self.selector, self.frames)
 
     def __eq__(self, other):
         return super().__eq__(other)

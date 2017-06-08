@@ -3,6 +3,9 @@ from warnings import warn
 import numpy as np
 from .utils import merge_hashes, hash_anything as _hash
 import functools
+
+from .checksum import checksum
+
 autosave_directory = None
 load_autosave_data = False
 verbose_print = True
@@ -97,7 +100,7 @@ def get_filename(function, checksum, description, *args):
     return os.path.join(savedir, filename)
 
 
-def checksum(function, *args):
+def old_checksum(function, *args):
     """Get the checksum of a function call."""
     hashes = [_hash(function)]
     for arg in args:
@@ -161,9 +164,14 @@ def autosave_data(nargs, kwargs_keys=None):
                             relevant_args.append(kwargs[key])
 
                 csum = checksum(function, *relevant_args)
+                csum_old = old_checksum(function, *relevant_args)
                 filename = get_filename(function, csum, description, *relevant_args)
                 if autoload and verify_file(filename, csum):
                     result = load_data(filename)
+                elif autoload and verify_file(filename, csum_old):
+                    result = load_data(filename)
+                    save_data(filename, csum, result)
+
                 else:
                     result = function(*args, **kwargs)
                     save_data(filename, csum, result)
