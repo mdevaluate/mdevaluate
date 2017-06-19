@@ -8,7 +8,6 @@ from functools import lru_cache
 from collections import namedtuple
 import os
 from os import path
-import logging
 from array import array
 from zipfile import BadZipFile
 
@@ -17,6 +16,8 @@ from scipy import sparse
 
 import pygmx
 from pygmx.errors import InvalidMagicException, InvalidIndexException
+
+from .logging import logger
 
 
 class NojumpError(Exception):

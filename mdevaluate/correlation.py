@@ -2,14 +2,13 @@ import numpy as np
 import numba
 from scipy.special import legendre
 from itertools import chain
-import logging
 import dask.array as darray
 
 from .meta import annotate
 from .autosave import autosave_data
 from .utils import filon_fourier_transformation, coherent_sum, coherent_histogram
 from .pbc import pbc_diff
-
+from .logging import logger
 
 def log_indices(first, last, num=100):
     ls = np.logspace(0, np.log10(last - first + 1), num=num)

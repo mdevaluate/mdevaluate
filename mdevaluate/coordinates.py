@@ -1,6 +1,6 @@
 from functools import partial, lru_cache, wraps
 from copy import copy
-import logging
+from .logging import logger
 
 import numpy as np
 from scipy.spatial import cKDTree, KDTree

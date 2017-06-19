@@ -1,7 +1,7 @@
 
 import functools
 import hashlib
-import logging
+from .logging import logger
 
 import numpy as np
 
@@ -32,7 +32,7 @@ def checksum(*args):
     bstr = str(SALT).encode()
     for arg in args:
         if hasattr(arg, '__checksum__'):
-            logging.debug('Checksum via __checksum__: %s', str(arg))
+            logger.debug('Checksum via __checksum__: %s', str(arg))
             bstr += str(arg.__checksum__()).encode()
         elif arg is None:
             bstr += b'None'
@@ -41,13 +41,13 @@ def checksum(*args):
         elif isinstance(arg, str):
             bstr += arg.encode()
         elif hasattr(arg, '__code__'):
-            logging.debug('Checksum via __code__ for %s', str(arg))
+            logger.debug('Checksum via __code__ for %s', str(arg))
             bstr += arg.__code__.co_code
             if arg.__closure__ is not None:
                 for cell in arg.__closure__:
                     bstr += str(checksum(cell.cell_contents)).encode()
         elif isinstance(arg, functools.partial):
-            logging.debug('Checksum via partial for %s', str(arg))
+            logger.debug('Checksum via partial for %s', str(arg))
             bstr += checksum(arg.func)
             for x in arg.args:
                 bstr += str(checksum(x)).encode()
@@ -56,7 +56,7 @@ def checksum(*args):
         elif isinstance(arg, np.ndarray):
             bstr += arg.tobytes()
         else:
-            logging.debug('Checksum via str for %s', str(arg))
+            logger.debug('Checksum via str for %s', str(arg))
             bstr += str(arg).encode()
 
     m = hashlib.md5()

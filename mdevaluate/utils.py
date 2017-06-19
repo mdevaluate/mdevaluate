@@ -11,6 +11,7 @@ import pandas as pd
 
 from scipy.interpolate import interp1d
 
+from .logging import logger
 
 def hash_partial(partial):
     """

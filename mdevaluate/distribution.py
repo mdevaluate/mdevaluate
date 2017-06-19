@@ -1,6 +1,4 @@
-import logging
 import warnings
-
 import numpy as np
 
 from .coordinates import  rotate_axis, polar_coordinates, spherical_coordinates
@@ -9,6 +7,7 @@ from .autosave import autosave_data
 from .meta.annotate import deprecated
 from .utils import runningmean
 from .pbc import pbc_diff
+from .logging import logger
 
 
 @autosave_data(nargs=2, kwargs_keys=('coordinates_b',))
@@ -45,7 +44,7 @@ def time_average(function, coordinates, coordinates_b=None, pool=None):
         number_of_averages += 1
         result += ev
         if number_of_averages % 100 == 0:
-            logging.debug('time_average: %d', number_of_averages)
+            logger.debug('time_average: %d', number_of_averages)
 
     return result / number_of_averages
 

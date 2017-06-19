@@ -10,13 +10,12 @@ from . import pbc
 from . import simulation
 from . import autosave
 from . import reader
-
-from .meta import notify
+from .logging import logger
 
 from pygmx import gromacs
 from pygmx.errors import FileTypeError
 
-__version__ = '16.11'
+__version__ = '17.06'
 
 
 def trajectory_from_xtc(xtc_file, generate_index=True):
@@ -58,15 +57,15 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
     tpr_glob = glob(os.path.join(directory, tpr)) if tpr is not None else None
     gro_glob = glob(os.path.join(directory, gro)) if gro is not None else None
     if tpr_glob is not None and len(tpr_glob) is 1:
-        print('Loading topology: {}'.format(tpr_glob[0]))
+        logger.info('Loading topology: {}'.format(tpr_glob[0]))
         atom_set = atoms.from_tprfile(tpr_glob[0])
     elif gro_glob is not None and len(gro_glob) is 1:
-        print('Loading topology: {}'.format(gro_glob[0]))
+        logger.info('Loading topology: {}'.format(gro_glob[0]))
         atom_set = atoms.from_grofile(gro_glob[0], index_file)
     else:
         raise FileNotFoundError('Topology file could not be identified.')
     xtc_file, = glob(os.path.join(directory, xtc))
-    print('Loading trajectory: {}'.format(xtc_file))
+    logger.info('Loading trajectory: {}'.format(xtc_file))
     frames = trajectory_from_xtc(xtc_file)
 
     return coordinates.Coordinates(frames, atom_subset=atom_set, caching=caching)
@@ -115,7 +114,7 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
     if top_glob is not None and len(top_glob) is 1:
         top_file, = top_glob
         top_ext = top_file.split('.')[-1]
-        notify('Loading topology: {}'.format(top_file), verbose)
+        logger.info('Loading topology: {}'.format(top_file))
         if index_file is not None:
             index_glob = glob(os.path.join(directory, index_file), recursive=True)
             if index_glob is not None:
@@ -134,7 +133,7 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
 
     traj_glob = glob(os.path.join(directory, trajectory), recursive=True)
     if traj_glob is not None and len(traj_glob) is 1:
-        notify('Loading trajectory: {}'.format(traj_glob[0]), verbose)
+        logger.info('Loading trajectory: {}'.format(traj_glob[0]))
         frames = reader.open(traj_glob[0], cached=cached, reindex=reindex)
     else:
         raise FileNotFoundError('Trajectory file could not be identified.')

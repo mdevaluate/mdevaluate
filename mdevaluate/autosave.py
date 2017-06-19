@@ -1,10 +1,10 @@
 import os
-from warnings import warn
 import numpy as np
 from .utils import merge_hashes, hash_anything as _hash
 import functools
 
 from .checksum import checksum
+from .logging import logger
 
 autosave_directory = None
 load_autosave_data = False
@@ -77,7 +77,7 @@ def get_directory(reader):
             pass
     if not os.access(savedir, os.W_OK):
         savedir = os.path.join(user_autosave_directory, savedir.lstrip('/'))
-        warn('Switched autosave directory to {}, since original location is not writeable.'.format(savedir))
+        logger.info('Switched autosave directory to {}, since original location is not writeable.'.format(savedir))
     os.makedirs(savedir, exist_ok=True)
     return savedir
 

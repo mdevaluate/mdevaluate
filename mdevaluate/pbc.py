@@ -2,8 +2,11 @@
 import numpy as np
 import numba
 
+from scipy.spatial import cKDTree
 
-def pbc_diff(v1, v2, box):
+from .logging import logger
+
+def pbc_diff_old(v1, v2, box):
     """
     Calculate the difference of two vestors, considering optional boundary conditions.
     """
