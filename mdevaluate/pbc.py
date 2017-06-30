@@ -27,27 +27,6 @@ def pbc_diff_numba(ri, rj, box):
     v += (v < -box / 2) * box
     return v
 
-def pbc_vec(a, b, box):
-    """
-    Calculate the vector pointing from a to b. This assumes that periodic
-    boundary conditions apply and vectors are never longer than half the
-    box size in any direction. Instead they will point into negative directions.
-    """
-    d = a-b
-    d = d-(d//box)*box
-    d = d-(d//(box/2))*box
-    return d
-
-def pbc_diff(a, b, box=None):
-    """
-    Calculate the difference of two vestors, considering optional boundary conditions.
-    """
-    if box is None:
-        return a-b
-    d = a-b
-    d = d-(d//box)*box
-    d = d-(d//(box/2))*box
-    return d
 
 def whole(frame, residue_ids=None, len_res=None):
     """
