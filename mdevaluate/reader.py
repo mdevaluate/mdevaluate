@@ -24,7 +24,7 @@ class NojumpError(Exception):
     pass
 
 
-def open(filename, cached=False, reindex=False):
+def open(filename, cached=False, reindex=False, ignore_index_timestamps=False):
     """
     Opens a trajectory file with the apropiate reader.
 
@@ -46,9 +46,9 @@ def open(filename, cached=False, reindex=False):
             maxsize = 128
         else:
             maxsize = cached
-        reader = CachedReader(filename, maxsize, reindex=reindex)
+        reader = CachedReader(filename, maxsize, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
     else:
-        reader = BaseReader(filename, reindex=reindex)
+        reader = BaseReader(filename, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
 
     return reader
 
@@ -157,14 +157,14 @@ class BaseReader:
         self._nojump_matrixes = mats
         save_nojump_matrixes(self)
 
-    def __init__(self, filename, reindex=False):
+    def __init__(self, filename, reindex=False, ignore_index_timestamps=False):
         """
         Args:
             filename: Trajectory file to open.
             reindex (bool, opt.): If True, regenerate the index file if necessary.
         """
         try:
-            self.rd = pygmx.open(filename)
+            self.rd = pygmx.open(filename, ignore_index_timestamps=ignore_index_timestamps)
         except InvalidMagicException:
             raise InvalidIndexException('This is not a valid index file: {}'.format(filename))
         except InvalidIndexException:
@@ -200,13 +200,13 @@ class CachedReader(BaseReader):
         """Clear the cache of the frames."""
         self._get_item.cache_clear()
 
-    def __init__(self, filename, maxsize, reindex=False):
+    def __init__(self, filename, maxsize, reindex=False, ignore_index_timestamps=False):
         """
         Args:
             filename (str): Trajectory file that will be opened.
             maxsize: Maximum size of the lru_cache or None for infinite cache.
         """
-        super().__init__(filename, reindex=reindex)
+        super().__init__(filename, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
         self._get_item = lru_cache(maxsize=maxsize)(self._get_item)
 
     def _get_item(self, item):

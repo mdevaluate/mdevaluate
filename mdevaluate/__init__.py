@@ -53,7 +53,6 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
 
     For more details see: https://docs.python.org/3/library/glob.html
     """
-
     tpr_glob = glob(os.path.join(directory, tpr)) if tpr is not None else None
     gro_glob = glob(os.path.join(directory, gro)) if gro is not None else None
     if tpr_glob is not None and len(tpr_glob) is 1:
@@ -72,7 +71,7 @@ def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file
 
 
 def open(directory, topology='*.tpr', trajectory='*.xtc',
-         index_file=None, cached=False, reindex=True, verbose=True, nojump=False):
+         index_file=None, cached=False, reindex=True, verbose=True, nojump=False, ignore_index_timestamps=False):
     """
     Open a simulation from a directory.
 
@@ -89,7 +88,10 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
             the cache, None means infinite cache (this is a potential memory leak!).
         reindex (opt.): Regenerate the xtc-index if necessary.
         verbose (opt.): Be verbose about the opened files.
-        nojump (opt.): If nojump matrixes should be generated. They will alwyas be loaded if present.
+        nojump (opt.): If nojump matrixes should be generated. They will alwyas be loaded if present
+        ignore_index_timestamps (opt.): 
+            Ignore timestamps in xtc index file. If True the index file will be loaded 
+            regardless of the timestamp
 
     Returns:
         A Coordinate object of the simulation.
@@ -134,7 +136,7 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
     traj_glob = glob(os.path.join(directory, trajectory), recursive=True)
     if traj_glob is not None and len(traj_glob) is 1:
         logger.info('Loading trajectory: {}'.format(traj_glob[0]))
-        frames = reader.open(traj_glob[0], cached=cached, reindex=reindex)
+        frames = reader.open(traj_glob[0], cached=cached, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
     else:
         raise FileNotFoundError('Trajectory file could not be identified.')
 
@@ -148,8 +150,6 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
 
 
 def open_energy(energyfile):
-    """
-    Open an energy file with EnergyReader.
-    """
+    """Open an energy file with EnergyReader."""
     edrfile = glob(energyfile)[0]
     return reader.EnergyReader(edrfile)
