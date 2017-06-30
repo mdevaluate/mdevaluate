@@ -73,7 +73,8 @@ def shifted_correlation(function, frames,
 
         >>> indices, data = shifted_correlation(msd, coords)
     """
-    skip = skip or (frames._slice.start / len(frames))
+    if skip is None:
+        skip = frames._slice.start / len(frames) if hasattr(frames, '_slice') else 0
     assert window + skip < 1
 
     start_frames = np.linspace(
