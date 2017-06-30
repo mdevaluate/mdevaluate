@@ -8,6 +8,8 @@ from types import FunctionType
 import numpy as np
 import numba
 import pandas as pd
+from functions import kww, kww_1e
+from scipy.ndimage.filters import uniform_filter1d
 
 from scipy.interpolate import interp1d
 
@@ -212,6 +214,31 @@ def runningmean(data, nav):
     """
     return np.convolve(data, np.ones((nav,)) / nav, mode='valid')
 
+def moving_average(A,n=3):
+    """
+    Compute the running mean of an array.
+    Uses the second axis if it is of higher dimensionality.
+
+    Args:
+        data: Input data of shape (N, )
+        n: Number of points over which the data will be averaged
+
+    Returns:
+        Array of shape (N-(n-1), )
+
+    Supports 2D-Arrays.
+    Slower than runningmean for small n but faster for large n.
+    """
+    k1 = int(n/2)
+    k2 = int((n-1)/2)
+    if k2 == 0:
+        if A.ndim > 1:
+            return uniform_filter1d(A,n)[:,k1:]
+        return uniform_filter1d(A,n)[k1:]
+    if A.ndim > 1:
+        return uniform_filter1d(A,n)[:,k1:-k2]
+    return uniform_filter1d(A,n)[k1:-k2]
+
 
 def coherent_sum(func, coord_a, coord_b):
     """
@@ -352,3 +379,32 @@ def singledispatchmethod(func):
     wrapper.register = dispatcher.register
     functools.update_wrapper(wrapper, func)
     return wrapper
+
+def quick1etau(t, C, n=7):
+    """
+    Estimates the time for a correlation function that goes from 1 to 0 to decay to 1/e.
+    If successful, returns tau as fine interpolation with a kww fit.
+    The data is reduce to points around 1/e to remove short and long times from the kww fit!
+    t is the time
+    C is C(t) the correlation function
+    n is the minimum number of points around 1/e required
+    """
+    # first rough estimate, the closest time. This is returned if the interpolation fails!
+    tau_est = t[np.argmin(np.fabs(C-np.exp(-1)))]
+    # reduce the data to points around 1/e
+    k = 0.1
+    mask = (S < np.exp(-1)+k) & (C > np.exp(-1)-k)
+    while np.sum(mask) < n:
+        k += 0.01
+        mask = (C < np.exp(-1)+k) & (C > np.exp(-1)-k)
+        if k+np.exp(1) > 1.0:
+            break
+    # if enough points are found, try a curve fit, else and in case of failing keep using the estimate
+    if np.sum(mask) >= n:
+        try:
+            fit, _ = curve_fit(kww, t[mask], C[mask], p0=[0.9, tau_est, 0.9], maxfev=100000)
+            tau_est = kww_1e(*fit)
+        except:
+            pass
+    return tau_est
+    

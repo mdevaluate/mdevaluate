@@ -27,6 +27,16 @@ def pbc_diff_numba(ri, rj, box):
     v += (v < -box / 2) * box
     return v
 
+def pbc_vec(a, b, box):
+    """
+    Calculate the vector pointing from a to b. This assumes that periodic
+    boundary conditions apply and vectors are never longer than half the
+    box size in any direction. Instead they will point into negative directions.
+    """
+    d = a-b
+    d = d-(d//box)*box
+    d = d-(d//(box/2))*box
+    return d
 
 def whole(frame, residue_ids=None, len_res=None):
     """
@@ -72,3 +82,35 @@ def nojump(frame):
         [m[:frame.step + 1, selection].sum(axis=0) for m in frame.coordinates.frames.nojump_matrixes]
     ).T) * frame.box.diagonal()
     return frame - delta
+
+
+def pbc_points(points, box, thickness=0, index=False, inclusive=True):
+    """
+    Returns the points folded back into the box and the first periodic images.
+    Thickness 0 means all 27 boxes. Positive means the box+thickness. Negative values mean that less than the box is returned.
+    index=True also returns the indices with indices of images being their originals values.
+    inclusive=False returns only images, does not work with thickness <= 0
+    """
+    coordinates = np.copy(points)%box
+    allcoordinates = np.copy(coordinates)
+    indices = np.tile(np.arange(len(points)),(27))
+    for x in range(-1, 2, 1):
+            for y in range(-1, 2, 1):
+                for z in range(-1, 2, 1):
+                    vv = np.array([x, y, z], dtype=float)
+                    if not (vv == 0).all() :
+                        allcoordinates = np.concatenate((allcoordinates, coordinates + vv*box), axis=0)
+    
+    if thickness != 0:
+        mask = np.all(allcoordinates < box+thickness, axis=1)
+        allcoordinates = allcoordinates[mask]
+        indices = indices[mask]
+        mask = np.all(allcoordinates > -thickness, axis=1)
+        allcoordinates = allcoordinates[mask]
+        indices = indices[mask]
+    if not inclusive and thickness > 0:
+        allcoordinates = allcoordinates[len(points):]
+        indices = indices[len(points):]
+    if index:
+        return (allcoordinates, indices)
+    return allcoordinates
