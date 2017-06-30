@@ -48,7 +48,7 @@ def checksum(*args):
                     bstr += str(checksum(cell.cell_contents)).encode()
         elif isinstance(arg, functools.partial):
             logger.debug('Checksum via partial for %s', str(arg))
-            bstr += checksum(arg.func)
+            bstr += str(checksum(arg.func)).encode()
             for x in arg.args:
                 bstr += str(checksum(x)).encode()
             for k in sorted(arg.keywords.keys()):

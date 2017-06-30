@@ -103,7 +103,7 @@ def generate_nojump_matrixes(trajectory):
 def save_nojump_matrixes(reader, matrixes=None):
     if matrixes is None:
         matrixes = reader.nojump_matrixes
-    data = {'checksum': merge_hashes(NOJUMP_MAGIC, hash(reader))}
+    data = {'checksum': checksum(NOJUMP_MAGIC, checksum(reader))}
     for d, mat in enumerate(matrixes):
         data['shape'] = mat.shape
         for attr in CSR_ATTRS:
@@ -122,7 +122,7 @@ def load_nojump_matrixes(reader):
         os.remove(nojump_filename(reader))
         return
     try:
-        if data['checksum'] == merge_hashes(NOJUMP_MAGIC, hash(reader)):
+        if data['checksum'] == checksum(NOJUMP_MAGIC, checksum(reader)):
             reader.nojump_matrixes = tuple(
                 sparse.csr_matrix(
                     tuple(data['{}_{}'.format(attr, d)] for attr in CSR_ATTRS),
