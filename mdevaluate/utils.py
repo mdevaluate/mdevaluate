@@ -8,7 +8,7 @@ from types import FunctionType
 import numpy as np
 import numba
 import pandas as pd
-from functions import kww, kww_1e
+from .functions import kww, kww_1e
 from scipy.ndimage.filters import uniform_filter1d
 
 from scipy.interpolate import interp1d
@@ -393,7 +393,7 @@ def quick1etau(t, C, n=7):
     tau_est = t[np.argmin(np.fabs(C-np.exp(-1)))]
     # reduce the data to points around 1/e
     k = 0.1
-    mask = (S < np.exp(-1)+k) & (C > np.exp(-1)-k)
+    mask = (C < np.exp(-1)+k) & (C > np.exp(-1)-k)
     while np.sum(mask) < n:
         k += 0.01
         mask = (C < np.exp(-1)+k) & (C > np.exp(-1)-k)
