@@ -20,6 +20,17 @@ def pbc_diff_old(v1, v2, box):
     return v
 
 
+def pbc_diff(v1, v2, box):
+    """
+    Calculate the difference of two vectors, considering periodic boundary conditions.
+    """
+    v = v1 - v2
+    if box is not None:
+        s = v / box
+        v = box * (s - s.round())
+    return v
+
+
 @numba.jit(nopython=True)
 def pbc_diff_numba(ri, rj, box):
     v = ri % box - rj % box
@@ -58,6 +69,10 @@ def whole(frame, residue_ids=None, len_res=None):
     correction[n, m, d] = -box[d]
     n, m, d = np.where(com_dist < -box / 2)
     correction[n, m, d] = box[d]
+
+    if len_res == 2 and frame.masses[0] == frame.masses[1]:
+        # special case for 2-site molecules, where the algorithm fails since the COM is somewhere in the box center
+        correction[:,1,:] = 0
 
     whole_frame = residues + correction
     return whole_frame.reshape(nr_res * len_res, 3)
