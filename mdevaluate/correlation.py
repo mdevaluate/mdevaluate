@@ -89,7 +89,7 @@ def shifted_correlation(function, frames,
 
     result = []
     for i, start_frame in enumerate(start_frames):
-        logging.debug('shifted_correlation: segment {}/{} (index={})'.format(i + 1, segments, start_frame))
+        logger.debug('shifted_correlation: segment {}/{} (index={})'.format(i + 1, segments, start_frame))
         result.append(list(correlate(start_frame)))
     result = np.array(result)
     if average:

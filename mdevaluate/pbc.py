@@ -38,6 +38,17 @@ def pbc_vec(a, b, box):
     d = d-(d//(box/2))*box
     return d
 
+def pbc_diff(a, b, box=None):
+    """
+    Calculate the difference of two vestors, considering optional boundary conditions.
+    """
+    if box is None:
+        return a-b
+    d = a-b
+    d = d-(d//box)*box
+    d = d-(d//(box/2))*box
+    return d
+
 def whole(frame, residue_ids=None, len_res=None):
     """
     Apply ``-pbc whole`` to a CoordinateFrame.

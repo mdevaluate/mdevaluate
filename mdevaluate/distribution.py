@@ -141,36 +141,26 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=Fal
     else:
         return res
 
-def pbc_tree_rdf(from_coordinates, to_coordinates, bins, box, exclude=0):
-    number_of_atoms1 = len(from_coordinates)
-    number_of_atoms2 = len(to_coordinates)
-    allcoordinates = numpy.copy(to_coordinates)
-    allcoordinates = pbc.pbc_points(allcoordinates, box, thickness=max(bins)+0.1)
-    to_tree = spatial.cKDTree(allcoordinates)
-    dist = to_tree.query(from_coordinates%box,
-            k=len(from_coordinates), distance_upper_bound=max(bins)+0.1)[0]
+def pbc_tree_rdf(from_coords, to_coords, bins, box, exclude=0):
+    all_coords = pbc_points(to_coords, box, thickness=max(bins)+0.1)
+    to_tree = spatial.cKDTree(all_coords)
+    dist = to_tree.query(from_coords%box,
+            k=len(from_coords), distance_upper_bound=max(bins)+0.1)[0]
     dist = dist.flatten()
-    dist = dist[dist < np.inf]   
-    hist, histedges = np.histogram([0], bins)
+    dist = dist[dist < np.inf]  
     hist = np.histogram(dist, bins)[0]
     volume = 4/3*np.pi*(bins[1:]**3-bins[:-1]**3)
-    histmiddles = get_bin_middles(histedges)
-    return ((hist) * np.prod(box) / volume / number_of_atoms1 / (number_of_atoms2-exclude), histmiddles)
+    return (hist) * np.prod(box) / volume / len(from_coords) / (len(to_coords)-exclude)
 
 
-@autosave_data(nargs=3, kwargs_keys=('times','box','exclude'))
-def multi_radial_pair_distribution(coordinates1, coordinates2, bins, times=10, box=None, exclude=0):
-    frames = np.array(range(0, len(coordinates1), int(len(coordinates1)/times)))
-    frames = frames[:times]
-    rad = np.zeros(len(bins)-1)
+@autosave_data(nargs=3, kwargs_keys=('times','exclude'))
+def averaged_pbc_tree_rdf(from_coords, to_coords, bins, times=10, exclude=0, **kwargs):
+    frames = np.array(range(0, len(from_coords), int(len(from_coords)/times)))[:times]
+    out = np.zeros(len(bins)-1)
     for j, i in enumerate(frames):
         logger.debug('multi_radial_pair_distribution: %d/%d', j, len(frames))
-        if box == None:
-            out1, middleframes = pbc_tree_rdf(coordinates1[i], coordinates2[i], bins, box=np.diag(coordinates1[i].box), exclude=exclude)
-        else:
-            out1, middleframes = pbc_tree_rdf(coordinates1[i], coordinates2[i], bins, box=box, exclude=exclude)
-        rad += out1
-    return (rad/len(frames), middleframes)
+        out += pbc_tree_rdf(from_coords[i], to_coords[i], bins, box=np.diag(from_coords[i].box), exclude=exclude)
+    return out/len(frames)
 
 
 def distance_distribution(atoms, bins):
