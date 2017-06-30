@@ -1,7 +1,6 @@
 """
 Collection of utility functions.
 """
-import hashlib
 import functools
 from types import FunctionType
 
@@ -14,60 +13,6 @@ from scipy.ndimage.filters import uniform_filter1d
 from scipy.interpolate import interp1d
 
 from .logging import logger
-
-def hash_partial(partial):
-    """
-    Hashes `functools.partail` objects by their function and arguments.
-    Keyword argmuents are sorted by name, to preserve order between python sessions.
-    """
-    hashes = [hash_anything(partial.func)]
-    for arg in partial.args:
-        hashes.append(hash_anything(arg))
-    keys = list(partial.keywords.keys())
-    keys.sort()
-    for key in keys:
-        hashes.append(hash_anything(partial.keywords[key]))
-    return merge_hashes(*hashes)
-
-
-def hash_code(func):
-    """
-    Hash an object with a __code__ attribute, e.g. a function.
-    """
-    hashes = [hash_anything(func.__code__.co_code)]
-    if func.__closure__ is not None:
-        for cell in func.__closure__:
-            hashes.append(hash_anything(cell.cell_contents))
-    return merge_hashes(*hashes)
-
-
-def hash_anything(arg):
-    """Return a md5 hash value for the current state of any argument."""
-    if arg is None:
-        bstr = b'None'
-    elif isinstance(arg, bytes):
-        bstr = arg
-    elif isinstance(arg, str):
-        bstr = arg.encode()
-    elif hasattr(arg, '__code__'):
-        return hash_code(arg)
-    elif isinstance(arg, functools.partial):
-        return hash_partial(arg)
-    elif isinstance(arg, np.ndarray):
-        bstr = arg.tobytes()
-    else:
-        try:
-            return hash(arg)
-        except TypeError:
-            bstr = str(arg).encode()
-    m = hashlib.md5()
-    m.update(bstr)
-    return int.from_bytes(m.digest(), 'big')
-
-
-def merge_hashes(*hashes):
-    """Merge several hashes to one hash value."""
-    return hash_anything(''.join([str(h) for h in hashes]))
 
 
 def five_point_stencil(xdata, ydata):
@@ -380,6 +325,20 @@ def singledispatchmethod(func):
     functools.update_wrapper(wrapper, func)
     return wrapper
 
+def histogram(data, bins):
+    """
+    Compute the histogram of the given data. Uses the faster numpy.bincount function, if possible.
+    """
+    dbins = np.diff(bins)
+    dx = dbins.mean()
+    if bins.min() == 0 and dbins.std() < 1e-6:
+        logger.debug("Using numpy.bincount for histogramm compuation.")
+        hist = np.bincount((data // dx).astype(int), minlength=len(dbins))
+    else:
+        hist = np.histogram(data, bins=bins)[0]
+
+    return hist, runningmean(bins, 2)
+
 def quick1etau(t, C, n=7):
     """
     Estimates the time for a correlation function that goes from 1 to 0 to decay to 1/e.
@@ -407,4 +366,3 @@ def quick1etau(t, C, n=7):
         except:
             pass
     return tau_est
-    

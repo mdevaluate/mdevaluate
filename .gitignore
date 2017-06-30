@@ -11,3 +11,4 @@ coordinates.c
 .cache/
 doc/gallery
 doc/modules
+tmp/

@@ -24,7 +24,7 @@ class NojumpError(Exception):
     pass
 
 
-def open(filename, cached=False, reindex=False):
+def open(filename, cached=False, reindex=False, ignore_index_timestamps=False):
     """
     Opens a trajectory file with the apropiate reader.
 
@@ -46,9 +46,9 @@ def open(filename, cached=False, reindex=False):
             maxsize = 128
         else:
             maxsize = cached
-        reader = CachedReader(filename, maxsize, reindex=reindex)
+        reader = CachedReader(filename, maxsize, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
     else:
-        reader = BaseReader(filename, reindex=reindex)
+        reader = BaseReader(filename, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
 
     return reader
 
@@ -73,7 +73,7 @@ def parse_jumps(trajectory):
 
     for i, curr in enumerate(trajectory):
         if i % 500 == 0:
-            logging.debug('Parse jumps Step: %d', i)
+            logger.debug('Parse jumps Step: %d', i)
         delta = ((curr - prev) / box).round().astype(np.int8)
         prev = curr
         for d in range(3):
@@ -89,7 +89,7 @@ def generate_nojump_matrixes(trajectory):
     """
     Create the matrixes with pbc jumps for a trajectory.
     """
-    logging.info('generate Nojump Matrixes for: {}'.format(trajectory))
+    logger.info('generate Nojump Matrixes for: {}'.format(trajectory))
 
     jump_data = parse_jumps(trajectory)
     N = len(trajectory)
@@ -103,7 +103,7 @@ def generate_nojump_matrixes(trajectory):
 def save_nojump_matrixes(reader, matrixes=None):
     if matrixes is None:
         matrixes = reader.nojump_matrixes
-    data = {'checksum': merge_hashes(NOJUMP_MAGIC, hash(reader))}
+    data = {'checksum': checksum(NOJUMP_MAGIC, checksum(reader))}
     for d, mat in enumerate(matrixes):
         data['shape'] = mat.shape
         for attr in CSR_ATTRS:
@@ -118,11 +118,11 @@ def load_nojump_matrixes(reader):
         data = np.load(zipname)
     except (AttributeError, BadZipFile, OSError):
         # npz-files can be corrupted, propably a bug for big arrays saved with savez_compressed?
-        logging.info('Removing zip-File: %s', zipname)
+        logger.info('Removing zip-File: %s', zipname)
         os.remove(nojump_filename(reader))
         return
     try:
-        if data['checksum'] == merge_hashes(NOJUMP_MAGIC, hash(reader)):
+        if data['checksum'] == checksum(NOJUMP_MAGIC, checksum(reader)):
             reader.nojump_matrixes = tuple(
                 sparse.csr_matrix(
                     tuple(data['{}_{}'.format(attr, d)] for attr in CSR_ATTRS),
@@ -130,11 +130,11 @@ def load_nojump_matrixes(reader):
                 )
                 for d in range(3)
             )
-            logging.info('Loaded Nojump Matrixes: {}'.format(nojump_filename(reader)))
+            logger.info('Loaded Nojump Matrixes: {}'.format(nojump_filename(reader)))
         else:
-            logging.info('Invlaid Nojump Data: {}'.format(nojump_filename(reader)))
+            logger.info('Invlaid Nojump Data: {}'.format(nojump_filename(reader)))
     except KeyError:
-        logging.info('Removing zip-File: %s', zipname)
+        logger.info('Removing zip-File: %s', zipname)
         os.remove(nojump_filename(reader))
         return
 
@@ -157,14 +157,14 @@ class BaseReader:
         self._nojump_matrixes = mats
         save_nojump_matrixes(self)
 
-    def __init__(self, filename, reindex=False):
+    def __init__(self, filename, reindex=False, ignore_index_timestamps=False):
         """
         Args:
             filename: Trajectory file to open.
             reindex (bool, opt.): If True, regenerate the index file if necessary.
         """
         try:
-            self.rd = pygmx.open(filename)
+            self.rd = pygmx.open(filename, ignore_index_timestamps=ignore_index_timestamps)
         except InvalidMagicException:
             raise InvalidIndexException('This is not a valid index file: {}'.format(filename))
         except InvalidIndexException:
@@ -200,13 +200,13 @@ class CachedReader(BaseReader):
         """Clear the cache of the frames."""
         self._get_item.cache_clear()
 
-    def __init__(self, filename, maxsize, reindex=False):
+    def __init__(self, filename, maxsize, reindex=False, ignore_index_timestamps=False):
         """
         Args:
             filename (str): Trajectory file that will be opened.
             maxsize: Maximum size of the lru_cache or None for infinite cache.
         """
-        super().__init__(filename, reindex=reindex)
+        super().__init__(filename, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
         self._get_item = lru_cache(maxsize=maxsize)(self._get_item)
 
     def _get_item(self, item):

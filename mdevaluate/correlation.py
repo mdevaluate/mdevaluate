@@ -6,9 +6,10 @@ import dask.array as darray
 
 from .meta import annotate
 from .autosave import autosave_data
-from .utils import filon_fourier_transformation, coherent_sum, coherent_histogram
+from .utils import filon_fourier_transformation, coherent_sum, histogram
 from .pbc import pbc_diff
 from .logging import logger
+
 
 def log_indices(first, last, num=100):
     ls = np.logspace(0, np.log10(last - first + 1), num=num)
@@ -72,7 +73,8 @@ def shifted_correlation(function, frames,
 
         >>> indices, data = shifted_correlation(msd, coords)
     """
-    skip = skip or (frames._slice.start / len(frames))
+    if skip is None:
+        skip = frames._slice.start / len(frames) if hasattr(frames, '_slice') else 0
     assert window + skip < 1
 
     start_frames = np.linspace(
@@ -172,10 +174,10 @@ def van_hove_self(start, end, bins):
     """
     vec = start - end
     delta_r = ((vec)**2).sum(axis=-1)**.5
-    return 1 / len(start) * np.histogram(delta_r, bins)[0]
+    return 1 / len(start) * histogram(delta_r, bins)[0]
 
 
-def van_hove_distinct(onset, frame, bins, box=None):
+def van_hove_distinct(onset, frame, bins, box=None, use_dask=True, comp=False, bincount=True):
     """
     Compute the distinct part of the Van Hove autocorrelation function.
 

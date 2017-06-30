@@ -1,6 +1,5 @@
 import os
 import numpy as np
-from .utils import merge_hashes, hash_anything as _hash
 import functools
 
 from .checksum import checksum
@@ -14,7 +13,9 @@ user_autosave_directory = os.path.join(os.environ['HOME'], '.mdevaluate/autosave
 
 def notify(msg):
     if verbose_print:
-        print(msg)
+        logger.info(msg)
+    else:
+        logger.debug(msg)
 
 
 def enable(dir, load_data=True, verbose=True):
@@ -35,9 +36,7 @@ def enable(dir, load_data=True, verbose=True):
 
 
 def disable():
-    """
-    Disable autosave.
-    """
+    """Disable autosave."""
     global autosave_directory, load_autosave_data
     autosave_directory = None
     load_autosave_data = False
@@ -100,14 +99,6 @@ def get_filename(function, checksum, description, *args):
     return os.path.join(savedir, filename)
 
 
-def old_checksum(function, *args):
-    """Get the checksum of a function call."""
-    hashes = [_hash(function)]
-    for arg in args:
-        hashes.append(_hash(arg))
-    return merge_hashes(*hashes)
-
-
 def verify_file(filename, checksum):
     """Verify if the file matches the function call."""
     file_checksum = 0
@@ -164,14 +155,9 @@ def autosave_data(nargs, kwargs_keys=None):
                             relevant_args.append(kwargs[key])
 
                 csum = checksum(function, *relevant_args)
-                csum_old = old_checksum(function, *relevant_args)
                 filename = get_filename(function, csum, description, *relevant_args)
                 if autoload and verify_file(filename, csum):
                     result = load_data(filename)
-                elif autoload and verify_file(filename, csum_old):
-                    result = load_data(filename)
-                    save_data(filename, csum, result)
-
                 else:
                     result = function(*args, **kwargs)
                     save_data(filename, csum, result)

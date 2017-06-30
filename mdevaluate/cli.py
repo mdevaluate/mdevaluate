@@ -1,5 +1,5 @@
 import argparse
-from .logging import logger
+from . import logging
 
 import mdevaluate as md
 
@@ -26,9 +26,9 @@ def run(*args, **kwargs):
         dest='debug', action='store_true', default=False
     )
     args = parser.parse_args()
-    level = logger.DEBUG if args.debug else logging.INFO
-    logger.basicConfig(level=level)
-
+    if args.debug:
+        logging.setlevel('DEBUG')
+    
     md.open('', trajectory=args.xtcfile, topology=args.tpr, nojump=args.nojump)
 
 

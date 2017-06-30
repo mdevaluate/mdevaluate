@@ -15,7 +15,7 @@ def setlevel(level, file=None):
     Change the level of logging. If `file` is specified, logs are written to this file.
     """
     if isinstance(level, str):
-        level = getattr(logging, level)
+        level = getattr(logging, level.upper())
     logger.setLevel(level)
     if file is not None:
         handler = logging.FileHandler(file)
