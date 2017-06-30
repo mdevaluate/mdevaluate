@@ -73,7 +73,7 @@ def parse_jumps(trajectory):
 
     for i, curr in enumerate(trajectory):
         if i % 500 == 0:
-            logging.debug('Parse jumps Step: %d', i)
+            logger.debug('Parse jumps Step: %d', i)
         delta = ((curr - prev) / box).round().astype(np.int8)
         prev = curr
         for d in range(3):
@@ -89,7 +89,7 @@ def generate_nojump_matrixes(trajectory):
     """
     Create the matrixes with pbc jumps for a trajectory.
     """
-    logging.info('generate Nojump Matrixes for: {}'.format(trajectory))
+    logger.info('generate Nojump Matrixes for: {}'.format(trajectory))
 
     jump_data = parse_jumps(trajectory)
     N = len(trajectory)
@@ -118,7 +118,7 @@ def load_nojump_matrixes(reader):
         data = np.load(zipname)
     except (AttributeError, BadZipFile, OSError):
         # npz-files can be corrupted, propably a bug for big arrays saved with savez_compressed?
-        logging.info('Removing zip-File: %s', zipname)
+        logger.info('Removing zip-File: %s', zipname)
         os.remove(nojump_filename(reader))
         return
     try:
@@ -130,11 +130,11 @@ def load_nojump_matrixes(reader):
                 )
                 for d in range(3)
             )
-            logging.info('Loaded Nojump Matrixes: {}'.format(nojump_filename(reader)))
+            logger.info('Loaded Nojump Matrixes: {}'.format(nojump_filename(reader)))
         else:
-            logging.info('Invlaid Nojump Data: {}'.format(nojump_filename(reader)))
+            logger.info('Invlaid Nojump Data: {}'.format(nojump_filename(reader)))
     except KeyError:
-        logging.info('Removing zip-File: %s', zipname)
+        logger.info('Removing zip-File: %s', zipname)
         os.remove(nojump_filename(reader))
         return
 

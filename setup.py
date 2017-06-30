@@ -10,6 +10,7 @@ def get_version(module):
                 break
     return version
 
+
 __version__ = get_version('mdevaluate/__init__.py')
 
 setup(

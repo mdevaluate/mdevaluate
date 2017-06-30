@@ -6,9 +6,10 @@ import dask.array as darray
 
 from .meta import annotate
 from .autosave import autosave_data
-from .utils import filon_fourier_transformation, coherent_sum, coherent_histogram
+from .utils import filon_fourier_transformation, coherent_sum, histogram
 from .pbc import pbc_diff
 from .logging import logger
+
 
 def log_indices(first, last, num=100):
     ls = np.logspace(0, np.log10(last - first + 1), num=num)
@@ -89,7 +90,7 @@ def shifted_correlation(function, frames,
 
     result = []
     for i, start_frame in enumerate(start_frames):
-        logging.debug('shifted_correlation: segment {}/{} (index={})'.format(i + 1, segments, start_frame))
+        logger.debug('shifted_correlation: segment {}/{} (index={})'.format(i + 1, segments, start_frame))
         result.append(list(correlate(start_frame)))
     result = np.array(result)
     if average:

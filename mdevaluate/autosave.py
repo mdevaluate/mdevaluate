@@ -13,7 +13,9 @@ user_autosave_directory = os.path.join(os.environ['HOME'], '.mdevaluate/autosave
 
 def notify(msg):
     if verbose_print:
-        print(msg)
+        logger.info(msg)
+    else:
+        logger.debug(msg)
 
 
 def enable(dir, load_data=True, verbose=True):
