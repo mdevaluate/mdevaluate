@@ -174,10 +174,10 @@ def van_hove_self(start, end, bins):
     """
     vec = start - end
     delta_r = ((vec)**2).sum(axis=-1)**.5
-    return 1 / len(start) * np.histogram(delta_r, bins)[0]
+    return 1 / len(start) * histogram(delta_r, bins)[0]
 
 
-def van_hove_distinct(onset, frame, bins, box=None):
+def van_hove_distinct(onset, frame, bins, box=None, use_dask=True, comp=False, bincount=True):
     """
     Compute the distinct part of the Van Hove autocorrelation function.
 

@@ -297,3 +297,18 @@ def singledispatchmethod(func):
     wrapper.register = dispatcher.register
     functools.update_wrapper(wrapper, func)
     return wrapper
+
+
+def histogram(data, bins):
+    """
+    Compute the histogram of the given data. Uses the faster numpy.bincount function, if possible.
+    """
+    dbins = np.diff(bins)
+    dx = dbins.mean()
+    if bins.min() == 0 and dbins.std() < 1e-6:
+        logger.debug("Using numpy.bincount for histogramm compuation.")
+        hist = np.bincount((data // dx).astype(int), minlength=len(dbins))
+    else:
+        hist = np.histogram(data, bins=bins)[0]
+
+    return hist, runningmean(bins, 2)

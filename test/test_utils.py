@@ -31,3 +31,16 @@ def test_filon_fourier_transformation(logdata):
         xdata, xdata, frequencies=freqs, derivative='linear', imag=False
         )
     assert np.isclose(filon_imag.real, filon_real).all()
+
+
+def test_histogram():
+    data = np.random.rand(100)
+    bins = np.linspace(0, 1)
+    np_hist = np.histogram(data, bins=bins)[0]
+    ut_hist = utils.histogram(data, bins=bins)[0]
+    assert (np_hist == ut_hist).all()
+
+    bins = np.linspace(0.3, 1.5)
+    np_hist = np.histogram(data, bins=bins)[0]
+    ut_hist = utils.histogram(data, bins=bins)[0]
+    assert (np_hist == ut_hist).all()
