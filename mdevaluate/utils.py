@@ -68,7 +68,7 @@ def filon_fourier_transformation(time, correlation,
         f_min = 1 / max(time)
         f_max = 0.05**(1.2 - max(correlation)) / min(time[time > 0])
         frequencies = 2 * np.pi * np.logspace(
-            np.log10(f_min), np.log10(f_max), num=100
+            np.log10(f_min), np.log10(f_max), num=60
         )
     frequencies.reshape(1, -1)
 
