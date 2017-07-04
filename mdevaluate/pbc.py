@@ -20,11 +20,14 @@ def pbc_diff_old(v1, v2, box):
     return v
 
 
-def pbc_diff(v1, v2, box):
+def pbc_diff(v1, v2=None, box=None):
     """
     Calculate the difference of two vectors, considering periodic boundary conditions.
     """
-    v = v1 - v2
+    if v2 is None:
+        v = v1
+    else:
+        v = v1 -v2
     if box is not None:
         s = v / box
         v = box * (s - s.round())
@@ -89,16 +92,17 @@ def nojump(frame):
     return frame - delta
 
 
-def pbc_points(points, box, thickness=0, index=False, inclusive=True):
+def pbc_points(coordinates, box, thickness=0, index=False, inclusive=True, center=None):
     """
-    Returns the points folded back into the box and the first periodic images.
+    Returns the points their first periodic images. Does not fold them back into the box.
     Thickness 0 means all 27 boxes. Positive means the box+thickness. Negative values mean that less than the box is returned.
     index=True also returns the indices with indices of images being their originals values.
     inclusive=False returns only images, does not work with thickness <= 0
     """
-    coordinates = np.copy(points)%box
+    if center is None:
+        center = box/2
     allcoordinates = np.copy(coordinates)
-    indices = np.tile(np.arange(len(points)),(27))
+    indices = np.tile(np.arange(len(coordinates)),(27))
     for x in range(-1, 2, 1):
             for y in range(-1, 2, 1):
                 for z in range(-1, 2, 1):
@@ -107,15 +111,15 @@ def pbc_points(points, box, thickness=0, index=False, inclusive=True):
                         allcoordinates = np.concatenate((allcoordinates, coordinates + vv*box), axis=0)
     
     if thickness != 0:
-        mask = np.all(allcoordinates < box+thickness, axis=1)
+        mask = np.all(allcoordinates < center+box/2+thickness, axis=1)
         allcoordinates = allcoordinates[mask]
         indices = indices[mask]
-        mask = np.all(allcoordinates > -thickness, axis=1)
+        mask = np.all(allcoordinates > center-box/2-thickness, axis=1)
         allcoordinates = allcoordinates[mask]
         indices = indices[mask]
     if not inclusive and thickness > 0:
-        allcoordinates = allcoordinates[len(points):]
-        indices = indices[len(points):]
+        allcoordinates = allcoordinates[len(coordinates):]
+        indices = indices[len(coordinates):]
     if index:
         return (allcoordinates, indices)
     return allcoordinates
