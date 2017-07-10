@@ -183,15 +183,15 @@ def pbc_spm_rdf(atoms_a, atoms_b=None, bins=None, box=None, exclude=0, returnx=F
     else:
         return res
 
-@autosave_data(nargs=3, kwargs_keys=('times','exclude'))
-def averaged_pbc_tree_rdf(from_coords, bins, to_coords=None, times=10, exclude=0, **kwargs):
+@autosave_data(nargs=2, kwargs_keys=('to_coords','times'))
+def fast_averaged_rdf(from_coords, bins, to_coords=None, times=10, exclude=0, **kwargs):
     if to_coords is None:
         to_coords = from_coords
         exclude = 1
     # first find timings for the different rdf functions
     import time
     # only consider sparse matrix for this condition
-    if (len(from_coords[0])*len(to_coords[0]) <= 3000 * 2000 ) & (len(from_coords[0])/len(to_coords[0]) > 10 ):
+    if (len(from_coords[0])*len(to_coords[0]) <= 3000 * 2000 ) & (len(from_coords[0])/len(to_coords[0]) > 5 ):
         funcs = [rdf, pbc_tree_rdf, pbc_spm_rdf]
     else:
         funcs = [rdf, pbc_tree_rdf]
