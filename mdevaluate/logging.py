@@ -6,7 +6,7 @@ stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.INFO)
 logger.addHandler(stream_handler)
 
-formatter = logging.Formatter('{levelname:8}[{asctime}]:{funcName}: {message}', style='{')
+formatter = logging.Formatter('{levelname[0]}{levelname[1]}{levelname[2]}[{asctime}]:{funcName}: {message}', style='{')
 stream_handler.setFormatter(formatter)
 
 
