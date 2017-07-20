@@ -10,6 +10,7 @@ import os
 from os import path
 from array import array
 from zipfile import BadZipFile
+import builtins
 
 import numpy as np
 from scipy import sparse
@@ -53,9 +54,36 @@ def open(filename, cached=False, reindex=False, ignore_index_timestamps=False):
     return reader
 
 
+def is_writeable(fname):
+    fdir = os.path.dirname(fname)
+    ftmp = os.path.join(fdir, str(np.random.randint(999999999)))
+
+    if os.access(fdir, os.W_OK):
+        try:
+            with builtins.open(ftmp, 'w'):
+                pass
+            os.remove(ftmp)
+            return True
+        except PermissionError:
+            pass
+    return False
+
+
 def nojump_filename(reader):
     directory, fname = path.split(reader.filename)
-    return path.join(directory, '.{}.nojump.npz'.format(fname))
+    fname = path.join(directory, '.{}.nojump.npz'.format(fname))
+    if os.path.exists(fname) or is_writeable(directory):
+        return fname
+    else:
+        fname = os.path.join(
+            os.path.join(os.environ['HOME'], '.mdevaluate/nojump'),
+            directory.lstrip('/'),
+            '.{}.nojump.npz'.format(fname)
+        )
+        logger.info('Saving nojump to {}, since original location is not writeable.'.format(fname))
+        os.makedirs(os.path.dirname(fname), exist_ok=True)
+        return fname
+
 
 CSR_ATTRS = ('data', 'indices', 'indptr')
 NOJUMP_MAGIC = 2016
