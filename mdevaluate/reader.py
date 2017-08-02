@@ -14,6 +14,7 @@ import builtins
 
 import numpy as np
 from scipy import sparse
+from dask import delayed
 
 import pygmx
 from pygmx.errors import InvalidMagicException, InvalidIndexException
@@ -245,9 +246,37 @@ class CachedReader(BaseReader):
         return self._get_item(item)
 
 
+read_xtcframe_delayed = delayed(pure=True, traverse=False)(pygmx.read_xtcframe)
+
+
+class DelayedReader(BaseReader):
+
+    @property
+    def filename(self):
+        if self.rd is not None:
+            return self.rd.filename
+        else:
+            return self._filename
+    
+    def __init__(self, filename, reindex=False, ignore_index_timestamps=False):
+        super().__init__(filename, reindex=False, ignore_index_timestamps=False)
+        self.natoms = len(self.rd[0].coordinates)
+        self.cache = self.rd.cache
+        self._filename = self.rd.filename
+        self.rd = None
+        
+    def __len__(self):
+        return len(self.cache)
+    
+    def _get_item(self, frame):
+        return read_xtcframe_delayed(self.filename, self.cache[frame], self.natoms)
+        
+    def __getitem__(self, frame):
+        return self._get_item(frame)
+
+
 class EnergyReader:
     """A reader for Gromacs energy files."""
-
     def __init__(self, edrfile):
         """
         Args:

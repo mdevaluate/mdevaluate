@@ -6,8 +6,9 @@ from .atoms import next_neighbors
 from .autosave import autosave_data
 from .meta.annotate import deprecated
 from .utils import runningmean
-from .pbc import pbc_diff
+from .pbc import pbc_diff, pbc_points
 from .logging import logger
+from scipy import spatial
 
 
 @autosave_data(nargs=2, kwargs_keys=('coordinates_b',))
@@ -77,7 +78,7 @@ def time_histogram(function, coordinates, bins, hist_range, pool=None):
     return hist_results
 
 
-def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=False):
+def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=False, **kwargs):
     """
     Compute the radial pair distribution of one or two sets of atoms.
 
@@ -139,6 +140,81 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=Fal
         return np.vstack((runningmean(bins, 2), res))
     else:
         return res
+
+def pbc_tree_rdf(atoms_a, atoms_b=None, bins=None, box=None, exclude=0, returnx=False, **kwargs):
+    if box is None:
+        box = atoms_a.box.diagonal()
+    all_coords = pbc_points(pbc_diff(atoms_b,box=box), box, thickness=np.amax(bins)+0.1, center=0)
+    to_tree = spatial.cKDTree(all_coords)
+    dist = to_tree.query(pbc_diff(atoms_a,box=box),k=len(atoms_b), distance_upper_bound=np.amax(bins)+0.1)[0].flatten()
+    dist = dist[dist < np.inf]
+    hist = np.histogram(dist, bins)[0]
+    volume = 4/3*np.pi*(bins[1:]**3-bins[:-1]**3)
+    res = (hist) * np.prod(box) / volume / len(atoms_a) / (len(atoms_b)-exclude)
+    if returnx:
+        return np.vstack((runningmean(bins, 2), res))
+    else:
+        return res
+
+def pbc_spm_rdf(atoms_a, atoms_b=None, bins=None, box=None, exclude=0, returnx=False, **kwargs):
+    if box is None:
+        box = atoms_a.box.diagonal()
+    all_coords = pbc_points(pbc_diff(atoms_b,box=box), box, thickness=np.amax(bins)+0.1, center=0)
+    to_tree = spatial.cKDTree(all_coords)
+    if all_coords.nbytes/1024**3 * len(atoms_a) < 2:
+        from_tree = spatial.cKDTree(pbc_diff(atoms_a,box=box))
+        dist = to_tree.sparse_distance_matrix(from_tree, max_distance=np.amax(bins)+0.1, output_type='ndarray')
+        dist = np.asarray(dist.tolist())[:,2]
+        hist = np.histogram(dist, bins)[0]
+    else:
+        chunksize = int(2 * len(atoms_a) / (all_coords.nbytes/1024**3 * len(atoms_a)))
+        hist = 0
+        for chunk in range(0, len(atoms_a), chunksize):
+            sl = slice(chunk, chunk + chunksize)
+            from_tree = spatial.cKDTree(pbc_diff(atoms_a[sl],box=box))
+            dist = to_tree.sparse_distance_matrix(from_tree, max_distance=np.amax(bins)+0.1, output_type='ndarray')
+            dist = np.asarray(dist.tolist())[:,2]
+            hist += np.histogram(dist, bins)[0]
+
+    volume = 4/3*np.pi*(bins[1:]**3-bins[:-1]**3)
+    res = (hist) * np.prod(box) / volume / len(atoms_a) / (len(atoms_b)-exclude)
+    if returnx:
+        return np.vstack((runningmean(bins, 2), res))
+    else:
+        return res
+
+@autosave_data(nargs=2, kwargs_keys=('to_coords','times'))
+def fast_averaged_rdf(from_coords, bins, to_coords=None, times=10, exclude=0, **kwargs):
+    if to_coords is None:
+        to_coords = from_coords
+        exclude = 1
+    # first find timings for the different rdf functions
+    import time
+    # only consider sparse matrix for this condition
+    if (len(from_coords[0])*len(to_coords[0]) <= 3000 * 2000 ) & (len(from_coords[0])/len(to_coords[0]) > 5 ):
+        funcs = [rdf, pbc_tree_rdf, pbc_spm_rdf]
+    else:
+        funcs = [rdf, pbc_tree_rdf]
+    timings = []
+    for f in funcs:
+        start = time.time()
+        f(from_coords[0], atoms_b=to_coords[0], bins=bins, box=np.diag(from_coords[0].box))
+        end = time.time()
+        timings.append(end-start)
+    timings = np.array(timings)
+    timings[0] = 2*timings[0] # statistics for the other functions is twice as good per frame
+    logger.debug('rdf function timings: ' + str(timings))
+    rdffunc = funcs[np.argmin(timings)]
+    logger.debug('rdf function used: ' + str(rdffunc))
+    if rdffunc == rdf:
+        times = times*2 # duplicate times for same statistics
+
+    frames = np.array(range(0, len(from_coords), int(len(from_coords)/times)))[:times]
+    out = np.zeros(len(bins)-1)
+    for j, i in enumerate(frames):
+        logger.debug('multi_radial_pair_distribution: %d/%d', j, len(frames))
+        out += rdffunc(from_coords[i], to_coords[i], bins, box=np.diag(from_coords[i].box), exclude=exclude)
+    return out/len(frames)
 
 
 def distance_distribution(atoms, bins):

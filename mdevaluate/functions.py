@@ -26,6 +26,13 @@ def havriliak_negami(ω, A, β, α, τ):
        \chi_{HN}(\omega) = \Im\left(\frac{A}{(1 + (i\omega\tau)^\alpha)^\beta}\right)
     """
     return -(A / (1 + (1j * ω * τ)**α)**β).imag
-    # ωτ = ω * τ
-    # P = np.arctan(ωτ**α * np.sin(np.pi * α / 2) / (1 + ωτ**α * np.cos(np.pi * α / 2)))
-    # return A * np.sin(β * P) / (1 + 2 * ωτ**α * np.cos(np.pi * α / 2) + ωτ**(2 * α))**(β / 2)
+
+
+# fits decay of correlation times, e.g. with distance to pore walls
+def colen(d, X, t8, A):
+    return t8 * np.exp(A*np.exp(-d/X))
+
+
+# fits decay of the plateau height of the overlap function, e.g. with distance to pore walls
+def colenQ(d, X, Qb, g):
+    return (1-Qb)*np.exp(-(d/X)**g)+Qb

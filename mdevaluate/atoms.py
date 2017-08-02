@@ -247,6 +247,26 @@ def distance_to_atoms(ref, atoms, box=None):
         out[i] = np.sqrt(diff)
     return out
 
+def distance_to_atoms_cKDtree(ref, atoms, box=None, thickness=None):
+    """
+    Get the minimal distance from atoms to ref.
+    The result is an array of with length == len(atoms)
+    Can be faster than distance_to_atoms.
+    Thickness defaults to box/5. If this is too small results may be wrong.
+    If box is not given then periodic boundary conditions are not applied!
+    """
+    if thickness == None:
+        thickness = box/5
+    if box is not None:
+        start_coords = np.copy(atoms)%box
+        all_frame_coords = pbc_points(ref, box, thickness = thickness)
+    else:
+        start_coords = atoms
+        all_frame_coords = ref
+    
+    tree = spatial.cKDTree(all_frame_coords)
+    return tree.query(start_coords)[0]
+
 
 def next_neighbors(atoms, query_atoms=None, number_of_neighbors=1, distance_upper_bound=np.inf, distinct=False):
     """
