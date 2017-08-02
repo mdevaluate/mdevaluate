@@ -340,6 +340,7 @@ def histogram(data, bins):
     return hist, runningmean(bins, 2)
 
 def quick1etau(t, C, n=7):
+    #with np.errstate(invalid='ignore'):
     """
     Estimates the time for a correlation function that goes from 1 to 0 to decay to 1/e.
     If successful, returns tau as fine interpolation with a kww fit.
@@ -356,13 +357,14 @@ def quick1etau(t, C, n=7):
     while np.sum(mask) < n:
         k += 0.01
         mask = (C < np.exp(-1)+k) & (C > np.exp(-1)-k)
-        if k+np.exp(1) > 1.0:
+        if k+np.exp(-1) > 1.0:
             break
     # if enough points are found, try a curve fit, else and in case of failing keep using the estimate
     if np.sum(mask) >= n:
         try:
-            fit, _ = curve_fit(kww, t[mask], C[mask], p0=[0.9, tau_est, 0.9], maxfev=100000)
-            tau_est = kww_1e(*fit)
+            with np.errstate(invalid='ignore'):
+                fit, _ = curve_fit(kww, t[mask], C[mask], p0=[0.9, tau_est, 0.9], maxfev=100000)
+                tau_est = kww_1e(*fit)
         except:
             pass
     return tau_est
