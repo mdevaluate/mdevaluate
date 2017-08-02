@@ -340,7 +340,6 @@ def histogram(data, bins):
     return hist, runningmean(bins, 2)
 
 def quick1etau(t, C, n=7):
-    #with np.errstate(invalid='ignore'):
     """
     Estimates the time for a correlation function that goes from 1 to 0 to decay to 1/e.
     If successful, returns tau as fine interpolation with a kww fit.
