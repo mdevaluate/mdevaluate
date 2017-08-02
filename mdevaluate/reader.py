@@ -14,7 +14,7 @@ import builtins
 
 import numpy as np
 from scipy import sparse
-from dask import delayed
+from dask import delayed, __version__ as DASK_VERSION
 
 import pygmx
 from pygmx.errors import InvalidMagicException, InvalidIndexException
@@ -246,7 +246,10 @@ class CachedReader(BaseReader):
         return self._get_item(item)
 
 
-read_xtcframe_delayed = delayed(pure=True, traverse=False)(pygmx.read_xtcframe)
+if DASK_VERSION >= '0.15.0':
+    read_xtcframe_delayed = delayed(pure=True, traverse=False)(pygmx.read_xtcframe)
+else:
+    read_xtcframe_delayed = delayed(pure=True)(pygmx.read_xtcframe)
 
 
 class DelayedReader(BaseReader):
