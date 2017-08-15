@@ -134,13 +134,16 @@ def load_data(filename):
         return data
 
 
-def autosave_data(nargs, kwargs_keys=None):
+def autosave_data(nargs, kwargs_keys=None, version=None):
     """
     Enable autosaving of results for a function.
 
     Args:
         nargs: Number of args which are relevant for the calculation.
-        kwargs (opt.): List of keyword arguments which are relevant for the calculation.
+        kwargs_keys (opt.): List of keyword arguments which are relevant for the calculation.
+        version (opt.): 
+            An optional version number of the decorated function, which replaces the checksum of
+            the function code, hence the checksum does not depend on the function code.
     """
     def decorator_function(function):
         @functools.wraps(function)
@@ -154,9 +157,14 @@ def autosave_data(nargs, kwargs_keys=None):
                         if key in kwargs:
                             relevant_args.append(kwargs[key])
 
-                csum = checksum(function, *relevant_args)
+                if version is None:
+                    csum = checksum(function, *relevant_args)
+                else:
+                    csum = checksum(version, *relevant_args)
+                    legacy_csum = checksum(function, *relevant_args)
+
                 filename = get_filename(function, csum, description, *relevant_args)
-                if autoload and verify_file(filename, csum):
+                if autoload and (verify_file(filename, csum) or verify_file(filename, legacy_csum)):
                     result = load_data(filename)
                 else:
                     result = function(*args, **kwargs)

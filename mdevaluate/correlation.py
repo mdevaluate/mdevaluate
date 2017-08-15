@@ -35,13 +35,13 @@ def subensemble_correlation(selector_function, correlation_function=correlation)
 
 @autosave_data(nargs=2, kwargs_keys=(
     'index_distribution', 'correlation', 'segments', 'window', 'skip', 'average'
-))
+), version='shifted_correlation-1')
 def shifted_correlation(function, frames,
                         index_distribution=log_indices, correlation=correlation,
                         segments=10, window=0.5, skip=None,
                         average=False,):
     """
-    Calculate the time series for a correlation function
+    Calculate the time series for a correlation function.
 
     The times at which the correlation is calculated are determined automatically by the
     function given as ``index_distribution``. The default is a logarithmic distribution.
