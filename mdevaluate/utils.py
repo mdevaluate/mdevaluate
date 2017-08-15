@@ -11,6 +11,7 @@ from .functions import kww, kww_1e
 from scipy.ndimage.filters import uniform_filter1d
 
 from scipy.interpolate import interp1d
+from scipy.optimize import curve_fit
 
 from .logging import logger
 
@@ -314,9 +315,7 @@ def norm(vec):
 
 
 def singledispatchmethod(func):
-    """
-    A decorator to define a genric instance method, analogue to functools.singledispatch.
-    """
+    """A decorator to define a genric instance method, analogue to functools.singledispatch."""
     dispatcher = functools.singledispatch(func)
 
     def wrapper(*args, **kw):
@@ -325,23 +324,24 @@ def singledispatchmethod(func):
     functools.update_wrapper(wrapper, func)
     return wrapper
 
+
 def histogram(data, bins):
-    """
-    Compute the histogram of the given data. Uses the faster numpy.bincount function, if possible.
-    """
+    """Compute the histogram of the given data. Uses numpy.bincount function, if possible."""
     dbins = np.diff(bins)
     dx = dbins.mean()
     if bins.min() == 0 and dbins.std() < 1e-6:
         logger.debug("Using numpy.bincount for histogramm compuation.")
-        hist = np.bincount((data // dx).astype(int), minlength=len(dbins))
+        hist = np.bincount((data // dx).astype(int), minlength=len(dbins))[:len(dbins)]
     else:
         hist = np.histogram(data, bins=bins)[0]
 
     return hist, runningmean(bins, 2)
 
+
 def quick1etau(t, C, n=7):
     """
-    Estimates the time for a correlation function that goes from 1 to 0 to decay to 1/e.
+    Estimate the time for a correlation function that goes from 1 to 0 to decay to 1/e.
+
     If successful, returns tau as fine interpolation with a kww fit.
     The data is reduce to points around 1/e to remove short and long times from the kww fit!
     t is the time
@@ -356,7 +356,7 @@ def quick1etau(t, C, n=7):
     while np.sum(mask) < n:
         k += 0.01
         mask = (C < np.exp(-1)+k) & (C > np.exp(-1)-k)
-        if k+np.exp(-1) > 1.0:
+        if k + np.exp(-1) > 1.0:
             break
     # if enough points are found, try a curve fit, else and in case of failing keep using the estimate
     if np.sum(mask) >= n:
