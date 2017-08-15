@@ -6,7 +6,7 @@ import numpy as np
 from scipy.spatial import cKDTree, KDTree
 
 from .atoms import AtomSubset
-from .pbc import whole, nojump
+from .pbc import whole, nojump, pbc_diff
 from .utils import mask2indices, singledispatchmethod
 from .checksum import checksum
 
@@ -477,7 +477,7 @@ def pore_coordinates(coordinates, origin, sym_axis='z'):
 
 
 @map_coordinates
-def vectors(coordinates, atoms_a, atoms_b, normed=False):
+def vectors(coordinates, atoms_a, atoms_b, normed=False, box=None):
     """
     Compute the vectors between the atoms of two subsets.
 
@@ -486,6 +486,7 @@ def vectors(coordinates, atoms_a, atoms_b, normed=False):
         atoms_a: Mask or indices of the first atom subset
         atoms_b: Mask or indices of the second atom subset
         normed (opt.): If the vectors should be normed
+        box (opt.): If not None, the vectors are calcualte with PBC
 
     The defintion of atoms_a/b can be any possible subript of a numpy array.
     They can, for example, be given as a masking array of bool values with the
@@ -511,6 +512,6 @@ def vectors(coordinates, atoms_a, atoms_b, normed=False):
     coords_b = coordinates[atoms_b]
     if len(coords_b.shape) > 2:
         coords_b = coords_b.mean(axis=0)
-    vectors = coords_a - coords_b
+    vectors = pbc_diff(coords_a, coords_b, box=box)
     norm = np.linalg.norm(vectors, axis=-1).reshape(-1, 1) if normed else 1
     return vectors / norm
