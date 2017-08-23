@@ -7,71 +7,16 @@ from . import correlation
 from . import distribution
 from . import functions
 from . import pbc
-from . import simulation
 from . import autosave
 from . import reader
 from .logging import logger
 
-from pygmx import gromacs
-from pygmx.errors import FileTypeError
-
 __version__ = '17.06'
 
 
-def trajectory_from_xtc(xtc_file, generate_index=True):
-    """
-    Load a trajectory from a xtc file. If no index file is found,
-    a new one will be generated if generate_index is true.
-    """
-    index_file = gromacs.reader.index_filename_for_xtc(xtc_file)
-    if not os.path.exists(index_file):
-        print('No index file found, generating a new one. This may take a while...')
-        gromacs.index_xtcfile(xtc_file)
-
-    return gromacs.XTCReader(xtc_file)
-
-
-def load_simulation(directory, xtc='*.xtc', tpr='*.tpr', gro='*.gro', index_file=None, caching=False):
-    """
-    Load a simulation from a directory.
-
-    Args:
-        directory:  The directory where the simulation is located
-        xtc (opt.): Descriptor of the trajectory file
-        tpr (opt.): Descriptors of the tpr file, if this is None no tpr file will be used.
-        gro (opt.): Descriptors of the gro file, if this is None no gro file will be used.
-        index_file: Name of a index file that will be loaded with the gro file
-        caching:    If caching should be activated in the Coordinates
-
-    Only one topology filename has to be specified, tpr files will be prefered.
-    The function uses :func:`trajectory_from_xtc` to load the xtc file, hence a new
-    xtc-index file will be generated if necessary.
-
-    The file descriptors can use unix style pathname expansion to define the filenames.
-    For example: 'out/nojump*.xtc' would match xtc files in a subdirectory `out` that
-    start with `nojump` and end with `.xtc`.
-
-    For more details see: https://docs.python.org/3/library/glob.html
-    """
-    tpr_glob = glob(os.path.join(directory, tpr)) if tpr is not None else None
-    gro_glob = glob(os.path.join(directory, gro)) if gro is not None else None
-    if tpr_glob is not None and len(tpr_glob) is 1:
-        logger.info('Loading topology: {}'.format(tpr_glob[0]))
-        atom_set = atoms.from_tprfile(tpr_glob[0])
-    elif gro_glob is not None and len(gro_glob) is 1:
-        logger.info('Loading topology: {}'.format(gro_glob[0]))
-        atom_set = atoms.from_grofile(gro_glob[0], index_file)
-    else:
-        raise FileNotFoundError('Topology file could not be identified.')
-    xtc_file, = glob(os.path.join(directory, xtc))
-    logger.info('Loading trajectory: {}'.format(xtc_file))
-    frames = trajectory_from_xtc(xtc_file)
-
-    return coordinates.Coordinates(frames, atom_subset=atom_set, caching=caching)
-
-
 def open(directory, topology='*.tpr', trajectory='*.xtc',
-         index_file=None, cached=False, reindex=True, verbose=True, nojump=False, ignore_index_timestamps=False):
+         index_file=None, cached=False, reindex=True, verbose=True, nojump=False,
+         ignore_index_timestamps=False):
     """
     Open a simulation from a directory.
 
@@ -111,11 +56,9 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
 
     For more details see: https://docs.python.org/3/library/glob.html
     """
-
     top_glob = glob(os.path.join(directory, topology), recursive=True)
     if top_glob is not None and len(top_glob) is 1:
         top_file, = top_glob
-        top_ext = top_file.split('.')[-1]
         logger.info('Loading topology: {}'.format(top_file))
         if index_file is not None:
             index_glob = glob(os.path.join(directory, index_file), recursive=True)
@@ -123,23 +66,19 @@ def open(directory, topology='*.tpr', trajectory='*.xtc',
                 index_file = index_glob[0]
             else:
                 index_file = None
-        if top_ext == 'tpr':
-            atom_set = atoms.from_tprfile(top_file, index_file)
-        elif top_ext == 'gro':
-            atom_set = atoms.from_grofile(top_file, index_file)
-        else:
-            raise FileTypeError('Can not open file: {}'.format(top_file))
-
     else:
         raise FileNotFoundError('Topology file could not be identified.')
 
     traj_glob = glob(os.path.join(directory, trajectory), recursive=True)
     if traj_glob is not None and len(traj_glob) is 1:
-        logger.info('Loading trajectory: {}'.format(traj_glob[0]))
-        frames = reader.open(traj_glob[0], cached=cached, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
+        traj_file = traj_glob[0]
+        logger.info('Loading trajectory: {}'.format(traj_file))
     else:
         raise FileNotFoundError('Trajectory file could not be identified.')
-
+    atom_set, frames = reader.open(
+        top_file, traj_file, index_file=index_file, cached=cached, reindex=reindex,
+        ignore_index_timestamps=ignore_index_timestamps
+    )
     coords = coordinates.Coordinates(frames, atom_subset=atom_set)
     if nojump:
         try:

@@ -1,8 +1,12 @@
 """
 Module that provides different readers for trajectory files.
-"""
 
+It also provides a common interface layer between the file IO packages,
+namely pygmx and mdanalysis, and mdevaluate.
+"""
 from .checksum import checksum
+from .logging import logger
+from . import atoms
 
 from functools import lru_cache
 from collections import namedtuple
@@ -11,24 +15,91 @@ from os import path
 from array import array
 from zipfile import BadZipFile
 import builtins
+import warnings
 
 import numpy as np
 from scipy import sparse
 from dask import delayed, __version__ as DASK_VERSION
 
-import pygmx
-from pygmx.errors import InvalidMagicException, InvalidIndexException
 
-from .logging import logger
+try:
+    import pygmx
+    from pygmx.errors import InvalidMagicException, InvalidIndexException, FileTypeError
+    PYGMX_AVAILABLE = True
+except ImportError:
+    PYGMX_AVAILABLE = False
+
+try:
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=UserWarning)
+        import MDAnalysis as mdanalysis
+    MADANALYSIS_AVAILABLE = True
+except ImportError:
+    MADANALYSIS_AVAILABLE = False
+
+assert PYGMX_AVAILABLE or MADANALYSIS_AVAILABLE, 'Could not import any file IO package; make sure too install pygmx or mdanalysis.'
 
 
 class NojumpError(Exception):
     pass
 
 
-def open(filename, cached=False, reindex=False, ignore_index_timestamps=False):
+class NoReaderAvailabelError(Exception):
+    pass
+
+
+def open_with_mdanalysis(topology, trajectory, cached=False):
+    """Open a the topology and trajectory with mdanalysis."""
+    uni = mdanalysis.Universe(topology, trajectory)
+    if cached is not False:
+        if cached is True:
+            maxsize = 128
+        else:
+            maxsize = cached
+        reader = CachedReader(uni.trajectory, maxsize)
+    else:
+        reader = BaseReader(uni.trajectory)
+    reader.universe = uni
+    atms = atoms.Atoms(
+        np.stack((uni.atoms.resids, uni.atoms.resnames, uni.atoms.names), axis=1),
+        charges=uni.atoms.charges, masses=uni.atoms.masses
+    ).subset()
+    return atms, reader
+
+
+def open_with_pygmx(topology, trajectory, cached=False, reindex=False,
+                    ignore_index_timestamps=False, index_file=None):
+    """Open a topology and trajectory with pygmx."""
+    try:
+        rd = pygmx.open(trajectory, ignore_index_timestamps=ignore_index_timestamps)
+    except InvalidMagicException:
+        raise InvalidIndexException('This is not a valid index file: {}'.format(trajectory))
+    except InvalidIndexException:
+        if reindex:
+            pygmx.gromacs.index_xtcfile(trajectory)
+            rd = pygmx.open(trajectory)
+        else:
+            raise InvalidIndexException('Index file is invalid, us reindex=True to regenerate.')
+
+    if cached is not False:
+        if isinstance(cached, bool):
+            maxsize = 128
+        else:
+            maxsize = cached
+        reader = CachedReader(rd, maxsize)
+    else:
+        reader = BaseReader(rd)
+
+    if topology.endswith('.tpr'):
+        atms = atoms.from_tprfile(topology, index_file=index_file)
+    elif topology.endswith('.gro'):
+        atms = atoms.from_grofile(topology, index_file=index_file)
+    return atms, reader
+
+
+def open(topology, trajectory, cached=False, index_file=None, reindex=False, ignore_index_timestamps=False):
     """
-    Opens a trajectory file with the apropiate reader.
+    Open a trajectory file with the apropiate reader.
 
     Args:
         filename (str):
@@ -42,22 +113,21 @@ def open(filename, cached=False, reindex=False, ignore_index_timestamps=False):
         nojump (opt.): If nojump matrixes should be generated.
 
     """
-
-    if cached is not False:
-        if isinstance(cached, bool):
-            maxsize = 128
-        else:
-            maxsize = cached
-        reader = CachedReader(filename, maxsize, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
+    if PYGMX_AVAILABLE and trajectory.endswith('.xtc') and topology.endswith(('.tpr', '.gro')):
+        return open_with_pygmx(topology, trajectory, cached=False, reindex=False,
+                               ignore_index_timestamps=False, index_file=index_file)
+    elif MADANALYSIS_AVAILABLE:
+        return open_with_mdanalysis(topology, trajectory, cached)
     else:
-        reader = BaseReader(filename, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
-
-    return reader
+        raise NoReaderAvailabelError('No reader package found, install pygmx or mdanalysis.')
 
 
 def is_writeable(fname):
+    """Test if a directory is actually writeable, by writing a temporary file."""
     fdir = os.path.dirname(fname)
     ftmp = os.path.join(fdir, str(np.random.randint(999999999)))
+    while os.path.exists(ftmp):
+        ftmp = os.path.join(fdir, str(np.random.randint(999999999)))
 
     if os.access(fdir, os.W_OK):
         try:
@@ -191,23 +261,13 @@ class BaseReader:
         self._nojump_matrixes = mats
         save_nojump_matrixes(self)
 
-    def __init__(self, filename, reindex=False, ignore_index_timestamps=False):
+    def __init__(self, rd):
         """
         Args:
             filename: Trajectory file to open.
             reindex (bool, opt.): If True, regenerate the index file if necessary.
         """
-        try:
-            self.rd = pygmx.open(filename, ignore_index_timestamps=ignore_index_timestamps)
-        except InvalidMagicException:
-            raise InvalidIndexException('This is not a valid index file: {}'.format(filename))
-        except InvalidIndexException:
-            if reindex:
-                pygmx.gromacs.index_xtcfile(filename)
-                self.rd = pygmx.open(filename)
-            else:
-                raise InvalidIndexException('Index file is invalid, us reindex=True to regenerate.')
-
+        self.rd = rd
         self._nojump_matrixes = None
         if path.exists(nojump_filename(self)):
             load_nojump_matrixes(self)
@@ -219,7 +279,13 @@ class BaseReader:
         return len(self.rd)
 
     def __checksum__(self):
-        return checksum(self.rd.filename, str(self.rd.cache))
+        if hasattr(self.rd, 'cache'):
+            # Has an pygmx reader
+            return checksum(self.filename, str(self.rd.cache))
+        elif hasattr(self.rd, '_xdr'):
+            # Has an mdanalysis reader
+            cache = array('L', self.rd._xdr.offsets.tobytes())
+            return checksum(self.filename, str(cache))
 
 
 class CachedReader(BaseReader):
@@ -234,13 +300,13 @@ class CachedReader(BaseReader):
         """Clear the cache of the frames."""
         self._get_item.cache_clear()
 
-    def __init__(self, filename, maxsize, reindex=False, ignore_index_timestamps=False):
+    def __init__(self, rd, maxsize):
         """
         Args:
             filename (str): Trajectory file that will be opened.
             maxsize: Maximum size of the lru_cache or None for infinite cache.
         """
-        super().__init__(filename, reindex=reindex, ignore_index_timestamps=ignore_index_timestamps)
+        super().__init__(rd)
         self._get_item = lru_cache(maxsize=maxsize)(self._get_item)
 
     def _get_item(self, item):
