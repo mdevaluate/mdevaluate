@@ -158,7 +158,7 @@ def autosave_data(nargs, kwargs_keys=None, version=None):
                             relevant_args.append(kwargs[key])
 
                 if version is None:
-                    csum = checksum(function, *relevant_args)
+                    csum = legacy_csum = checksum(function, *relevant_args)
                 else:
                     csum = checksum(version, *relevant_args)
                     legacy_csum = checksum(function, *relevant_args)
