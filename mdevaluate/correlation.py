@@ -78,7 +78,7 @@ def shifted_correlation(function, frames,
     assert window + skip < 1
 
     start_frames = np.linspace(
-        len(frames) * skip, len(frames) * (1 - window - skip),
+        len(frames) * skip, len(frames) * (1 - window),
         num=segments, endpoint=False, dtype=int
     )
     num_frames = int(len(frames) * (window))
