@@ -184,6 +184,24 @@ class Coordinates:
     Atoms may be selected by specifing a atom_subset or a atom_filter.
     """
 
+    def get_mode(self, mode):
+        if self.atom_subset is not None:
+            return Coordinates(frames=self.frames, atom_subset=self.atom_subset, mode=mode)[self._slice]
+        else:
+            return Coordinates(frames=self.frames, atom_filter=self.atom_filter, mode=mode)[self._slice]
+
+    @property
+    def pbc(self):
+        return self.get_mode('pbc')
+    
+    @property
+    def whole(self):
+        return self.get_mode('whole')
+    
+    @property
+    def nojump(self):
+        return self.get_mode('nojump')
+        
     @property
     def mode(self):
         return self._mode
@@ -191,6 +209,7 @@ class Coordinates:
     @mode.setter
     def mode(self, val):
         if val in CoordinateFrame._known_modes:
+            logger.warn('Changing the Coordinates mode directly is deprecated. Use Coordinates.%s instead, which returns a copy.', val)
             self._mode = val
         else:
             raise UnknownCoordinatesMode('No such mode: {}'.format(val))
@@ -201,11 +220,7 @@ class Coordinates:
             frames: The trajectory reader
             atom_filter (opt.): A mask which selects a subset of the system
             atom_subset (opt.): A AtomSubset that selects a subset of the system
-            caching (opt.):
-                If frames should be cached. If no bool is given, the value will be used
-                as the maxsize of lru_cache, which can be a number or None. Use None to
-                never discard any frame.
-            mode
+            mode (opt.): PBC mode of the Coordinates, can be pbc, whole or nojump.
 
         Note:
             The caching in Coordinates is deprecated, use the CachedReader or the function open
@@ -213,17 +228,19 @@ class Coordinates:
         """
         self._mode = mode
         self.frames = frames
-        self._slice = slice(0, len(self.frames))
+        self._slice = slice(None)
         assert atom_filter is None or atom_subset is None, "Cannot use both: subset and filter"
 
         if atom_filter is not None:
             self.atom_filter = atom_filter
+            self.atom_subset = None
         elif atom_subset is not None:
             self.atom_filter = atom_subset.selection
             self.atom_subset = atom_subset
             self.atoms = atom_subset.atoms
         else:
             self.atom_filter = np.ones(shape=(len(frames[0].coordinates),), dtype=bool)
+            self.atom_subset = None
 
     def get_frame(self, fnr):
         """Returns the fnr-th frame."""
