@@ -324,6 +324,10 @@ class CoordinatesMap:
         self.frames = self.coordinates.frames
         self.atom_subset = self.coordinates.atom_subset
         self.function = function
+        if isinstance(function, partial):
+            self._description = self.function.func.__name__
+        else:
+            self._description = self.function.__name__
 
     def __iter__(self):
         for frame in self.coordinates:
@@ -352,14 +356,7 @@ class CoordinatesMap:
 
     @property
     def description(self):
-        if hasattr(self, '_description'):
-            return self._description
-        else:
-            if isinstance(self.function, partial):
-                fname = self.function.func.__name__
-            else:
-                fname = self.function.__name__
-            return '{}_{}'.format(fname, self.atom_subset.description)
+        return '{}_{}'.format(self._description, self.coordinates.description)
 
     @description.setter
     def description(self, desc):
