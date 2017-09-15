@@ -362,6 +362,17 @@ class CoordinatesMap:
     def description(self, desc):
         self._description = desc
 
+    @property
+    def nojump(self):
+        return CoordinatesMap(self.coordinates.nojump, self.function)
+
+    @property
+    def whole(self):
+        return CoordinatesMap(self.coordinates.whole, self.function)
+
+    @property
+    def pbc(self):
+        return CoordinatesMap(self.coordinates.pbc, self.function)
 
 class CoordinatesFilter:
 
