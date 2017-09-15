@@ -1,7 +1,7 @@
 import warnings
 import numpy as np
 
-from .coordinates import  rotate_axis, polar_coordinates, spherical_coordinates
+from .coordinates import rotate_axis, polar_coordinates, spherical_coordinates
 from .atoms import next_neighbors
 from .autosave import autosave_data
 from .meta.annotate import deprecated
@@ -11,7 +11,7 @@ from .logging import logger
 from scipy import spatial
 
 
-@autosave_data(nargs=2, kwargs_keys=('coordinates_b',))
+@autosave_data(nargs=2, kwargs_keys=('coordinates_b',), version='time_average-1')
 def time_average(function, coordinates, coordinates_b=None, pool=None):
     """
     Compute the time average of a function.
@@ -35,6 +35,8 @@ def time_average(function, coordinates, coordinates_b=None, pool=None):
     result = 0
 
     if coordinates_b is not None:
+        if coordinates._slice != coordinates_b._slice:
+            logger.warning("Different slice fro coordinates and coordinates_b.")
         coordinate_iter = (iter(coordinates), iter(coordinates_b))
     else:
         coordinate_iter = (iter(coordinates),)
@@ -79,12 +81,12 @@ def time_histogram(function, coordinates, bins, hist_range, pool=None):
 
 
 def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=False, **kwargs):
-    """
+    r"""
     Compute the radial pair distribution of one or two sets of atoms.
 
     .. math::
-       g_{AB}(r) = \\frac{1}{\langle \\rho_B\\rangle N_A}\sum\limits_{i\in A}^{N_A}
-       \sum\limits_{j\in B}^{N_B}\\frac{\delta(r_{ij} -r)}{4\pi r^2}
+       g_{AB}(r) = \frac{1}{\langle \rho_B\rangle N_A}\sum\limits_{i\in A}^{N_A}
+       \sum\limits_{j\in B}^{N_B}\frac{\delta(r_{ij} -r)}{4\pi r^2}
 
     For use with :func:`time_average`, define bins through the use of :func:`~functools.partial`,
     the atom sets are passed to :func:`time_average`, if a second set of atoms should be used
@@ -111,35 +113,26 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=Fal
     else:
         nr_a, dim = atoms_a.shape
         nr_b, dim = atoms_b.shape
-        if nr_a > nr_b:
-            # Make sure atoms_a is always the smaller set.
-            atoms_a, atoms_b = atoms_b, atoms_a
-        fill = np.empty((abs(nr_a - nr_b), dim))
-        fill.fill(np.nan)
-        atoms_a = np.concatenate((atoms_a, fill))
-        nr_of_atoms = max(nr_a, nr_b)
-        indices = np.triu_indices(nr_of_atoms, k=0)
+        indices = np.array([(i, j) for i in range(nr_a) for j in range(nr_b)]).T
 
     # compute the histogram in chunks for large systems
     hist = 0
     nr_of_samples = 0
     for chunk in range(0, len(indices[0]), chunksize):
         sl = slice(chunk, chunk + chunksize)
-        with warnings.catch_warnings(record=True):
-            diff = pbc_diff(atoms_a[indices[0][sl]], atoms_b[indices[1][sl]], box)
-        diff = diff[~np.isnan(diff).any(axis=1)]
+        diff = pbc_diff(atoms_a[indices[0][sl]], atoms_b[indices[1][sl]], box)
         dist = (diff**2).sum(axis=1)**0.5
         nr_of_samples += len(dist)
         hist += np.histogram(dist, bins)[0]
 
     volume = 4 / 3 * np.pi * (bins[1:]**3 - bins[:-1]**3)
     density = nr_of_samples / np.prod(box)
-
     res = hist / volume / density
     if returnx:
         return np.vstack((runningmean(bins, 2), res))
     else:
         return res
+
 
 def pbc_tree_rdf(atoms_a, atoms_b=None, bins=None, box=None, exclude=0, returnx=False, **kwargs):
     if box is None:
