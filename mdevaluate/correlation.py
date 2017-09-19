@@ -76,7 +76,7 @@ def shifted_correlation(function, frames,
     if skip is None:
         try:
             skip = frames._slice.start / len(frames)
-        except:
+        except TypeError, AttributeErrror:
             skip = 0
     assert window + skip < 1
 
