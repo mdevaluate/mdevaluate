@@ -74,13 +74,16 @@ def shifted_correlation(function, frames,
         >>> indices, data = shifted_correlation(msd, coords)
     """
     if skip is None:
-        skip = frames._slice.start / len(frames) if hasattr(frames, '_slice') else 0
+        try:
+            skip = frames._slice.start / len(frames)
+        except (TypeError, AttributeError) as e:
+            skip = 0
     assert window + skip < 1
 
-    start_frames = np.linspace(
-        len(frames) * skip, len(frames) * (1 - window - skip),
+    start_frames = np.unique(np.linspace(
+        len(frames) * skip, len(frames) * (1 - window),
         num=segments, endpoint=False, dtype=int
-    )
+    ))
     num_frames = int(len(frames) * (window))
 
     idx = index_distribution(0, num_frames)
