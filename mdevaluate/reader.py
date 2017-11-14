@@ -37,7 +37,7 @@ try:
 except ImportError:
     MADANALYSIS_AVAILABLE = False
 
-assert PYGMX_AVAILABLE or MADANALYSIS_AVAILABLE, 'Could not import any file IO package; make sure too install pygmx or mdanalysis.'
+assert PYGMX_AVAILABLE or MADANALYSIS_AVAILABLE, 'Could not import any file IO package; make sure too install either pygmx or mdanalysis.'
 
 
 class NojumpError(Exception):
@@ -50,7 +50,7 @@ class NoReaderAvailabelError(Exception):
 
 def open_with_mdanalysis(topology, trajectory, cached=False):
     """Open a the topology and trajectory with mdanalysis."""
-    uni = mdanalysis.Universe(topology, trajectory)
+    uni = mdanalysis.Universe(topology, trajectory, convert_units=False)
     if cached is not False:
         if cached is True:
             maxsize = 128
