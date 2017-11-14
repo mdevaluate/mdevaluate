@@ -1,7 +1,6 @@
 import argparse
 from . import logging
-
-import mdevaluate as md
+from . import open as md_open
 
 
 def run(*args, **kwargs):
@@ -28,8 +27,8 @@ def run(*args, **kwargs):
     args = parser.parse_args()
     if args.debug:
         logging.setlevel('DEBUG')
-    
-    md.open('', trajectory=args.xtcfile, topology=args.tpr, nojump=args.nojump)
+
+    md_open('', trajectory=args.xtcfile, topology=args.tpr, nojump=args.nojump)
 
 
 if __name__ == '__main__':

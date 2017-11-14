@@ -11,21 +11,17 @@ def get_version(module):
     return version
 
 
-__version__ = get_version('mdevaluate/__init__.py')
-
 setup(
     name='mdevaluate',
     description='Collection of python utilities for md simulations',
     author_email='niels.mueller@physik.tu-darmstadt.de',
 
-    packages=['mdevaluate',
-              'mdevaluate.meta'],
+    packages=['mdevaluate',],
     entry_points={
         'console_scripts': [
             'index-xtc = mdevaluate.cli:run'
         ]
     },
-    version=__version__,
+    version='dev',
     requires=['numpy', 'scipy'],
-    zip_safe=False
 )
