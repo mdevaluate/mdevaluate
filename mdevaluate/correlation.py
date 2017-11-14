@@ -4,7 +4,6 @@ from scipy.special import legendre
 from itertools import chain
 import dask.array as darray
 
-from .meta import annotate
 from .autosave import autosave_data
 from .utils import filon_fourier_transformation, coherent_sum, histogram
 from .pbc import pbc_diff
@@ -76,7 +75,7 @@ def shifted_correlation(function, frames,
     if skip is None:
         try:
             skip = frames._slice.start / len(frames)
-        except (TypeError, AttributeError) as e:
+        except (TypeError, AttributeError):
             skip = 0
     assert window + skip < 1
 
@@ -139,37 +138,8 @@ def rotational_autocorrelation(onset, frame, order=2):
     return poly(scalar_prod).mean()
 
 
-@annotate.untested
-def oaf(start, frame):
-    """
-    Orientation autocorrelation function. start and frame must be connection vectors, not absolute coordinates. Use for
-    example oaf_indexed to define connection vectors.
-
-    :param start:
-    :param frame:
-    :return:
-    """
-    vec_start_norm = np.norm(start)
-    vec_frame_norm = np.norm(frame)
-
-    dot_prod = (start * frame).sum(axis=1) / (vec_start_norm, vec_frame_norm)
-    return (3 * dot_prod**2 - 1).mean() / 2.0
-
-
-def oaf_indexed(index_from, index_to):
-    """
-    Returns a OAF correlation function. Example
-    oaf_indexed(t[:,1] == 'C', t[:,1] == 'O')
-    :param index_from:
-    :param index_to:
-    :return:
-    """
-    return lambda start, frame: oaf(start[index_to] - start[index_from],
-                                    frame[index_to] - frame[index_from])
-
-
 def van_hove_self(start, end, bins):
-    """
+    r"""
     Compute the self part of the Van Hove autocorrelation function.
 
     ..math::
@@ -181,7 +151,7 @@ def van_hove_self(start, end, bins):
 
 
 def van_hove_distinct(onset, frame, bins, box=None, use_dask=True, comp=False, bincount=True):
-    """
+    r"""
     Compute the distinct part of the Van Hove autocorrelation function.
 
     ..math::

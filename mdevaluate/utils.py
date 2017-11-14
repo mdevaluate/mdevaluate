@@ -258,7 +258,7 @@ def coherent_histogram(func, coord_a, coord_b, bins, distinct=False):
 
 
 def Sq_from_gr(r, gr, q, ρ):
-    """
+    r"""
     Compute the static structure factor as fourier transform of the pair correlation function. [Yarnell]_
 
     .. math::

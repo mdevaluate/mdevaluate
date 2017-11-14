@@ -1,10 +1,8 @@
-import warnings
 import numpy as np
 
 from .coordinates import rotate_axis, polar_coordinates, spherical_coordinates
 from .atoms import next_neighbors
 from .autosave import autosave_data
-from .meta.annotate import deprecated
 from .utils import runningmean
 from .pbc import pbc_diff, pbc_points
 from .logging import logger
@@ -176,6 +174,7 @@ def pbc_spm_rdf(atoms_a, atoms_b=None, bins=None, box=None, exclude=0, returnx=F
         return np.vstack((runningmean(bins, 2), res))
     else:
         return res
+
 
 @autosave_data(nargs=2, kwargs_keys=('to_coords','times'))
 def fast_averaged_rdf(from_coords, bins, to_coords=None, times=10, exclude=0, **kwargs):
