@@ -11,7 +11,7 @@ from . import autosave
 from . import reader
 from .logging import logger
 
-__version__ = '17.06'
+__version__ = 'dev-17.11'
 
 
 def open(directory='', topology='*.tpr', trajectory='*.xtc',
