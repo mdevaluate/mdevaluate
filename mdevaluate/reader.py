@@ -190,12 +190,7 @@ def generate_nojump_matrixes(trajectory):
     """
     logger.info('generate Nojump Matrixes for: {}'.format(trajectory))
 
-    try:
-        jump_data = parse_jumps(trajectory)
-    except ValueError:
-        logger.info('Failed to parse jumps for: {}'.format(trajectory))
-        return
-
+    jump_data = parse_jumps(trajectory)
     N = len(trajectory)
     M = len(trajectory[0])
 
