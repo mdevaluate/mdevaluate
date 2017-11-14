@@ -5,23 +5,24 @@ An online documentation is available at [mdevaluate.github.io](https://mdevaluat
 Mdevaluate provides a flexible interface for the detailed analysis of dynamical and statical properties of molecular systems.
 It's main focus is the analysis of Gromacs data, but with the help of external packages ([MDAnalysis](https://www.mdanalysis.org/)) 
 it can also handle file formats, used by other simulation software.
-	
-	import mdevaluate as md
 
-	# load the simulation
-	tr = md.open(
-		directory='/path/to/simulation',
-		topology='topol.tpr',
-		trajectory='traj.xtc'
-	)
-	# select a subset of atoms
-	water_oxygen = tr.subset(residue_name='SOL', atom_name='OW')
+```python
+import mdevaluate as md
 
-	# calculate the mean squared displacement for this subset
-	time, msd = md.correlation.shifted_correlation(
-		md.correlation.msd, water_oxygen, average=True
-	)
+# load the simulation
+tr = md.open(
+	directory='/path/to/simulation',
+	topology='topol.tpr',
+	trajectory='traj.xtc'
+)
+# select a subset of atoms
+water_oxygen = tr.subset(residue_name='SOL', atom_name='OW')
 
+# calculate the mean squared displacement for this subset
+time, msd = md.correlation.shifted_correlation(
+	md.correlation.msd, water_oxygen, average=True
+)
+```
 
 ## Installation
 
