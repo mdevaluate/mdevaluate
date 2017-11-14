@@ -76,7 +76,10 @@ def open_with_pygmx(topology, trajectory, cached=False, reindex=False,
         raise InvalidIndexException('This is not a valid index file: {}'.format(trajectory))
     except InvalidIndexException:
         if reindex:
-            pygmx.gromacs.index_xtcfile(trajectory)
+            try:
+                os.remove(pygmx.index_filename_for_xtc(trajectory))
+            except FileNotFoundError:
+                pass
             rd = pygmx.open(trajectory)
         else:
             raise InvalidIndexException('Index file is invalid, us reindex=True to regenerate.')
