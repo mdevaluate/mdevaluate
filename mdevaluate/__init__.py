@@ -14,7 +14,7 @@ from .logging import logger
 __version__ = '17.06'
 
 
-def open(directory, topology='*.tpr', trajectory='*.xtc',
+def open(directory='', topology='*.tpr', trajectory='*.xtc',
          index_file=None, cached=False, reindex=True, verbose=True, nojump=False,
          ignore_index_timestamps=False):
     """
