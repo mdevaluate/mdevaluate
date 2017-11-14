@@ -35,6 +35,8 @@ def time_average(function, coordinates, coordinates_b=None, pool=None):
     result = 0
 
     if coordinates_b is not None:
+        if coordinates._slice != coordinates_b._slice:
+            logger.warn("Slice of coordinates differs from slice of coordinates_b.")
         coordinate_iter = (iter(coordinates), iter(coordinates_b))
     else:
         coordinate_iter = (iter(coordinates),)
@@ -141,6 +143,7 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=Fal
     else:
         return res
 
+
 def pbc_tree_rdf(atoms_a, atoms_b=None, bins=None, box=None, exclude=0, returnx=False, **kwargs):
     if box is None:
         box = atoms_a.box.diagonal()
@@ -155,6 +158,7 @@ def pbc_tree_rdf(atoms_a, atoms_b=None, bins=None, box=None, exclude=0, returnx=
         return np.vstack((runningmean(bins, 2), res))
     else:
         return res
+
 
 def pbc_spm_rdf(atoms_a, atoms_b=None, bins=None, box=None, exclude=0, returnx=False, **kwargs):
     if box is None:
