@@ -246,9 +246,9 @@ class Coordinates:
         """Returns the fnr-th frame."""
         try:
             if self.atom_filter is not None:
-                frame = self.frames[fnr].coordinates[self.atom_filter].view(CoordinateFrame)
+                frame = self.frames[fnr].positions[self.atom_filter].view(CoordinateFrame)
             else:
-                frame = self.frames.__getitem__(fnr).coordinates.view(CoordinateFrame)
+                frame = self.frames.__getitem__(fnr).positions.view(CoordinateFrame)
             frame.coordinates = self
             frame.step = fnr
             if self.mode is not None:
