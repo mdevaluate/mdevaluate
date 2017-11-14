@@ -12,8 +12,6 @@ import mdevaluate as md
 import tudplot
 from scipy import spatial
 from scipy.optimize import curve_fit
-#TODO sicherlich nicht dahin saven
-md.autosave.enable('/data/robin')
 
 #trajectory with index file
 #TODO eine allgemeinere stelle?
