@@ -58,10 +58,6 @@ See the documentation of :func:`numpy.histogram` for details on bin specificatio
   When not specified, the bins will be chosen automatically for each call of ``histogram`` leading to
   different bins for each frame, hence an incorrect average.
 
-.. note::
-  It is advised to chose bins which have an exact numerical value, especially if the size of the bins matters (e.g. for normalization).
-  Values like 1/3 ore 1/9 should be avoided, since this will eventually lead to bins of different size.
-
 Advanced evaluations
 --------------------
 

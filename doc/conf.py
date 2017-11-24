@@ -43,6 +43,7 @@ extensions = [
     #    'sphinx.ext.autosummary',
     #    'sphinx.ext.inheritance_diagram',
     'sphinx_gallery.gen_gallery',
+    'sphinxcontrib.github_ribbon'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -61,7 +62,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'mdevaluate'
-copyright = '2016, Niels Müller'
+copyright = '2017, Niels Müller'
 author = 'Niels Müller'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -310,3 +311,7 @@ sphinx_gallery_conf = {
     'examples_dirs' : '../examples',
     # path where to save gallery generated examples
     'gallery_dirs'  : 'gallery'}
+
+
+github_ribbon_repo = 'mdevaluate/mdevaluate'
+github_ribbon_color = 'green'

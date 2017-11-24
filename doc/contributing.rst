@@ -1,6 +1,6 @@
 
-Contribution Guide
-==================
+Contributing
+============
 
 This document aims to lay out the basics of contributing code to the ``mdevaluate`` package.
 The code is managed through a git repository, hence this guides gives basic information on the usage of `git <https://git-scm.com>`_.
@@ -121,18 +121,9 @@ A collection of utility functions.
 Set up a development environment
 ++++++++++++++++++++++++++++++++
 
-The code is hosted in the groups git server https://chaos3.fkp.physik.tu-darmstadt.de,
-use your credentials of the institutes computers for login.
-Authentication has to be done through SSH-Keys, first add the SSH Key of
-your development machine to your account.
-
-1. Copy the public key from the file ``~/.ssh/id_rsa.pub``
-2. Add it to your account at https://chaos3.fkp.physik.tu-darmstadt.de/settings/panel/ssh/
-3. Clone the repository
-
 .. code-block:: console
 
-  $ git clone ssh://vcs@chaos3.fkp.physik.tu-darmstadt.de/diffusion/MDE/mdevaluate.git
+  $ git clone https://github.com/mdevaluate/mdevaluate.git
 
 Organization of the repository
 ------------------------------
@@ -150,10 +141,10 @@ to make it accessible for others.
 
 A standard work flow to submit new code is the following
 
-1. Create a new **branch** in your local repository
-2. **Commit** the changes to your local repository
-3. **Merge** the branch into master
-4. **Push** the changes to the remote repository
+1. Fork the main repository o github and clone your fork to your local machine.
+2. Create a new branch locally and apply the desired changes.
+3. If the master branch was updated, merge it into the local branch.
+4. Push the changes to github and create a pull request for your fork.
 
 Pulling updates from remote
 ---------------------------
@@ -211,10 +202,10 @@ When all changes for a commit are staged, it can actually be created
 This will open up an editor where a commit message has to be entered.
 After writing the commit message, save & close the file, which will create the commit.
 
-Merging into master
--------------------
+Create Pullrequest
+------------------
 
-When all changes are made and the new feature should be made public, first the branch has to be merged into master.
+When all changes are made and the new feature should be made public, you can open a new pull request on github.
 Most of the time, the master branch will have been updated, so first pull any updates
 
 .. code-block:: console
@@ -226,7 +217,8 @@ When the master branch is up to date, it can be merged into the feature branch
 
 .. code-block:: console
 
-  $ git merge my-feature
+  $ git checkout my-feature
+  $ git merge master
 
 If no conflicting changes were made, merging works automatically.
 If for example the same line was modified in a commit in master and your commits, a merge conflict will occur.
@@ -243,10 +235,7 @@ After resolving the conflict, the files need to be staged and the merge has to b
 
 The commit message will be generated automatically, indicating the merge.
 
-Push to remote
---------------
-
-After merging the changes can be pushed to the remote
+After merging, the changes can be pushed to the remote
 
 .. code-block:: console
 

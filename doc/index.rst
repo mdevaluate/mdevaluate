@@ -18,7 +18,7 @@ Contents
    general-hints
    guide
    gallery/index
-   contribution
+   contributing
    modules
 
 Indices and tables

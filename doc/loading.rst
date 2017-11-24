@@ -1,10 +1,6 @@
 Loading of simulation data
 ==========================
 
-.. note::
-  The process of loading simulations has been simplified in the latest version of mdevaluate.
-  The previous way is described below for completeness and people with an older code base.
-
 Mdevaulate provides a convenient function :func:`mdevaluate.load_simulation`
 that loads a simulation more or less automatically.
 It takes a path as input and looks for all files it needs in this directory.
@@ -14,7 +10,7 @@ where the former is the preferred choice.
 Trajectory data will be read from a xtc file.
 If the directory contains more than one file of any type, the desired file
 has to be specified with the appropriate keyword argument.
-For details see :func:`mdevaluate.load_simulation`.
+For details see :func:`mdevaluate.open`.
 
 The function will return a coordinates object, for the whole system.
 A subset of the system may be obtained directly from the coordinates object by
@@ -101,8 +97,8 @@ The special value ``None`` will set the cache size to infinite, so all frames wi
 This will prevent the frames from being loaded twice but can also consume a whole lot of memory,
 since a single frame can easily take 1 MB of memory.
 
-Freeing cached frames
-+++++++++++++++++++++
+Clearing cached frames
+++++++++++++++++++++++
 
 In some scenarios it may be advisable to free cached frames which are no longer needed.
 For this case the reader has a function ``clear_cache()``.
@@ -117,92 +113,3 @@ The current state of the cache can be displayed with the ``cache_info`` property
 Clearing the cache when it is not needed anymore is advisable since this will help the
 Python interpreter to reuse the memory.
 
-
-The deprecated way of loading simulations
------------------------------------------
-
-For the evaluation, two data sets are necessary:
-
-1. Information about the atoms of the simulation, which is read from gro-files
-2. The trajectory of the simulation, which is read from xtc- or trr-files
-
-These two data sets are combined to a coordinates object, that selects only the requested atoms.
-This object can also be used to perform coordinate transformations like computing a center of mass.
-
-Atoms
-+++++
-
-Atom information is read from gro-files via the function :func:`mdevaluate.atoms.from_grofile`,
-which takes the path to a gro-file as argument and an optional gromacs index file.
-
-::
-
-  from mdevaluate import atoms
-
-  all_atoms = atoms.from_grofile('/data/niels/tutorial/conf.gro',
-                                 index='/data/niels/tutorial/index.ndx')
-
-For many evaluations, a subset of the system must be selected.
-Atoms can be selected by name, residue or direct indices::
-
-  H11_atoms = all_atoms.subset(atom_name='H11')
-  amim_atoms = all_atoms.subset(residue_name='AMIM')
-
-Atom subset can be combined with logical operators to obtain the intersection or union of two or more subsets.
-The union is equal to a logical or, the intersection is equal to a logical and::
-
-  union = H11_atoms | amim_atoms
-  intersection = H11_atoms & amim_atoms
-
-Excluding atoms from a larger subset can also be done easily with negation::
-
-  exclusion = amim_atoms & ~H11_atoms
-
-Trajectory
-++++++++++
-
-The trajectory is read from xtc-files or trr-files, usually the former are used.
-For effective data loading, these files have to be indexed **once** before they can be used with mdevaluate.
-This is done with the command line tool ``index-xtc``::
-
-  $ index-xtc /data/niels/tutorial/traj.xtc
-
-The trajectory is than read with an appropiate reader::
-
-  from mdevaluate.gromacs.reader import XTCReader
-
-  trajectory = XTCReader('/data/niels/tutorial/traj.xtc')
-
-From this trajectory, single frames can be selected by index::
-
-  frame = trajectory[42]
-  print(frame.time)
-  print(frame.box)
-  print(frame.coordinates)
-
-.. warning::
-  To this time, even though implemented, the usage of trr-files has not been fully tested.
-
-Coordinates
-+++++++++++
-
-A coordinates object for the evaluation is obtained by combining the trajectory and an atom subset::
-
-  from mdevaluate import coordinates
-
-  cords_amim = coordinates.Coordinates(trajectory, atom_subset=amim_atoms)
-
-These coordinates can be transformed if necessary.
-The center of mass can be computed with the function :func:`mdevaluate.coordinates.centers_of_mass`,
-which takes coordinates and a list of masses as input.
-Only the first set of atom masses has to be given, which will be repeated for the rest of the atoms.
-The only requirement is that the length of the list of atoms is an integral multiple of the number of masses given.
-
-To compute a center of mass of the amim molecule::
-
-  masses = [14]*2 + [1]*15 + [12]*8
-  com_amim = coordinates.centers_of_mass(cords_amim, masses=masses)
-
-Note that the coordinate transformation is not limited to center of masses at all.
-Look at the definition of :func:`centers_of_mass` for hints how to implement a different transformation.
-On important bit is the decorator ``@coordinates_map`` that is necessary for the transformation to work.

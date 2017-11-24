@@ -5,6 +5,7 @@ This page collects some general hints for data centered programming  with Python
 Some resources for tutorials on the topics can be found here:
 
 * http://www.scipy-lectures.org/
+* The `Python Data Science Handbook <https://jakevdp.github.io/PythonDataScienceHandbook/>`_, by Jake VanderPlas
 * PyCon-Talk on Numpy arrays: `Losing Your Loops, by Jake VanderPlas <https://www.youtube.com/watch?v=EEUXKG97YRw>`_
 
 Programming Environments

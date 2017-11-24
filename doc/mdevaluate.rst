@@ -50,11 +50,6 @@ mdevaluate.distribution
 mdevaluate.evaluation
 .....................
 
-.. automodule:: mdevaluate.evaluation
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 mdevaluate.functions
 ....................
 
@@ -86,13 +81,3 @@ mdevaluate.utils
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-
-
-Subpackages
------------
-
-.. toctree::
-
-    mdevaluate.meta
