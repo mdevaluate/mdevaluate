@@ -91,13 +91,16 @@ def shifted_correlation(function, frames,
         shifted_idx = idx + start_frame
         return correlation(function, map(frames.__getitem__, shifted_idx))
 
-    result = []
+    result = 0 if average else []
     for i, start_frame in enumerate(start_frames):
         logger.debug('shifted_correlation: segment {}/{} (index={})'.format(i + 1, segments, start_frame))
-        result.append(list(correlate(start_frame)))
+        if average:
+            result += np.array(list(correlate(start_frame)))
+        else:
+            result.append(list(correlate(start_frame)))
     result = np.array(result)
     if average:
-        result = result.mean(axis=0)
+        result /= len(start_frames)
     times = np.array([frames[i].time for i in idx]) - frames[0].time
     return times, result
 
