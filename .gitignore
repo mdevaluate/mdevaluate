@@ -12,3 +12,4 @@ coordinates.c
 doc/gallery
 doc/modules
 tmp/
+*.xtcindex
