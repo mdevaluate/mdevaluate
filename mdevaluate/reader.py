@@ -200,6 +200,7 @@ def generate_nojump_matrixes(trajectory):
     trajectory.frames.nojump_matrixes = tuple(
         sparse.csr_matrix((np.array(m.data), (m.row, m.col)), shape=(N, M)) for m in jump_data
     )
+    save_nojump_matrixes(trajectory.frames)
 
 
 def save_nojump_matrixes(reader, matrixes=None):
@@ -257,7 +258,6 @@ class BaseReader:
     @nojump_matrixes.setter
     def nojump_matrixes(self, mats):
         self._nojump_matrixes = mats
-        save_nojump_matrixes(self)
 
     def __init__(self, rd):
         """
