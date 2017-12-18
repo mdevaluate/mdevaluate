@@ -40,8 +40,8 @@ def from_grofile(grofile, index_file=None):
     indices = None
     if index_file is not None:
         indices = load_indices(index_file)
-
-    return Atoms(_atoms_from_grofile(grofile), indices).subset()
+    t = np.genfromtxt(grofile, skip_header=2, delimiter=(5, 5, 5), dtype='U8', autostrip=True, skip_footer=1)
+    return Atoms(t, indices).subset()
 
 
 def from_tprfile(tprfile, index_file=None):
