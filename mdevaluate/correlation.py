@@ -100,7 +100,7 @@ def shifted_correlation(function, frames,
             result.append(list(correlate(start_frame)))
     result = np.array(result)
     if average:
-        result /= len(start_frames)
+        result = result / len(start_frames)
     times = np.array([frames[i].time for i in idx]) - frames[0].time
     return times, result
 
