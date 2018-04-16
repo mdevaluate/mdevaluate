@@ -331,7 +331,13 @@ class CoordinatesMap:
 
     def __iter__(self):
         for frame in self.coordinates:
-            yield self.function(frame)
+            step = frame.step
+            frame = self.function(frame)
+            if not isinstance(frame, CoordinateFrame):
+                frame = frame.view(CoordinateFrame)
+                frame.coordinates = self
+                frame.step = step
+            yield frame
 
     def __getitem__(self, item):
         if isinstance(item, slice):
