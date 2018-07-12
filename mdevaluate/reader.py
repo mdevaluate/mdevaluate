@@ -92,7 +92,6 @@ def open_with_pygmx(topology, trajectory, cached=False, reindex=False,
         reader = CachedReader(rd, maxsize)
     else:
         reader = BaseReader(rd)
-
     if topology.endswith('.tpr'):
         atms = atoms.from_tprfile(topology, index_file=index_file)
     elif topology.endswith('.gro'):
@@ -117,7 +116,7 @@ def open(topology, trajectory, cached=False, index_file=None, reindex=False, ign
 
     """
     if PYGMX_AVAILABLE and trajectory.endswith('.xtc') and topology.endswith(('.tpr', '.gro')):
-        return open_with_pygmx(topology, trajectory, cached=False, reindex=False,
+        return open_with_pygmx(topology, trajectory, cached=False, reindex=reindex,
                                ignore_index_timestamps=False, index_file=index_file)
     elif MADANALYSIS_AVAILABLE:
         return open_with_mdanalysis(topology, trajectory, cached)
