@@ -50,10 +50,11 @@ def subensemble_correlation(selector_function):
         if (selectors.dtype != object): sel_shape = sel_shape[:-1]
         f_values = np.zeros(sel_shape)
         count    = np.zeros(sel_shape, dtype=int)
+        is_first_frame_loop = True
         
         def cc(act_frame): 
             
-            is_first_frame_loop = True
+            nonlocal is_first_frame_loop 
             for index in np.ndindex(sel_shape):
                 sel = selectors[index]
                 sf_sel = start_frame[sel]
