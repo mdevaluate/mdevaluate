@@ -20,8 +20,17 @@ def pbc_diff_old(v1, v2, box):
 
     return v
 
+def pbc_diff(v1, v2=None, box=None):
+    if box==None:
+        out = v1 - v2
+    elif len(box.shape) == 1: 
+        out = pbc_diff_rect(v1, v2, box)
+    elif len(box.shape) == 2: 
+        out = pbc_diff_tric(v1, v2, box)        
+    else: raise NotImplementedError("cannot handle box")
+    return out
 
-def pbc_diff_not_so_old(v1, v2=None, box=None):
+def pbc_diff_rect(v1, v2, box=None):
     """
     Calculate the difference of two vectors, considering periodic boundary conditions.
     """
@@ -29,31 +38,29 @@ def pbc_diff_not_so_old(v1, v2=None, box=None):
         v = v1
     else:
         v = v1 -v2
-    if box is not None:
-        s = v / box
-        v = box * (s - s.round())
+   
+    s = v / box
+    v = box * (s - s.round())
     return v
 
 
-def pbc_diff(v1, v2=None, box=None):
+def pbc_diff_tric(v1, v2=None, box=None):
     """
     difference vector for arbitrary pbc
     
         Args:
         box_matrix: CoordinateFrame.box
     """
-    if v2 is None:
-        v = v1
+    if len(box.shape) == 1: box = np.diag(box)  
+    if v1.shape == (3,): v1 = v1.reshape((1,3)) #quick 'n dirty
+    if v2.shape == (3,): v2 = v2.reshape((1,3))   
+    if box is not None:
+        r3 = np.subtract(v1, v2)
+        r2 = np.subtract(r3, (np.rint(np.divide(r3[:,2],box[2][2])))[:,np.newaxis] * box[2][np.newaxis,:])
+        r1 = np.subtract(r2, (np.rint(np.divide(r2[:,1],box[1][1])))[:,np.newaxis] * box[1][np.newaxis,:])
+        v  = np.subtract(r1, (np.rint(np.divide(r1[:,0],box[0][0])))[:,np.newaxis] * box[0][np.newaxis,:])
     else:
-        if v1.shape == (3,): v1 = v1.reshape((1,3)) #quick 'n dirty
-        if v2.shape == (3,): v2 = v2.reshape((1,3))   
-        if box is not None:
-            r3 = np.subtract(v2,v1)
-            r2 = np.subtract(r3, (np.rint(np.divide(r3[:,2],box[2][2])))[:,np.newaxis] * box[2][np.newaxis,:])
-            r1 = np.subtract(r2, (np.rint(np.divide(r2[:,1],box[1][1])))[:,np.newaxis] * box[1][np.newaxis,:])
-            v  = np.subtract(r1, (np.rint(np.divide(r1[:,0],box[0][0])))[:,np.newaxis] * box[0][np.newaxis,:])
-        else:
-            v = v1 - v2
+        v = v1 - v2
     return v
 
 
