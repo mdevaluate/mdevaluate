@@ -15,7 +15,7 @@ def Hbondlist(don,H_,akz):
         akz: The coordinates of each acceptor atom.
     """
     
-    don = don%don.diagaonal()
+    don = don%don.box.diagaonal()
     akz = akz%akz.box.diagonal()
     par = dict(balanced_tree = False, compact_nodes = False , leafsize = 32)
     tree = scipy.spatial.cKDTree(akz,**par,boxsize=akz.box.diagonal())
