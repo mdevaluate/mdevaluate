@@ -64,7 +64,7 @@ def multi_subensemble_correlation(selector_function):
         sel_shape = selectors.shape
         if sel_shape[-1] == 0: selectors = np.asarray(selectors,int)
         if (selectors.dtype != object): sel_shape = sel_shape[:-1]
-        f_values = np.zeros(sel_shape)
+        f_values = np.zeros(sel_shape + function(start_frame,start_frame).shape,)
         count    = np.zeros(sel_shape, dtype=int)
         is_first_frame_loop = True
         def cc(act_frame): 
@@ -113,15 +113,15 @@ def shifted_correlation(function, frames,
         counter (bool, opt.): 
                     If True, returns length of frames (in general number of particles specified)
         average (bool, opt.): 
-                    If True, returns average of counts and 
-                    _weighted_ average of correlation function 
+                    If True, returns averaged correlation function 
     Returns:
         tuple:
             A list of length N that contains the indices of the frames at which
             the time series was calculated and a numpy array of shape (segments, N)
             that holds the (non-avaraged) correlation data
             
-            if counter == True: adds number of counts to output tupelc
+            if has_counter == True: adds number of counts to output tupel.
+                                    if average is returned it will be weighted. 
 
     Example:
         Calculating the mean square displacement of a coordinates object named ``coords``:
@@ -149,38 +149,41 @@ def shifted_correlation(function, frames,
         return correlation(function, map(frames.__getitem__, shifted_idx))
 
     times = np.array([frames[i].time for i in idx]) - frames[0].time
-    result = 0 if average else []
+    result = []
     
     if getattr(correlation, "has_counter", False):
-        count  = 0 if average else []
+        count  =  []
         for i, start_frame in enumerate(start_frames): 
             act_result, act_count = correlate(start_frame)
-            act_result = np.moveaxis(np.array(list(act_result)),0,-1)
-            if average:
-                result += act_result * act_count[...,np.newaxis]
-                count  += act_count
-            else:
-                result.append(act_result)
-                count.append(act_count)
+            act_result = list(act_result)
+            result.append(act_result)
+            count.append(act_count)
+
+        result = np.asarray(result)
+        count  = np.asarray(count)        
+        cdim =  count.ndim
         if average:
-            np.divide(result, count[...,np.newaxis], out = result, where = count[...,np.newaxis] != 0)
-            count  = count  / len(start_frames)
+            rdim = result.ndim
+            bt = slice(None), np.newaxis
+            for i in range(rdim - 2):
+                if i > cdim-2:
+                    bt +=  np.newaxis, 
+                else: 
+                    bt += slice(None),
+            result = (result*count[bt]).sum(0)
+            np.divide(result, count.sum(0)[bt[1:]], out = result, where = count.sum(0)[bt[1:]] != 0)
+            result = np.moveaxis(result,0,cdim-1)
+            count  = count.mean(0)
         else:
-            result = np.asarray(result)
-            count  = np.asarray(count)        
+            result = np.moveaxis(result,1,cdim)
         output = times, result, count
     else:
         for i, start_frame in enumerate(start_frames): 
-            act_result = correlate(start_frame)
-            act_result = np.moveaxis(np.array(list(act_result)),0,-1)
-            if average:
-                result += act_result 
-            else:
-                result.append(act_result)
+            act_result = list(correlate(start_frame))
+            result.append(act_result)
+        result = np.array(result)
         if average:
-            result  = result  / len(start_frames)
-        else:
-            result = np.asarray(result)
+            result  = result.mean(0)
         output = times, result        
     return output
 
