@@ -23,14 +23,14 @@ def pbc_diff_old(v1, v2, box):
 def pbc_diff(v1, v2=None, box=None):
     if box==None:
         out = v1 - v2
-    elif len(box.shape) == 1: 
+    elif hasattr(box, 'shape') and len(box.shape) == 1: 
         out = pbc_diff_rect(v1, v2, box)
-    elif len(box.shape) == 2: 
+    elif hasattr(box, 'shape') and len(box.shape) == 2: 
         out = pbc_diff_tric(v1, v2, box)        
     else: raise NotImplementedError("cannot handle box")
     return out
 
-def pbc_diff_rect(v1, v2, box=None):
+def pbc_diff_rect(v1, v2, box):
     """
     Calculate the difference of two vectors, considering periodic boundary conditions.
     """
