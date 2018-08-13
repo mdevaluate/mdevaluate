@@ -151,7 +151,7 @@ def shifted_correlation(function, frames,
     times = np.array([frames[i].time for i in idx]) - frames[0].time
     result = 0 if average else []
     
-    if hasattr(correlation, "has_counter") and getattr(correlation, "has_counter"):
+    if getattr(correlation, "has_counter", False):
         count  = 0 if average else []
         for i, start_frame in enumerate(start_frames): 
             act_result, act_count = correlate(start_frame)
