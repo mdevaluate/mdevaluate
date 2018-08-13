@@ -23,9 +23,9 @@ def pbc_diff_old(v1, v2, box):
 def pbc_diff(v1, v2=None, box=None):
     if box==None:
         out = v1 - v2
-    elif hasattr(box, 'shape') and len(box.shape) == 1: 
+    elif len(getattr(box, 'shape', [])) == 1: 
         out = pbc_diff_rect(v1, v2, box)
-    elif hasattr(box, 'shape') and len(box.shape) == 2: 
+    elif len(getattr(box, 'shape', [])) == 2: 
         out = pbc_diff_tric(v1, v2, box)        
     else: raise NotImplementedError("cannot handle box")
     return out
