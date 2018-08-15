@@ -5,7 +5,7 @@ import sys
 import collections
 import multiprocessing
 
-def Hbondlist(don,H_,akz):
+def Hbondlist(don,H_,akz,maxangle=30,maxdistance=0.35):
     """
     Returns the hydrogen bonds of each donor-group for a frame in the trajectory.
     
@@ -13,9 +13,12 @@ def Hbondlist(don,H_,akz):
         don: The coordintes of the donor atoms of each donor-group.
         H_: The coordinates of the hydrogen atoms of each donor-group.
         akz: The coordinates of each acceptor atom.
+        maxangle: The maximal angle between donor-group and acceptor
+        maxdistance: The maximal distance between donor-atom and acceptor
     """
     
-    don = don%don.box.diagaonal()
+    angle = np.cos(maxangle*2*np.pi/360)
+    don = don%don.box.diagonal()
     akz = akz%akz.box.diagonal()
     par = dict(balanced_tree = False, compact_nodes = False , leafsize = 32)
     tree = scipy.spatial.cKDTree(akz,**par,boxsize=akz.box.diagonal())
@@ -29,13 +32,13 @@ def Hbondlist(don,H_,akz):
     c = ((b**2).sum(1))**0.5
     fin = np.divide(scalar,na[0], where=mask)/c[:,np.newaxis]
 
-    finalmask = (na[0]<0.35)& ((fin) > 0.86602540) & (na[0]>0)
+    finalmask = (na[0]<maxdistance)& ((fin) > angle) & (na[0]>0)
 
 
     result = np.array([na[1][i, x] for i, x in enumerate(finalmask)])
     return result
 
-def Veranderungsliste(donliste,Hliste,akzliste):
+def Veranderungsliste(donliste,Hliste,akzliste,donqty=1):
     """
     Returns the list of all hydrogenbond changes as a string of all changes of each donor-atom.
     
@@ -44,15 +47,22 @@ def Veranderungsliste(donliste,Hliste,akzliste):
         Hliste: The subset of a Trajectory with the hydrogen atom of each donor-group.
         akzliste: The subset of a Trajectory with all acceptor atoms.
     """
+    mask=[]
+    for i in range(len(donliste[0])):
+    j = 0
+    while j<donqty:
+        mask.append(i)
+        j+=1
+
     fn = 0
-    start = Hbondlist(donliste[0],Hliste[0],akzliste[0])
+    start = Hbondlist(donliste[0][mask],Hliste[0],akzliste[0])
     Veranderung = [""]*len(donliste)
     vergleich1 = start
 
     while fn < len(donliste) :
         if fn%100 == 0:
             print(fn,end = '\r')
-        vergleich2 = Hbondlist(donliste[fn],Hliste[fn],akzliste[fn])
+        vergleich2 = Hbondlist(donliste[fn][mask],Hliste[fn],akzliste[fn])
         k = 0
         while k < len(vergleich2):
             differenz = set(vergleich2[k]).symmetric_difference(set(vergleich1[k]))
@@ -64,7 +74,7 @@ def Veranderungsliste(donliste,Hliste,akzliste):
         fn += 1
 
 
-def spatiallist(donliste,Hliste,akzliste,bins,radius):
+def spatiallist(donliste,Hliste,akzliste,bins,radius,donqty=1):
     """
     Returns an array with shape (bins,frames) which contains the average number of Hydrogen bonds in the area around
     the z-axiswith equally distanced sections. The average number is then stored in the array with respect to the distance to the z-axis in the 
@@ -76,6 +86,12 @@ def spatiallist(donliste,Hliste,akzliste,bins,radius):
         bins: Number of sections in which the the atoms are selected.
         radius: The maximal distance to the z-axis in the center of the box.
     """
+    donorquantity=[]
+    for i in range(len(donliste[0])):
+    j = 0
+    while j<donqty:
+        donorquantity.append(i)
+        j+=1
     frames = len(donliste)
     unit = np.array([0,0,1])
     fn = 0
@@ -92,7 +108,7 @@ def spatiallist(donliste,Hliste,akzliste,bins,radius):
         while i < bins:
             masks.append(((distance>=areas[i]) & (distance<areas[i+1])))
             i+=1
-        liste = Hbondlist(donliste[fn],Hliste[fn],akzliste[fn])
+        liste = Hbondlist(donliste[fn][donorquantity],Hliste[fn],akzliste[fn])
         m = 0
         while m < bins:
             for k in liste[masks[m]]:
