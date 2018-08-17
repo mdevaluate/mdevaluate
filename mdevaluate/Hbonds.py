@@ -49,10 +49,10 @@ def Veranderungsliste(donliste,Hliste,akzliste,donqty=1):
     """
     mask=[]
     for i in range(len(donliste[0])):
-    j = 0
-    while j<donqty:
-        mask.append(i)
-        j+=1
+        j = 0
+        while j<donqty:
+            mask.append(i)
+            j+=1
 
     fn = 0
     start = Hbondlist(donliste[0][mask],Hliste[0],akzliste[0])
@@ -89,10 +89,10 @@ def spatiallist(donliste,Hliste,akzliste,bins,radius,donqty=1):
     """
     donorquantity=[]
     for i in range(len(donliste[0])):
-    j = 0
-    while j<donqty:
-        donorquantity.append(i)
-        j+=1
+        j = 0
+        while j<donqty:
+            donorquantity.append(i)
+            j+=1
     frames = len(donliste)
     unit = np.array([0,0,1])
     fn = 0
