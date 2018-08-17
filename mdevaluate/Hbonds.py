@@ -40,7 +40,7 @@ def Hbondlist(don,H_,akz,maxangle=30,maxdistance=0.35):
 
 def Veranderungsliste(donliste,Hliste,akzliste,donqty=1):
     """
-    Returns the list of all hydrogenbond changes as a string of all changes of each donor-atom.
+    Returns the list of all hydrogenbond changes as a string of all changes of each donor-atom and the start configuration.
     
     Args:
         donliste: The subset of a Trajectory with the donor-atom of each donor-group.
@@ -69,9 +69,10 @@ def Veranderungsliste(donliste,Hliste,akzliste,donqty=1):
             for d in differenz:
                 Veranderung[k] += str(fn) +':' + str(d) + ';'
             k += 1
-
+    
         vergleich1 = vergleich2
         fn += 1
+    return Veranderung , start
 
 
 def spatiallist(donliste,Hliste,akzliste,bins,radius,donqty=1):
@@ -251,8 +252,12 @@ def getHdistribution(Plateus):
     Times = np.array(Plateus[1::2]) - np.array(Plateus[::2])
     return Times
 
-
-def parallelHdist(startlist,changelist,framenumber,average,cores=8):
+def helpfunction(i):
+        sortedchangelists , akzlist = getlists(start,Veranderung,i)
+        Plateus,arr = getHlifeplateus(frames,akzlist,sortedchangelists,mean= mean)
+        return (getHdistribution(Plateus))
+    
+def parallelHdist(startlist,changelist,framenumber,average=3,cores=8):
     """
     Evaluates the hydrogen bond lifetime distributio for all frames and all donor-groups on multiple cpu-cores parallel.
     Args:
@@ -262,22 +267,17 @@ def parallelHdist(startlist,changelist,framenumber,average,cores=8):
         average: The minimal number of frames in which two hydrogen bonds are seperate.
         cores: The number of cpu-cores which should be used for evaluation
     """
-    
-    def helpfunction(i):
-        sortedchangelists , akzlist = getlists(start,Veranderung,i)
-        Plateus,arr = getHlifeplateus(frames,akzlist,sortedchangelists,mean= mean)
-        return (getHdistribution(Plateus))
-    
     frames = framenumber
     start = startlist
     Veranderung = changelist
     mean = average
     final = collections.Counter()
-    k = len(startlist)
+    k = range(len(startlist))
     pool = multiprocessing.pool.Pool(cores)
     chunks = [k[x:x+120] for x in range(0, len(k), 120)]
     for c in chunks:
-        results = pool.map(helpfunction,c)
+        print(c[0])
+        results = pool.map(functools.partial(helpfunction,start=start,Veranderung=Veranderung,frames=frames,mean=mean),c)
         for r in results:
             final.update(r)
     pool.close()
