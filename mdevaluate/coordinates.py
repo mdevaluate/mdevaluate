@@ -139,6 +139,14 @@ class CoordinateFrame(np.ndarray):
         return self.coordinates.atom_subset.atom_names
 
     @property
+    def indices(self):
+        return self.coordinates.atom_subset.indices
+
+    @property
+    def selection(self):
+        return self.coordinates.atom_subset.selection 
+    
+    @property
     def whole(self):
         frame = whole(self)
         frame.mode = 'whole'
@@ -421,7 +429,7 @@ class CoordinatesKDTree:
         frame = self.frames[index]
         return self.kdtree(frame[self.selector(frame)])
 
-    def __init__(self, frames, selector=None, maxcache=128, ckdtree=True):
+    def __init__(self, frames, selector=None, boxsize=None, maxcache=128, ckdtree=True):
         """
         Args:
             frames: Trajectory of the simulation, can be Coordinates object or reader
@@ -435,6 +443,8 @@ class CoordinatesKDTree:
             self.selector = lambda x: slice(None)
         self.frames = frames
         self.kdtree = cKDTree if ckdtree else KDTree
+        if boxsize is not None:
+            self.kdtree = partial(self.kdtree, boxsize=boxsize)
         self._get_tree_at_index = lru_cache(maxsize=maxcache)(self._get_tree_at_index)
 
     def __getitem__(self, index):
