@@ -116,8 +116,8 @@ def open(topology, trajectory, cached=False, index_file=None, reindex=False, ign
 
     """
     if PYGMX_AVAILABLE and trajectory.endswith('.xtc') and topology.endswith(('.tpr', '.gro')):
-        return open_with_pygmx(topology, trajectory, cached=False, reindex=reindex,
-                               ignore_index_timestamps=False, index_file=index_file)
+        return open_with_pygmx(topology, trajectory, cached=cached, reindex=reindex,
+                               ignore_index_timestamps=ignore_index_timestamps, index_file=index_file)
     elif MADANALYSIS_AVAILABLE:
         return open_with_mdanalysis(topology, trajectory, cached)
     else:
