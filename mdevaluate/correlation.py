@@ -149,42 +149,55 @@ def shifted_correlation(function, frames,
         return correlation(function, map(frames.__getitem__, shifted_idx))
 
     times = np.array([frames[i].time for i in idx]) - frames[0].time
-    result = []
-    
+        
     if getattr(correlation, "has_counter", False):
-        count  =  []
-        for i, start_frame in enumerate(start_frames): 
-            act_result, act_count = correlate(start_frame)
-            act_result = list(act_result)
-            result.append(act_result)
-            count.append(act_count)
-
-        result = np.asarray(result)
-        count  = np.asarray(count)        
-        cdim =  count.ndim
         if average:
-            rdim = result.ndim
-            bt = slice(None), np.newaxis
-            for i in range(rdim - 2):
-                if i > cdim-2:
-                    bt +=  np.newaxis, 
-                else: 
-                    bt += slice(None),
-            result = (result*count[bt]).sum(0)
-            np.divide(result, count.sum(0)[bt[1:]], out = result, where = count.sum(0)[bt[1:]] != 0)
-            result = np.moveaxis(result,0,cdim-1)
-            count  = count.mean(0)
+            for i, start_frame in enumerate(start_frames): 
+                act_result, act_count = correlate(start_frame)
+                act_result = np.array(list(act_result))
+                act_count  = np.array(act_count)
+                if i == 0:
+                    count  =  act_count
+                    cdim   =  act_count.ndim
+                    rdim   =  act_result.ndim
+                    bt = np.newaxis,
+                    for i in range(rdim - 1):
+                        if i >= cdim:
+                            bt +=  np.newaxis, 
+                        else: 
+                            bt += slice(None), 
+                    result  = act_result * act_count[bt]
+                else:
+                    result += act_result * act_count[bt]
+                    count  += act_count
+            np.divide(result, count[bt], out = result, where = count[bt] != 0)
+            result = np.moveaxis(result,0,cdim)
+            count  = count / len(start_frames)
+            output = times, result, count
         else:
+            count  =  []
+            result =  []
+            for i, start_frame in enumerate(start_frames): 
+                act_result, act_count = correlate(start_frame)
+                act_result = list(act_result)
+                result.append(act_result)
+                count.append(act_count)
+            count  = np.asarray(count) 
+            cdim   = count.ndim
+            result = np.asarray(result)
             result = np.moveaxis(result,1,cdim)
-        output = times, result, count
-    else:
-        for i, start_frame in enumerate(start_frames): 
-            act_result = list(correlate(start_frame))
-            result.append(act_result)
+            output = times, result, count
+    else: 
+        result = 0 if average else []
+        for i, start_frame in enumerate(start_frames):
+            if average:
+                result += np.array(list(correlate(start_frame)))
+            else:
+                result.append(list(correlate(start_frame)))
         result = np.array(result)
         if average:
-            result  = result.mean(0)
-        output = times, result        
+            result = result / len(start_frames)
+        output = times, result
     return output
 
 def msd(start, frame):
