@@ -23,18 +23,13 @@ def Hbondlist(don,H_,akz,maxangle=30,maxdistance=0.35):
     par = dict(balanced_tree = False, compact_nodes = False , leafsize = 32)
     tree = scipy.spatial.cKDTree(akz,**par,boxsize=akz.box.diagonal())
     na = tree.query(don,k = 10)
-
     a = pbc_diff(akz[na[1]],don[:,np.newaxis,:], box = akz.box.diagonal())
     b = pbc_diff(H_,don, box = akz.box.diagonal())
-
     scalar = (np.multiply(a,b[:,np.newaxis,:]).sum(2))
     mask = (na[0]>0)
     c = ((b**2).sum(1))**0.5
     fin = np.divide(scalar,na[0], where=mask)/c[:,np.newaxis]
-
     finalmask = (na[0]<maxdistance)& ((fin) > angle) & (na[0]>0)
-
-
     result = np.array([na[1][i, x] for i, x in enumerate(finalmask)])
     return result
 
@@ -53,12 +48,10 @@ def Veranderungsliste(donliste,Hliste,akzliste,donqty=1):
         while j<donqty:
             mask.append(i)
             j+=1
-
     fn = 0
     start = Hbondlist(donliste[0][mask],Hliste[0],akzliste[0])
-    Veranderung = [""]*len(donliste)
+    Veranderung = [""]*len(donliste[0][mask])
     vergleich1 = start
-
     while fn < len(donliste) :
         if fn%100 == 0:
             print(fn,end = '\r')
@@ -118,61 +111,6 @@ def spatiallist(donliste,Hliste,akzliste,bins,radius,donqty=1):
             m+=1
         fn+=1
     return spatialarr
-
-def getHlifeplateus(frames,akzlist,sortedchangelist,mean=3):
-    """
-    Returns a boolean array with shape (akznr,frames). The array is the on and off time of hydrogen bonds a donor has 
-    with each acceptor it has ever bonded with. If an on and off frequency is too high it can be averaged over a number
-    frames. Also returns a list of frames in which the uneven frame denotes when a bond is formed and the even specify 
-    when a bond is disbanded.(May contain smaller bugs)
-    Args:
-        frames: The number of frames in the Trajectory
-        akzlist: The list of acceptors a specific donor has bonded with.
-        sortedchangelist: The list of hydrogen bond changes for a specific donor sorted by the number of the acceptor
-        mean: The minimal number of frames in which two hydrogen bonds are seperate.
-    
-    """
-    sortedchange = sortedchangelist
-    length = len(akzlist)
-    frames = frames
-    arr = np.zeros((length,frames),dtype=bool)
-    k = 0
-    Plateus = list()
-    akzlen = len(akzlist)
-    while k<akzlen:
-        isBindung = False
-        i = 0
-        for t in sortedchange[k]:
-            templis = [l.split(',') for l in t[0].split(':')]
-            templisint = int(templis[0][0])
-            while i< templisint:
-                    arr[k][i] = isBindung
-                    i+=1
-            isBindung = not isBindung
-        while i<frames:
-            arr[k][i] = isBindung
-            i+=1
-        indices = np.where(arr[k] == True)
-        n = 1
-        indilen = len(indices[0])
-        while n < indilen:
-            if (indices[0][n] - indices[0][n-1])<mean:
-                arr[k][indices[0][n-1]:indices[0][n]+1] = True
-            n+=1
-        l=1
-        for sort in sortedchange:
-            if len(sort)%2 != 0:
-                del sort[-1]
-        if arr[k][0] == True:
-            Plateus.extend([0])
-        if arr[k][frames-1] == True:
-            Plateus.extend([frames])
-        while l < frames:
-            if (arr[k][l] != arr[k][l-1]):
-                Plateus.extend([l])
-            l+=1
-        k+=1
-    return Plateus,arr
 
 def getaverageHbond(startlist,changelist,framenumber):
     """
@@ -243,43 +181,56 @@ def getlists(startlist,changelist,donnumber):
     liakz.extend([sor[k][0][sor[k][0].find(':')+1:]])
     return lis,liakz
 
-def getHdistribution(Plateus):
-    """
-    Returns the lifetimes of hydrogen bonds of a donor.
-    Args:
-        Plateus: A list of on and off times of hydrogen bonds.
-    """
-    Times = np.array(Plateus[1::2]) - np.array(Plateus[::2])
-    return Times
-
-def helpfunction(i):
-        sortedchangelists , akzlist = getlists(start,Veranderung,i)
-        Plateus,arr = getHlifeplateus(frames,akzlist,sortedchangelists,mean= mean)
-        return (getHdistribution(Plateus))
-    
-def parallelHdist(startlist,changelist,framenumber,average=3,cores=8):
-    """
-    Evaluates the hydrogen bond lifetime distributio for all frames and all donor-groups on multiple cpu-cores parallel.
+def HlifePlateus(startlist,changelist,frames,average=3):
+     """
+   Returns the lifetime of all Hbonds of the system in a Counter object.
     Args:
         startlist: The list of Hydrogenbonds of each donor-group for the first frame.
         changelist: The changes of hydrogen-bonds for each frame for each donor-group.
-        framenumber: The number of frames in the trajectory.
-        average: The minimal number of frames in which two hydrogen bonds are seperate.
-        cores: The number of cpu-cores which should be used for evaluation
+        frames: The number of frames in your Trajectory.
+        average: The minimum number of frames two Hbonds must be seperated to count as seperate Hbonds.
+    
     """
-    frames = framenumber
-    start = startlist
-    Veranderung = changelist
+    start=startlist
+    Veranderung=changelist
+    frames=frames
     mean = average
     final = collections.Counter()
-    k = range(len(startlist))
-    pool = multiprocessing.pool.Pool(cores)
-    chunks = [k[x:x+120] for x in range(0, len(k), 120)]
-    for c in chunks:
-        print(c[0])
-        results = pool.map(functools.partial(helpfunction,start=start,Veranderung=Veranderung,frames=frames,mean=mean),c)
-        for r in results:
-            final.update(r)
-    pool.close()
-    pool.join()
+    j=0
+    while j<frames:  
+        if j%100==0:
+            print(j,end='\r')
+        sortlist, akzlist = getlists(start,Veranderung,j)
+        sortedchange = sortlist
+        length = len(akzlist)
+        arr = np.zeros((length,frames),dtype=bool)
+        k = 0
+        Plateus = list()
+        akzlen = len(akzlist)
+        while k<akzlen:
+            isBindung = False
+            i = 0
+            for t in sortedchange[k]:
+                templisint = int(t[0][:t[0].index(':')])
+                arr[k][i:templisint] = isBindung
+                i = templisint
+                isBindung = not isBindung
+            arr[k][i:frames] = isBindung
+            indices = np.where(arr[k] == True)
+            n = 1
+            indilen = len(indices[0])
+            while n < indilen:
+                if (indices[0][n] - indices[0][n-1])<mean:
+                    arr[k][indices[0][n-1]:indices[0][n]+1] = True
+                n+=1
+            l=1
+            Plateus.append(np.where(np.diff(arr[k]))[0]+1)
+            if arr[k][0]:
+                Plateus[k] = np.insert(Plateus[k],0,0,axis=0)
+            if arr[k][frames-1] == True:
+                Plateus[k] = np.append(Plateus[k],[frames])
+            k+=1
+        for m in Plateus:
+            final.update(m[1::2]-m[::2])
+        j+=1
     return final
