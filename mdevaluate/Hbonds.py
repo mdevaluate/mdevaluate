@@ -182,14 +182,14 @@ def getlists(startlist,changelist,donnumber):
     return lis,liakz
 
 def HlifePlateus(startlist,changelist,frames,average=3):
-     """
-   Returns the lifetime of all Hbonds of the system in a Counter object.
+    """
+    Returns the lifetime of all Hbonds of the system in a Counter object.
     Args:
         startlist: The list of Hydrogenbonds of each donor-group for the first frame.
         changelist: The changes of hydrogen-bonds for each frame for each donor-group.
         frames: The number of frames in your Trajectory.
         average: The minimum number of frames two Hbonds must be seperated to count as seperate Hbonds.
-    
+
     """
     start=startlist
     Veranderung=changelist
