@@ -197,7 +197,7 @@ def HlifePlateus(startlist,changelist,frames,average=3):
     mean = average
     final = collections.Counter()
     j=0
-    while j<frames:  
+    while j<len(Veranderung):  
         if j%100==0:
             print(j,end='\r')
         sortlist, akzlist = getlists(start,Veranderung,j)
