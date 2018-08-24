@@ -57,7 +57,7 @@ def multi_subensemble_correlation(selector_function):
         using indices will be more efficient than using masks.
     """
     @set_has_counter
-    def c(function, frames):
+    def cmulti(function, frames):
         iterator = iter(frames)
         start_frame = next(iterator)
         selectors = np.asarray(selector_function(start_frame))
@@ -78,7 +78,7 @@ def multi_subensemble_correlation(selector_function):
             is_first_frame_loop = False 
             return np.asarray(f_values.copy())
         return map(cc, chain([start_frame], iterator)), count
-    return c
+    return cmulti
 
 @autosave_data(nargs=2, kwargs_keys=(
     'index_distribution', 'correlation', 'segments', 'window', 'skip', 'average'
