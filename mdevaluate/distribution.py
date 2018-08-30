@@ -78,7 +78,7 @@ def time_histogram(function, coordinates, bins, hist_range, pool=None):
     return hist_results
 
 
-def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=False, **kwargs):
+def rdf(atoms_a, atoms_b=None, bins=None, box=None, kind=None, chunksize=50000, returnx=False, **kwargs):
     r"""
     Compute the radial pair distribution of one or two sets of atoms.
 
@@ -95,6 +95,7 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=Fal
         atoms_b (opt.): Second set of atoms, used internally
         bins: Bins of the radial distribution function
         box (opt.): Simulations box, if not specified this is taken from ``atoms_a.box``
+        kind (opt.): Can be 'inter', 'intra' or None (default).
         chunksize (opt.):
             For large systems (N > 1000) the distaces have to be computed in chunks so the arrays
             fit into memory, this parameter controlls the size of these chunks. It should be
@@ -102,6 +103,7 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=Fal
         returnx (opt.): If True the x ordinate of the histogram is returned.
     """
     assert bins is not None, 'Bins of the pair distribution have to be defined.'
+    assert kind in ['intra', 'inter', None], 'Argument kind must be one of the following: intra, inter, None.'
     if box is None:
         box = atoms_a.box.diagonal()
     if atoms_b is None:
@@ -120,6 +122,13 @@ def rdf(atoms_a, atoms_b=None, bins=None, box=None, chunksize=50000, returnx=Fal
         sl = slice(chunk, chunk + chunksize)
         diff = pbc_diff(atoms_a[indices[0][sl]], atoms_b[indices[1][sl]], box)
         dist = (diff**2).sum(axis=1)**0.5
+        if kind == 'intra':
+            mask = atoms_a.residue_ids[indices[0][sl]] == atoms_b.residue_ids[indices[1][sl]]
+            dist = dist[mask]
+        elif kind == 'inter':
+            mask = atoms_a.residue_ids[indices[0][sl]] != atoms_b.residue_ids[indices[1][sl]]
+            dist = dist[mask]
+
         nr_of_samples += len(dist)
         hist += np.histogram(dist, bins)[0]
 
