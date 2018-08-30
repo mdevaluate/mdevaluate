@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import functools
+import inspect
 
 from .checksum import checksum
 from .logging import logger
@@ -146,6 +147,11 @@ def autosave_data(nargs, kwargs_keys=None, version=None):
             the function code, hence the checksum does not depend on the function code.
     """
     def decorator_function(function):
+        # make sure too include names of positional arguments in kwargs_keys,
+        # sice otherwise they will be ignored if passed via keyword.
+        # nonlocal kwargs_keys
+        posargs_keys = list(inspect.signature(function).parameters)[:nargs]
+
         @functools.wraps(function)
         def autosave(*args, **kwargs):
             description = kwargs.pop('description', '')
@@ -153,7 +159,7 @@ def autosave_data(nargs, kwargs_keys=None, version=None):
             if autosave_directory is not None:
                 relevant_args = list(args[:nargs])
                 if kwargs_keys is not None:
-                    for key in kwargs_keys:
+                    for key in [*posargs_keys, *kwargs_keys]:
                         if key in kwargs:
                             relevant_args.append(kwargs[key])
 
