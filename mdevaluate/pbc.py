@@ -44,43 +44,30 @@ def pbc_diff_numba(ri, rj, box):
     return v
 
 
-def whole(frame, residue_ids=None, len_res=None):
+def whole(frame):
     """
     Apply ``-pbc whole`` to a CoordinateFrame.
-    At the moment this function needs additonal information about the bonds within the residue.
-
-    Args:
-        frame: The original CoordinateFrame
-        bonds:
-            Information about bonds within the residue, as a list of shape (N, 3) where
-            each entry of the list defines tweo bonded atoms and the bond length.
-        residue_ids: The residue_ids of the atoms, if None this is taken from the CoordinateFrame
-
     """
-    if residue_ids is None:
-        residue_ids = frame.coordinates.atom_subset.residue_ids
-    if len_res is None:
-        len_res = (residue_ids == residue_ids[0]).sum()
+    residue_ids = frame.coordinates.atom_subset.residue_ids
     box = frame.box.diagonal()
+    coms = np.array([
+        np.bincount(residue_ids, weights=c * frame.masses)[1:] / np.bincount(residue_ids, weights=frame.masses)[1:]
+        for c in frame.T
+    ]).T[residue_ids - 1]
 
-    nr_res = len(frame) // len_res
-    residues = frame.reshape(nr_res, len_res, 3)
-    masses = frame.masses.reshape(nr_res, len_res, 1) / frame.masses[:len_res].sum()
-    com = (residues * masses).sum(axis=1).reshape(-1, 1, 3)
-    com_dist = residues - com
+    cor = np.zeros_like(frame)
+    cd = frame - coms
+    n, d = np.where(cd > box / 2 * 0.9)
+    cor[n, d] = -box[d]
+    n, d = np.where(cd < -box / 2 * 0.9)
+    cor[n, d] = box[d]
 
-    correction = np.zeros(residues.shape)
-    n, m, d = np.where(com_dist > box / 2)
-    correction[n, m, d] = -box[d]
-    n, m, d = np.where(com_dist < -box / 2)
-    correction[n, m, d] = box[d]
+    duomask = np.bincount(residue_ids)[1:][residue_ids - 1] == 2
+    if np.any(duomask):
+        duomask[::2] = False
+        cor[duomask] = 0
 
-    if len_res == 2 and frame.masses[0] == frame.masses[1]:
-        # special case for 2-site molecules, where the algorithm fails since the COM is somewhere in the box center
-        correction[:,1,:] = 0
-
-    whole_frame = residues + correction
-    return whole_frame.reshape(nr_res * len_res, 3)
+    return frame + cor
 
 
 NOJUMP_CACHESIZE = 128
