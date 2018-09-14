@@ -1,4 +1,6 @@
 
+from collections import OrderedDict
+
 import numpy as np
 import numba
 
@@ -81,14 +83,40 @@ def whole(frame, residue_ids=None, len_res=None):
     return whole_frame.reshape(nr_res * len_res, 3)
 
 
-def nojump(frame):
+NOJUMP_CACHESIZE = 128
+
+
+def nojump(frame, usecache=True):
     """
     Return the nojump coordinates of a frame, based on a jump matrix.
     """
     selection = frame.coordinates.atom_subset.selection
-    delta = np.array(np.vstack(
-        [m[:frame.step + 1, selection].sum(axis=0) for m in frame.coordinates.frames.nojump_matrixes]
-    ).T) * frame.box.diagonal()
+
+    reader = frame.coordinates.frames
+    if usecache:
+        if not hasattr(reader, '_nojump_cache'):
+            reader._nojump_cache = OrderedDict()
+        i0s = [x for x in reader._nojump_cache if x <= frame.step]
+        if len(i0s) > 0:
+            i0 = max(i0s)
+            delta = reader._nojump_cache[i0]
+            i0 += 1
+        else:
+            i0 = 0
+            delta = 0
+
+        delta += np.array(np.vstack(
+            [m[i0:frame.step + 1].sum(axis=0) for m in frame.coordinates.frames.nojump_matrixes]
+        ).T) * frame.box.diagonal()
+
+        reader._nojump_cache[frame.step] = delta
+        while len(reader._nojump_cache) > NOJUMP_CACHESIZE:
+            reader._nojump_cache.popitem(last=False)
+        delta = delta[selection, :]
+    else:
+        delta = np.array(np.vstack(
+            [m[:frame.step + 1, selection].sum(axis=0) for m in frame.coordinates.frames.nojump_matrixes]
+        ).T) * frame.box.diagonal()
     return frame - delta
 
 
