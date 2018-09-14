@@ -296,7 +296,7 @@ class Coordinates:
 
     @wraps(AtomSubset.subset)
     def subset(self, **kwargs):
-        return Coordinates(self.frames, atom_subset=self.atom_subset.subset(**kwargs))
+        return Coordinates(self.frames, atom_subset=self.atom_subset.subset(**kwargs), mode=self._mode)
 
     @property
     def description(self):
