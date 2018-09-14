@@ -3,6 +3,7 @@ import numpy as np
 import numba
 
 from scipy.spatial import cKDTree
+from itertools import product
 
 from .logging import logger
 
@@ -19,8 +20,17 @@ def pbc_diff_old(v1, v2, box):
 
     return v
 
-
 def pbc_diff(v1, v2=None, box=None):
+    if box==None:
+        out = v1 - v2
+    elif len(getattr(box, 'shape', [])) == 1: 
+        out = pbc_diff_rect(v1, v2, box)
+    elif len(getattr(box, 'shape', [])) == 2: 
+        out = pbc_diff_tric(v1, v2, box)        
+    else: raise NotImplementedError("cannot handle box")
+    return out
+
+def pbc_diff_rect(v1, v2, box):
     """
     Calculate the difference of two vectors, considering periodic boundary conditions.
     """
@@ -28,10 +38,103 @@ def pbc_diff(v1, v2=None, box=None):
         v = v1
     else:
         v = v1 -v2
-    if box is not None:
-        s = v / box
-        v = box * (s - s.round())
+   
+    s = v / box
+    v = box * (s - s.round())
     return v
+
+
+def pbc_diff_tric(v1, v2=None, box=None):
+    """
+    difference vector for arbitrary pbc
+    
+        Args:
+        box_matrix: CoordinateFrame.box
+    """
+    if len(box.shape) == 1: box = np.diag(box)  
+    if v1.shape == (3,): v1 = v1.reshape((1,3)) #quick 'n dirty
+    if v2.shape == (3,): v2 = v2.reshape((1,3))   
+    if box is not None:
+        r3 = np.subtract(v1, v2)
+        r2 = np.subtract(r3, (np.rint(np.divide(r3[:,2],box[2][2])))[:,np.newaxis] * box[2][np.newaxis,:])
+        r1 = np.subtract(r2, (np.rint(np.divide(r2[:,1],box[1][1])))[:,np.newaxis] * box[1][np.newaxis,:])
+        v  = np.subtract(r1, (np.rint(np.divide(r1[:,0],box[0][0])))[:,np.newaxis] * box[0][np.newaxis,:])
+    else:
+        v = v1 - v2
+    return v
+
+
+def pbc_dist(a1,a2,box = None):
+    return ((pbc_diff(a1,a2,box)**2).sum(axis=1))**0.5
+
+
+def pbc_extend(c, box):
+    """
+     in: c is frame, box is frame.box
+     out: all atoms in frame and their perio. image (shape => array(len(c)*27,3))
+    """
+    c=np.asarray(c)
+    if c.shape == (3,): c = c.reshape((1,3)) #quick 'n dirty
+    comb = np.array([np.asarray(i) for i in product([0,-1,1],[0,-1,1],[0,-1,1])])
+    b_matrices = comb[:,:,np.newaxis]*box[np.newaxis,:,:]
+    b_vectors = b_matrices.sum(axis=1)[np.newaxis,:,:]
+    return (c[:,np.newaxis,:]+b_vectors)
+    
+
+def pbc_kdtree(v1,box, leafsize = 32, compact_nodes = False, balanced_tree = False):
+    """
+    kd_tree with periodic images
+    box - whole matrix
+    rest: optional optimization
+    """
+    r0 =  cKDTree(pbc_extend(v1,box).reshape((-1,3)),leafsize ,compact_nodes ,balanced_tree)
+    return r0
+
+
+def pbc_kdtree_query(v1,v2,box,n = 1):
+    """
+    kd_tree query with periodic images
+    """
+    r0, r1 =  pbc_kdtree(v1,box).query(v2,n)
+    r1 = r1 // 27
+    return r0, r1
+
+
+def pbc_backfold_rect(act_frame,box_matrix):
+    """
+    mimics "trjconv ... -pbc atom -ur rect" 
+    
+    folds coords of act_frame in cuboid 
+    
+    """
+    af=np.asarray(act_frame)
+    if af.shape == (3,): act_frame = act_frame.reshape((1,3)) #quick 'n dirty
+    b = box_matrix
+    c = np.diag(b)/2
+    af = pbc_diff(np.zeros((1,3)),af-c,b)
+    return af + c
+
+
+def pbc_backfold_compact(act_frame,box_matrix):
+    """
+    mimics "trjconv ... -pbc atom -ur compact" 
+    
+    folds coords of act_frame in wigner-seitz-cell (e.g. dodecahedron)
+    """
+    c = act_frame
+    box = box_matrix
+    ctr = box.sum(0)/2
+    c=np.asarray(c)
+    shape = c.shape
+    if shape == (3,): 
+        c = c.reshape((1,3))
+        shape = (1,3)  #quick 'n dirty
+    comb = np.array([np.asarray(i) for i in product([0,-1,1],[0,-1,1],[0,-1,1])])
+    b_matrices = comb[:,:,np.newaxis]*box[np.newaxis,:,:]
+    b_vectors = b_matrices.sum(axis=1)[np.newaxis,:,:]
+    sc = c[:,np.newaxis,:]+b_vectors
+    w = np.argsort((((sc)-ctr)**2).sum(2),1)[:,0]
+    return sc[range(shape[0]),w]
 
 
 @numba.jit(nopython=True)

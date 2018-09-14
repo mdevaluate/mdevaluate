@@ -9,6 +9,9 @@ from .utils import filon_fourier_transformation, coherent_sum, histogram
 from .pbc import pbc_diff
 from .logging import logger
 
+def set_has_counter(func):
+    func.has_counter = True
+    return func
 
 def log_indices(first, last, num=100):
     ls = np.logspace(0, np.log10(last - first + 1), num=num)
@@ -32,13 +35,59 @@ def subensemble_correlation(selector_function, correlation_function=correlation)
     return c
 
 
+def multi_subensemble_correlation(selector_function):
+    """
+        selector_function has to expect a frame and to
+        return either valid indices (as with subensemble_correlation)
+        or a multidimensional array whose entries are valid indices
+        
+        e.g. slice(10,100,2)
+        
+        e.g. [1,2,3,4,5]
+        
+        e.g. [[[0,1],[2],[3]],[[4],[5],[6]] -> shape: 2,3 with 
+        list of indices of varying length
+        
+        e.g. [slice(1653),slice(1653,None,3)] 
+        
+        e.g. [np.ones(len_of_frames, bool)]
+        
+        in general using slices is the most efficient.
+        if the selections are small subsets of a frame or when many subsets are empty        
+        using indices will be more efficient than using masks.
+    """
+    @set_has_counter
+    def cmulti(function, frames):
+        iterator = iter(frames)
+        start_frame = next(iterator)
+        selectors = np.asarray(selector_function(start_frame))
+        sel_shape = selectors.shape
+        if sel_shape[-1] == 0: selectors = np.asarray(selectors,int)
+        if (selectors.dtype != object): sel_shape = sel_shape[:-1]
+        f_values = np.zeros(sel_shape + function(start_frame,start_frame).shape,)
+        count    = np.zeros(sel_shape, dtype=int)
+        is_first_frame_loop = True
+        def cc(act_frame): 
+            nonlocal is_first_frame_loop
+            for index in np.ndindex(sel_shape):
+                sel = selectors[index]
+                sf_sel = start_frame[sel]
+                if is_first_frame_loop:
+                    count[index]    = len(sf_sel)
+                f_values[index] = function(sf_sel, act_frame[sel]) if count[index] != 0 else 0
+            is_first_frame_loop = False 
+            return np.asarray(f_values.copy())
+        return map(cc, chain([start_frame], iterator)), count
+    return cmulti
+
 @autosave_data(nargs=2, kwargs_keys=(
     'index_distribution', 'correlation', 'segments', 'window', 'skip', 'average'
 ), version='shifted_correlation-1')
 def shifted_correlation(function, frames,
                         index_distribution=log_indices, correlation=correlation,
                         segments=10, window=0.5, skip=None,
-                        average=False,):
+                        average=False, ):
+
     """
     Calculate the time series for a correlation function.
 
@@ -47,7 +96,7 @@ def shifted_correlation(function, frames,
 
     Args:
         function:   The function that should be correlated
-        frames:     The coordinates of the simulation data
+        frames:     The coordinates of the simulation data 
         index_distribution (opt.):
                     A function that returns the indices for which the timeseries
                     will be calculated
@@ -61,11 +110,18 @@ def shifted_correlation(function, frames,
                     The fraction of the trajectory that will be skipped at the beginning,
                     if this is None the start index of the frames slice will be used,
                     which defaults to 0.
+        counter (bool, opt.): 
+                    If True, returns length of frames (in general number of particles specified)
+        average (bool, opt.): 
+                    If True, returns averaged correlation function 
     Returns:
         tuple:
             A list of length N that contains the indices of the frames at which
             the time series was calculated and a numpy array of shape (segments, N)
             that holds the (non-avaraged) correlation data
+            
+            if has_counter == True: adds number of counts to output tupel.
+                                    if average is returned it will be weighted. 
 
     Example:
         Calculating the mean square displacement of a coordinates object named ``coords``:
@@ -77,33 +133,72 @@ def shifted_correlation(function, frames,
             skip = frames._slice.start / len(frames)
         except (TypeError, AttributeError):
             skip = 0
-    assert window + skip < 1
+    assert window + skip < 1  
 
     start_frames = np.unique(np.linspace(
         len(frames) * skip, len(frames) * (1 - window),
         num=segments, endpoint=False, dtype=int
     ))
-    num_frames = int(len(frames) * (window))
+    num_frames = int(len(frames) * (window)) 
 
     idx = index_distribution(0, num_frames)
+
 
     def correlate(start_frame):
         shifted_idx = idx + start_frame
         return correlation(function, map(frames.__getitem__, shifted_idx))
 
-    result = 0 if average else []
-    for i, start_frame in enumerate(start_frames):
-        logger.debug('shifted_correlation: segment {}/{} (index={})'.format(i + 1, segments, start_frame))
-        if average:
-            result += np.array(list(correlate(start_frame)))
-        else:
-            result.append(list(correlate(start_frame)))
-    result = np.array(result)
-    if average:
-        result = result / len(start_frames)
     times = np.array([frames[i].time for i in idx]) - frames[0].time
-    return times, result
-
+        
+    if getattr(correlation, "has_counter", False):
+        if average:
+            for i, start_frame in enumerate(start_frames): 
+                act_result, act_count = correlate(start_frame)
+                act_result = np.array(list(act_result))
+                act_count  = np.array(act_count)
+                if i == 0:
+                    count  =  act_count
+                    cdim   =  act_count.ndim
+                    rdim   =  act_result.ndim
+                    bt = np.newaxis,
+                    for i in range(rdim - 1):
+                        if i >= cdim:
+                            bt +=  np.newaxis, 
+                        else: 
+                            bt += slice(None), 
+                    result  = act_result * act_count[bt]
+                else:
+                    result += act_result * act_count[bt]
+                    count  += act_count
+            np.divide(result, count[bt], out = result, where = count[bt] != 0)
+            result = np.moveaxis(result,0,cdim)
+            count  = count / len(start_frames)
+            output = times, result, count
+        else:
+            count  =  []
+            result =  []
+            for i, start_frame in enumerate(start_frames): 
+                act_result, act_count = correlate(start_frame)
+                act_result = list(act_result)
+                result.append(act_result)
+                count.append(act_count)
+            count  = np.asarray(count) 
+            cdim   = count.ndim
+            result = np.asarray(result)
+            result = np.moveaxis(result,1,cdim)
+            output = times, result, count
+    else: 
+        result = 0 if average else []
+        for i, start_frame in enumerate(start_frames):
+            if average:
+                result += np.array(list(correlate(start_frame)))
+            else:
+                result.append(list(correlate(start_frame)))
+        result = np.array(result)
+        if average:
+            result = result / len(start_frames)
+        output = times, result
+    return output
 
 def msd(start, frame):
     """
