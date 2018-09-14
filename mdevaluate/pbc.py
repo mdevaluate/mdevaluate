@@ -77,13 +77,15 @@ def nojump(frame, usecache=True):
     """
     Return the nojump coordinates of a frame, based on a jump matrix.
     """
-    selection = frame.coordinates.atom_subset.selection
+    selection = frame.selection
 
     reader = frame.coordinates.frames
     if usecache:
         if not hasattr(reader, '_nojump_cache'):
             reader._nojump_cache = OrderedDict()
-        i0s = [x for x in reader._nojump_cache if x <= frame.step]
+        # make sure to use absolute (not negative) index
+        abstep = frame.step % len(frame.coordinates)
+        i0s = [x for x in reader._nojump_cache if x <= abstep]
         if len(i0s) > 0:
             i0 = max(i0s)
             delta = reader._nojump_cache[i0]
@@ -93,10 +95,10 @@ def nojump(frame, usecache=True):
             delta = 0
 
         delta += np.array(np.vstack(
-            [m[i0:frame.step + 1].sum(axis=0) for m in frame.coordinates.frames.nojump_matrixes]
+            [m[i0:abstep + 1].sum(axis=0) for m in reader.nojump_matrixes]
         ).T) * frame.box.diagonal()
 
-        reader._nojump_cache[frame.step] = delta
+        reader._nojump_cache[abstep] = delta
         while len(reader._nojump_cache) > NOJUMP_CACHESIZE:
             reader._nojump_cache.popitem(last=False)
         delta = delta[selection, :]
