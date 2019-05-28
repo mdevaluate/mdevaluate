@@ -220,10 +220,32 @@ def center_of_mass(position, mass=None):
         return 1 / len(position) * position.sum(axis=0)
 
 
-def gyration_radius(position, mass=None):
-    r_s = center_of_mass(position, mass)
+def gyration_radius(position):
+    r"""
+    Calculates a list of all radii of gyration of all molecules given in the coordinate frame,
+    weighted with the masses of the individual atoms.
+    
+    Args:
+            position: Coordinate frame object
+    
+    ..math::
+        R_G = \left(\frac{\sum_{i=1}^{n} m_i |\vec{r_i} - \vec{r_{COM}}|^2 }{\sum_{i=1}^{n} m_i }   
+        \rigth)^{\frac{1}{2}}
+    """
+    
+    
+    gyration_radii = np.array([])
+    
+    for resid in np.unique(position.residue_ids):
+        pos = position.whole[position.residue_ids==resid]
+        mass = position.masses[position.residue_ids==resid][:,np.newaxis]
+        COM = center_of_mass(pos,mass)
+        r_sq = ((pbc_diff(pos,COM,pos.box.diagonal()))**2).sum(1)[:,np.newaxis]
+        g_radius = ((r_sq*mass).sum()/mass.sum())**(0.5)
+        
+        gyration_radii = np.append(gyration_radii,g_radius)
 
-    return 1 / len(position) * cdist(position, [r_s]).sum()
+    return gyration_radii
 
 
 def layer_of_atoms(atoms,
