@@ -23,7 +23,7 @@ def pbc_diff_old(v1, v2, box):
     return v
 
 def pbc_diff(v1, v2=None, box=None):
-    if box==None:
+    if box is None:
         out = v1 - v2
     elif len(getattr(box, 'shape', [])) == 1: 
         out = pbc_diff_rect(v1, v2, box)
@@ -181,12 +181,11 @@ def nojump(frame, usecache=True):
     Return the nojump coordinates of a frame, based on a jump matrix.
     """
     selection = frame.selection
-
     reader = frame.coordinates.frames
     if usecache:
         if not hasattr(reader, '_nojump_cache'):
             reader._nojump_cache = OrderedDict()
-        # make sure to use absolute (not negative) index
+        # make sure to use absolute (non negative) index
         abstep = frame.step % len(frame.coordinates)
         i0s = [x for x in reader._nojump_cache if x <= abstep]
         if len(i0s) > 0:
@@ -197,7 +196,7 @@ def nojump(frame, usecache=True):
             i0 = 0
             delta = 0
 
-        delta += np.array(np.vstack(
+        delta = delta + np.array(np.vstack(
             [m[i0:abstep + 1].sum(axis=0) for m in reader.nojump_matrixes]
         ).T) * frame.box.diagonal()
 
@@ -207,7 +206,7 @@ def nojump(frame, usecache=True):
         delta = delta[selection, :]
     else:
         delta = np.array(np.vstack(
-            [m[:frame.step + 1, selection].sum(axis=0) for m in frame.coordinates.frames.nojump_matrixes]
+            [m[:frame.step + 1, selection].sum(axis=0) for m in reader.nojump_matrixes]
         ).T) * frame.box.diagonal()
     return frame - delta
 

@@ -67,11 +67,11 @@ def polar_coordinates(x, y):
 def spherical_coordinates(x, y, z):
     """Convert cartesian to spherical coordinates."""
     xy, phi = polar_coordinates(x, y)
-    theta = np.arccos(z / xy)
     radius = (x**2 + y**2 + z**2)**0.5
+    theta = np.arccos(z / radius)
     return radius, phi, theta
 
-
+    
 def radial_selector(frame, coordinates, rmin, rmax):
     """
     Return a selection of all atoms with radius in the interval [rmin, rmax].
@@ -183,6 +183,8 @@ class CoordinateFrame(np.ndarray):
         self.coordinates = getattr(obj, 'coordinates', None)
         self.step = getattr(obj, 'step', None)
         self.mode = getattr(obj, 'mode', None)
+        if hasattr(obj, 'reference'):
+            self.reference = getattr(obj, 'reference')
 
 
 class Coordinates:
@@ -555,4 +557,5 @@ def vectors(coordinates, atoms_a, atoms_b, normed=False, box=None):
         coords_b = coords_b.mean(axis=0)
     vectors = pbc_diff(coords_a, coords_b, box=box)
     norm = np.linalg.norm(vectors, axis=-1).reshape(-1, 1) if normed else 1
-    return vectors / norm
+    vectors.reference = coords_a
+    return  vectors / norm

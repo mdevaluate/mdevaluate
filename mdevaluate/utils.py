@@ -65,7 +65,7 @@ def filon_fourier_transformation(time, correlation,
 
     .. [Blochowicz]
       T. Blochowicz, Broadband dielectric spectroscopy in neat and binary
-      molecular glass formers, Ph.D. thesis, Uni-versität Bayreuth (2003)
+      molecular glass formers, Ph.D. thesis, Universität Bayreuth (2003)
     """
     if frequencies is None:
         f_min = 1 / max(time)

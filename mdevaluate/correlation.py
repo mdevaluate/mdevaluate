@@ -262,7 +262,7 @@ def van_hove_distinct(onset, frame, bins, box=None, use_dask=True, comp=False, b
     if use_dask:
         onset = darray.from_array(onset, chunks=(500, dimension)).reshape(1, N, dimension)
         frame = darray.from_array(frame, chunks=(500, dimension)).reshape(N, 1, dimension)
-        dist = ((pbc_diff(onset, frame, box)**2).sum(axis=-1)**0.5)
+        dist = ((pbc_diff(onset, frame, box)**2).sum(axis=-1)**0.5).ravel()
         if np.diff(bins).std() < 1e6:
             dx = bins[0] - bins[1]
             hist = darray.bincount((dist // dx).astype(int), minlength=(len(bins) - 1))
