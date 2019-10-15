@@ -241,6 +241,16 @@ def load_nojump_matrixes(reader):
         return
 
 
+def correct_nojump_matrixes_for_whole(trajectory):
+    reader = trajectory.frames
+    frame = trajectory[0]
+    box = frame.box.diagonal()
+    cor = ((frame - frame.whole) / box).round().astype(np.int8)
+    for d in range(3):
+        reader.nojump_matrixes[d][0] = cor[:, d]
+    save_nojump_matrixes(reader)
+
+
 class BaseReader:
     """Base class for trajectory readers."""
 
