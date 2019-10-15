@@ -161,6 +161,8 @@ class CoordinateFrame(np.ndarray):
     @property
     def nojump(self):
         if self.mode != 'nojump':
+            if self.mode is not None:
+                logger.warn('Combining Nojump with other Coordinate modes is not supported and may cause unexpected results.')
             frame = nojump(self)
             frame.mode = 'nojump'
             return frame
