@@ -147,17 +147,32 @@ def pbc_diff_numba(ri, rj, box):
     return v
 
 
+# Parameter used to switch reference position for whole molecules
+# 'com': use center of mass of each molecule
+# 'simple': use first atom in each molecule 
+WHOLEMODE = 'com'
+
 def whole(frame):
     """
     Apply ``-pbc whole`` to a CoordinateFrame.
     """
     residue_ids = frame.coordinates.atom_subset.residue_ids
     box = frame.box.diagonal()
-    coms = np.array([
-        np.bincount(residue_ids, weights=c * frame.masses)[1:] / np.bincount(residue_ids, weights=frame.masses)[1:]
-        for c in frame.T
-    ]).T[residue_ids - 1]
 
+    if WHOLEMODE == 'com':
+        logger.debug('Using COM as reference for whole.')
+        coms = np.array([
+            np.bincount(residue_ids, weights=c * frame.masses)[1:] / np.bincount(residue_ids, weights=frame.masses)[1:]
+            for c in frame.T
+        ]).T[residue_ids - 1]
+    else:
+        # make sure, residue_ids are sorted, then determine indices at which the res id changes
+        # kind='stable' assures that any existent ordering is preserved
+        logger.debug('Using first atom as reference for whole.')
+        sort_ind = residue_ids.argsort(kind='stable')
+        i = np.concatenate([[0], np.where(np.diff(residue_ids[sort_ind]) > 0)[0] + 1])
+        coms = frame[sort_ind[i]][residue_ids - 1]
+    
     cor = np.zeros_like(frame)
     cd = frame - coms
     n, d = np.where(cd > box / 2 * 0.9)
@@ -165,10 +180,12 @@ def whole(frame):
     n, d = np.where(cd < -box / 2 * 0.9)
     cor[n, d] = box[d]
 
-    duomask = np.bincount(residue_ids)[1:][residue_ids - 1] == 2
-    if np.any(duomask):
-        duomask[::2] = False
-        cor[duomask] = 0
+    # this fix is only necessary when COM is the reference
+    if WHOLEMODE == 'com':
+        duomask = np.bincount(residue_ids)[1:][residue_ids - 1] == 2
+        if np.any(duomask):
+            duomask[::2] = False
+            cor[duomask] = 0
 
     return frame + cor
 
