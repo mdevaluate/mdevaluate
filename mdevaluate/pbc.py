@@ -158,7 +158,7 @@ fname = os.path.expanduser('~/.mdevaluate/WHOLEMODE')
 if os.path.exists(fname):
     with open(fname) as f:
         WHOLEMODE = f.read().strip()
-    logger.debug('Setting WHOLEMODE to %s, according to file ~/.mdevaluate/WHOLEMODE', WHOLEMODE)
+    logger.info('Setting WHOLEMODE to %s, according to file ~/.mdevaluate/WHOLEMODE', WHOLEMODE)
 
 def whole(frame):
     """
@@ -177,11 +177,11 @@ def whole(frame):
         import pygmx
         
         x = pygmx.make_xtcframe_whole(
-            frame.coordinates[frame.step],
+            frame.coordinates.frames[frame.step].positions,
             frame.box,
             frame.coordinates.atoms.reader
         )
-        cor = x - frame
+        cor = x[frame.selection] - frame
 
     else:
         # make sure, residue_ids are sorted, then determine indices at which the res id changes
