@@ -1,5 +1,6 @@
 
 from collections import OrderedDict
+import os
 
 import numpy as np
 import numba
@@ -149,8 +150,14 @@ def pbc_diff_numba(ri, rj, box):
 
 # Parameter used to switch reference position for whole molecules
 # 'com': use center of mass of each molecule
+# 'gmx': use Gromacs internal procedure
 # 'simple': use first atom in each molecule 
 WHOLEMODE = 'com'
+
+if os.path.exists('~/.mdevaluate/WHOLEMODE'):
+    with open('~/.mdevaluate/WHOLEMODE') as f:
+        WHOLEMODE = f.read().strip()
+    logger.debug('Setting WHOLEMODE to %, accodring to file ~/.mdevaluate/WHOLEMODE')
 
 def whole(frame):
     """
@@ -165,6 +172,16 @@ def whole(frame):
             np.bincount(residue_ids, weights=c * frame.masses)[1:] / np.bincount(residue_ids, weights=frame.masses)[1:]
             for c in frame.T
         ]).T[residue_ids - 1]
+    elif WHOLEMODE == 'gmx':
+        import pygmx
+        
+        x = pygmx.make_xtcframe_whole(
+            frame.coordinates[frame.step],
+            frame.box,
+            frame.coordinates.atoms.reader
+        )
+        cor = x - frame
+
     else:
         # make sure, residue_ids are sorted, then determine indices at which the res id changes
         # kind='stable' assures that any existent ordering is preserved
@@ -173,12 +190,13 @@ def whole(frame):
         i = np.concatenate([[0], np.where(np.diff(residue_ids[sort_ind]) > 0)[0] + 1])
         coms = frame[sort_ind[i]][residue_ids - 1]
     
-    cor = np.zeros_like(frame)
-    cd = frame - coms
-    n, d = np.where(cd > box / 2 * 0.9)
-    cor[n, d] = -box[d]
-    n, d = np.where(cd < -box / 2 * 0.9)
-    cor[n, d] = box[d]
+    if WHOLEMODE != 'gmx':
+        cor = np.zeros_like(frame)
+        cd = frame - coms
+        n, d = np.where(cd > box / 2 * 0.9)
+        cor[n, d] = -box[d]
+        n, d = np.where(cd < -box / 2 * 0.9)
+        cor[n, d] = box[d]
 
     # this fix is only necessary when COM is the reference
     if WHOLEMODE == 'com':

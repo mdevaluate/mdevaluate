@@ -60,7 +60,7 @@ def from_tprfile(tprfile, index_file=None):
         indices = load_indices(index_file)
     else:
         indices = None
-    return Atoms(tpr.atoms, indices=indices, charges=tpr.charge, masses=tpr.mass).subset()
+    return Atoms(tpr.atoms, indices=indices, charges=tpr.charge, masses=tpr.mass, reader=tpr).subset()
 
 
 class Atoms:
@@ -79,12 +79,13 @@ class Atoms:
 
     """
 
-    def __init__(self, atoms, indices=None, masses=None, charges=None):
+    def __init__(self, atoms, indices=None, masses=None, charges=None, reader=None):
         self.residue_ids, self.residue_names, self.atom_names = atoms.T
         self.residue_ids = np.array([int(m) for m in self.residue_ids])
         self.indices = indices
         self.masses = masses
         self.charges = charges
+        self.reader = reader
 
     def subset(self, *args, **kwargs):
         """
