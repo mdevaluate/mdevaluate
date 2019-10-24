@@ -154,10 +154,11 @@ def pbc_diff_numba(ri, rj, box):
 # 'simple': use first atom in each molecule 
 WHOLEMODE = 'com'
 
-if os.path.exists('~/.mdevaluate/WHOLEMODE'):
-    with open('~/.mdevaluate/WHOLEMODE') as f:
+fname = os.path.expanduser('~/.mdevaluate/WHOLEMODE')
+if os.path.exists(fname):
+    with open(fname) as f:
         WHOLEMODE = f.read().strip()
-    logger.debug('Setting WHOLEMODE to %, accodring to file ~/.mdevaluate/WHOLEMODE')
+    logger.debug('Setting WHOLEMODE to %s, according to file ~/.mdevaluate/WHOLEMODE', WHOLEMODE)
 
 def whole(frame):
     """
