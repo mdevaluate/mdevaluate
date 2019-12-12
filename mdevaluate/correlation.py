@@ -200,6 +200,93 @@ def shifted_correlation(function, frames,
         output = times, result
     return output
 
+
+@autosave_data(nargs=2, kwargs_keys=(
+    'index_distribution', 'correlation', 'segments', 'window', 'skip', 'average'
+), version='multitime_correlation-v1')
+def multitime_correlation(function, frames, ntimes=None,
+                          index_distribution=log_indices, correlation=correlation,
+                          segments=10, window=0.3, skip=None,
+                          average=True,):
+    """
+    Calculate multi time correlations.
+
+    Onset times and shifted times are determined the same way as in :func:`shifted_correlation`.
+    The same times are used for each time dimension.
+
+    Args:
+        function:   The function that should be correlated
+        frames:     The coordinates of the simulation data
+        ntimes (opt.):
+            Number of time dimenions, if None, this determined from the number of arguments
+            of the given function.
+        index_distribution (opt.):
+                    A function that returns the indices for which the timeseries
+                    will be calculated
+        correlation (function, opt.):
+                    The correlation function
+        segments (int, opt.):
+                    The number of segments the time window will be shifted
+        window (float, opt.):
+                    The fraction of the simulation the time series will cover
+        skip (float, opt.):
+                    The fraction of the trajectory that will be skipped at the beginning,
+                    if this is None the start index of the frames slice will be used,
+                    which defaults to 0.
+    Returns:
+        tuple: (times, result)
+            The times and result of the correlation. For the times, only a 1d-array is returned,
+            which is valid in each dimension.
+
+    Example:
+        Calculate the three time ISF F(Δt1, Δt2) = F(t1 - t0, t2 - t1)
+        >>> def isf2d(f0, f1, f3, q): return four_time_isf(f0, f1, f1, f2, q)
+        >>> time, cor = multitime_correlation(partial(isf2d, q=22.7), tr)
+        And rearrange the result into a dataframe with the according times
+        >>> idx = pd.MultiIndex.from_product([time, time], names=['Δt1', 'Δt2'])
+        >>> df = pd.DataFrame(cor.ravel(), index=idx, columns=['cor']).reset_index()
+    """
+    if ntimes is None:
+        ntimes = sum(p.kind != p.KEYWORD_ONLY for p in inspect.signature(function).parameters.values()) - 1
+    logger.debug('Function consumes %d frames.', ntimes + 1)
+    if skip is None:
+        try:
+            skip = frames._slice.start / len(frames)
+        except (TypeError, AttributeError):
+            skip = 0
+    assert ntimes * window + skip < 1
+
+    start_idx = np.unique(np.linspace(
+        len(frames) * skip, len(frames) * (1 - ntimes * window),
+        num=segments, endpoint=False, dtype=int
+    ))
+    start_frames = (frames[i] for i in start_idx)
+    num_frames = int(len(frames) * (window))
+
+    idx = np.unique(index_distribution(0, num_frames))
+
+    def correlate(start_frame, *prevs, recursion_level=1):
+        shifted_idx = idx + start_frame
+        next_frames = map(frames.__getitem__, shifted_idx)
+        if recursion_level == ntimes:
+            return [function(*prevs, f0) for f0 in next_frames]
+        else:
+            return [correlate(i0, *prevs, f0, recursion_level=recursion_level + 1) for i0, f0 in zip(shifted_idx, next_frames)]
+
+    result = 0 if average else []
+    for i, (ind0, f0) in enumerate(zip(start_idx, start_frames)):
+        logger.debug('shifted_correlation: segment {}/{} (index={})'.format(i + 1, segments, ind0))
+        if average:
+            result += np.array(list(correlate(ind0, f0)))
+        else:
+            result.append(list(correlate(ind0, f0)))
+    result = np.array(result)
+    if average:
+        result = result / len(start_idx)
+    times = np.array([frames[i].time for i in idx]) - frames[0].time
+    return times, result
+
+
 def msd(start, frame):
     """
     Mean square displacement
